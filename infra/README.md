@@ -3,7 +3,7 @@
 ```text
 infra/
 ├── docker/          # shared Docker bits (nginx.conf for serving the web build, init scripts)
-├── rabbitmq/        # definitions.json: exchanges, queues, dead-letter setup (loaded at startup)
+├── rabbitmq/        # optional broker config (queues are declared by the apps at startup)
 └── k8s/
     └── helm/
         └── swiftdrop/   # Helm chart (bonus +5)
