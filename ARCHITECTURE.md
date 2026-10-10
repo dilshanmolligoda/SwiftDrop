@@ -156,7 +156,7 @@ flowchart LR
 | `worker` | NestJS standalone | Notification + webhook consumers, retries | Horizontally (competing consumers) |
 | `ai-assistant` | Node + TS, MCP | Chatbot that calls the API as tools | Horizontally |
 | `postgres` | PostgreSQL 16 | System of record | Single instance (volume) |
-| `rabbitmq` | RabbitMQ 3.13 + management UI | Event broker, retry and dead-letter queues | Single instance (volume) |
+| `rabbitmq` | RabbitMQ 4 + management UI | Event broker, retry and dead-letter queues | Single instance (volume) |
 | `mailpit` | Mailpit | Catches all outgoing email in dev; view at `:8025` | Dev only |
 | `mock-merchant` | Small Node app | Demo store: calls our API, receives webhooks | Dev/demo only |
 
@@ -276,8 +276,9 @@ flowchart LR
     NC -->|"unprocessable message"| DLQN
 ```
 
-Topology is declared in `infra/rabbitmq/definitions.json` and loaded when the RabbitMQ
-container starts, so every teammate gets identical queues.
+The API and worker declare this topology on startup (exchange/queue declarations are
+idempotent), so every teammate and every environment gets identical queues without any
+manual setup in RabbitMQ.
 
 ### 7.3 Event contract
 

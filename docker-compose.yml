@@ -1,0 +1,168 @@
+# =====================================================================
+# SwiftDrop — local orchestration
+# ---------------------------------------------------------------------
+# Infrastructure (works today):
+#   docker compose up -d                 → postgres, rabbitmq, mailpit
+#
+# Application services are behind the "app" profile until each app is
+# scaffolded (apps/api, apps/worker, apps/web, tools/mock-merchant):
+#   docker compose --profile app up -d --build   → everything
+#
+# When ALL apps exist, delete the `profiles: ["app"]` lines so a plain
+# `docker compose up -d --build` starts the whole system.
+#
+# AI assistant (bonus) has its own profile:
+#   docker compose --profile app --profile ai up -d --build
+#
+# Values come from .env  (cp .env.example .env)
+# =====================================================================
+
+name: swiftdrop
+
+services:
+  # ------------------------------------------------------------------
+  # Infrastructure
+  # ------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: ${TZ:-Asia/Colombo}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    hostname: rabbitmq          # RabbitMQ stores data per hostname — keep it fixed
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    ports:
+      - "5672:5672"             # AMQP (apps connect here)
+      - "15672:15672"           # management UI → http://localhost:15672
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 20s
+
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "8025:8025"             # web UI to read every email the system sends
+      - "1025:1025"             # SMTP
+
+  # ------------------------------------------------------------------
+  # Application (enable with --profile app until all apps exist)
+  # ------------------------------------------------------------------
+  migrate:
+    profiles: ["app"]
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    env_file: .env
+    command: ["npx", "-w", "apps/api", "prisma", "migrate", "deploy"]
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    profiles: ["app"]
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    env_file: .env
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/v1/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  worker:
+    profiles: ["app"]
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    env_file: .env
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+      migrate:
+        condition: service_completed_successfully
+
+  web:
+    profiles: ["app"]
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+        VITE_AI_ASSISTANT_URL: ${VITE_AI_ASSISTANT_URL}
+    restart: unless-stopped
+    ports:
+      - "5173:80"               # http://localhost:5173
+    depends_on:
+      - api
+
+  mock-merchant:
+    profiles: ["app"]
+    build:
+      context: .
+      dockerfile: tools/mock-merchant/Dockerfile
+    env_file: .env
+    restart: unless-stopped
+    ports:
+      - "${MOCK_MERCHANT_PORT:-4000}:4000"
+    depends_on:
+      - api
+
+  ai-assistant:
+    profiles: ["ai"]
+    build:
+      context: .
+      dockerfile: apps/ai-assistant/Dockerfile
+    env_file: .env
+    restart: unless-stopped
+    ports:
+      - "${AI_ASSISTANT_PORT:-3100}:3100"
+    depends_on:
+      - api
+
+volumes:
+  postgres-data:
+  rabbitmq-data:
+  uploads:

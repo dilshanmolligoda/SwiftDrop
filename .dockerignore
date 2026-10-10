@@ -1,0 +1,23 @@
+# Keep the build context small and secrets out of images
+**/node_modules
+**/dist
+**/build
+**/coverage
+**/.vite
+.git
+.github
+.vscode
+.idea
+docs
+*.md
+!apps/**/README.md
+
+# Secrets — never bake into an image
+.env
+.env.*
+!.env.example
+
+# Local data
+uploads
+logs
+.docker-data

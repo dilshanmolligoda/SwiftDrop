@@ -101,7 +101,7 @@ swiftdrop/
 │   └── reports/            # Test results + coverage for submission
 ├── .github/                # PR template, CODEOWNERS (CI workflow coming)
 ├── .env.example            # Every environment variable, documented
-├── docker-compose.yml      # Whole system locally (coming soon)
+├── docker-compose.yml      # Whole system locally (infra + apps)
 ├── ARCHITECTURE.md
 ├── CONTRIBUTING.md         # Team workflow — read before your first commit
 └── README.md
@@ -131,17 +131,32 @@ cd SwiftDrop
 cp .env.example .env        # Windows PowerShell: Copy-Item .env.example .env
 ```
 
-Open `.env` and replace every `<change-me>`. For local use any random strings work, e.g.
-`openssl rand -base64 48`. Ask the repo lead for the shared Google OAuth client ID if you
-are working on Google login.
+That's it for most people — the defaults work for local Docker development. Only fill in
+the `<change-me>` values your area needs (Google login, AI assistant); the repo lead
+shares those **privately** (direct message), never in the repo or a group chat.
 
 ### 2. Run everything with Docker
 
+Make sure **Docker Desktop is running**, then from the repo root:
+
 ```bash
-docker compose up -d --build     # start all services
-docker compose ps                # check they are healthy
+docker compose up -d             # infrastructure: PostgreSQL, RabbitMQ, Mailpit
+docker compose ps                # all should show "running" / "healthy"
+```
+
+While the apps are being built, their containers sit behind the `app` profile:
+
+```bash
+docker compose --profile app up -d --build                # + api, worker, web, mock merchant
+docker compose --profile app --profile ai up -d --build   # + AI assistant (bonus)
+```
+
+Useful commands:
+
+```bash
 docker compose logs -f api       # follow one service's logs
-docker compose down              # stop (add -v to also wipe DB/broker data)
+docker compose down              # stop everything
+docker compose down -v           # stop AND wipe database/broker data (fresh start)
 ```
 
 | Service | URL |
@@ -159,7 +174,7 @@ docker compose down              # stop (add -v to also wipe DB/broker data)
 Keep the infrastructure in Docker and run your app with hot reload:
 
 ```bash
-docker compose up -d postgres rabbitmq mailpit   # infrastructure only
+docker compose up -d                             # infrastructure only
 npm install                                      # once, from the repo root
 npm run dev:api        # or dev:web / dev:worker
 ```
@@ -231,7 +246,7 @@ must be running. Coverage reports for submission go in [`docs/reports/`](docs/re
 **Before your first commit, read [CONTRIBUTING.md](CONTRIBUTING.md).** Short version:
 
 1. Work only in **your own area** (table below). Touching someone else's? Ask them first.
-2. Before you start: `git switch main && git pull`, then `git switch -c feat/<area>-<short-name>`.
+2. Before you start: `git switch dev && git pull`, then `git switch -c feat/<area>-<short-name>`.
 3. Small commits using `type(scope): message` (e.g. `feat(parcels): add status history`).
 4. Open a PR early, fill in the template, get **one approval**, squash-merge.
 
@@ -261,8 +276,10 @@ Full per-member responsibilities for submission: `docs/contribution-sheet.md`.
 - [x] Use case + sequence diagrams
 - [x] Integration diagrams (in ARCHITECTURE.md)
 - [x] Environment variables (`.env.example`)
-- [ ] Dockerfiles (web, api, worker, ai-assistant, mock-merchant)
-- [ ] `docker-compose.yml` (frontend, backend, database, RabbitMQ, Mailpit)
+- [x] `docker-compose.yml` — PostgreSQL, RabbitMQ, Mailpit running; app services ready behind the `app` profile
+- [x] Dockerfile templates (api, worker, web) + nginx config
+- [ ] Finalise Dockerfiles once apps are scaffolded; add mock-merchant + ai-assistant Dockerfiles
+- [ ] Remove the `app` profile so one `docker compose up -d --build` starts everything
 - [ ] Deployment configuration (Helm chart)
 - [ ] CI workflow (lint, test, coverage, image build)
 
