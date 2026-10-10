@@ -1,0 +1,49 @@
+# ---------- Dependencies ----------
+node_modules/
+.pnp
+.pnp.js
+
+# ---------- Build output ----------
+dist/
+build/
+.vite/
+*.tsbuildinfo
+
+# ---------- Environment & secrets (NEVER commit) ----------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+infra/k8s/**/secrets.local.yaml
+
+# ---------- Tests & coverage ----------
+coverage/
+reports/coverage/
+junit*.xml
+.nyc_output/
+
+# ---------- Uploads (delivery proof photos in local dev) ----------
+uploads/
+storage/
+
+# ---------- Logs ----------
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# ---------- OS / editor ----------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+
+# ---------- Docker / k8s local ----------
+docker-compose.override.yml
+.docker-data/
