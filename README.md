@@ -250,95 +250,18 @@ must be running. Coverage reports for submission go in [`docs/reports/`](docs/re
 3. Small commits using `type(scope): message` (e.g. `feat(parcels): add status history`).
 4. Open a PR early, fill in the template, get **one approval**, squash-merge.
 
-| Area | Owner(s) |
-|---|---|
-| Authentication*
-
-* JWT login
-* Registration
-* Google Login
-* Role-based access control
-* Secure password handling | `@hansana` |
-| Customer Delivery Creation*
-
-* Customer UI
-* Create delivery
-* Pickup/drop-off addresses
-* Parcel weight/size
-* Delivery fee calculation
-* Confirm booking | `@nimradha` |
-|  Tracking*
-
-* Tracking-number page
-* Status timeline
-* Real-time status display
-* Delivery history
-* Receipt generation/download | `@sanduni` |
-| Merchant*
-
-* Merchant registration
-* Admin approval
-* Merchant dashboard
-* View orders
-* View delivery states | `@sankalpa` |
-| Merchant Integration*
-
-* REST API for merchants
-* API authentication
-* Merchant creates orders programmatically
-* Webhooks
-* Webhook retry on failure | `@wanshika` |
-| Courier*
-
-* Courier login
-* Daily assigned deliveries
-* Update parcel status
-* Delivery note
-* Recipient information
-* Proof/photo upload
-* Failed delivery reason | `@banula` |
-| Dispatcher/Admin*
-
-* View unassigned parcels
-* Assign courier
-* Courier workload
-* Manage users
-* Manage merchants
-* Delivery zones
-* Pricing
-* Daily delivery reports
-* Success/failure reports | `@himasha` |
-| Real-Time + Message Broker*
-
-* WebSocket/SSE
-* RabbitMQ/Kafka
-* Publish status-change events
-* Consume events
-* Connect status changes with notifications/webhooks | `@raju` |
-| Notifications + Testing*
-
-* Email/mock SMS service
-* Status-change notifications
-* Unit tests
-* Integration tests
-* Authorization tests
-* Event-flow test
-* Code coverage report | `@dashintha` |
-| DevOps + Documentation*
-
-* Dockerfiles
-* docker-compose.yml
-* Frontend container
-* Backend container
-* Database container
-* RabbitMQ/Kafka container
-* Environment variables
-* Deployment configuration
-* README
-* Architecture documentation
-* Integration diagrams
-* Sequence/activity diagrams
-*Kubernetes + AI assistant | `@molligoda` |
+| Area | Responsibilities | Owner |
+|---|---|---|
+| Authentication | JWT login<br>Registration<br>Google Login<br>Role-based access control<br>Secure password handling | `@hansana` |
+| Customer Delivery Creation | Customer UI<br>Create delivery<br>Pickup/drop-off addresses<br>Parcel weight/size<br>Delivery fee calculation<br>Confirm booking | `@nimradha` |
+| Tracking | Tracking-number page<br>Status timeline<br>Real-time status display<br>Delivery history<br>Receipt generation/download | `@sanduni` |
+| Merchant | Merchant registration<br>Admin approval<br>Merchant dashboard<br>View orders<br>View delivery states | `@sankalpa` |
+| Merchant Integration | REST API for merchants<br>API authentication<br>Programmatic order creation<br>Webhooks<br>Webhook retry on failure | `@wanshika` |
+| Courier | Courier login<br>Daily assigned deliveries<br>Update parcel status<br>Delivery note<br>Recipient information<br>Proof/photo upload<br>Failed delivery reason | `@banula` |
+| Dispatcher/Admin | View unassigned parcels<br>Assign courier<br>Courier workload<br>Manage users<br>Manage merchants<br>Delivery zones<br>Pricing<br>Daily delivery reports<br>Success/failure reports | `@himasha` |
+| Real-Time + Message Broker | WebSocket/SSE<br>RabbitMQ/Kafka<br>Publish status-change events<br>Consume events<br>Connect status changes with notifications/webhooks | `@raju` |
+| Notifications + Testing | Email/mock SMS service<br>Status-change notifications<br>Unit tests<br>Integration tests<br>Authorization tests<br>Event-flow test<br>Code coverage report | `@dashintha` |
+| DevOps + Documentation | Dockerfiles<br>docker-compose.yml<br>Frontend container<br>Backend container<br>Database container<br>RabbitMQ/Kafka container<br>Environment variables<br>Deployment configuration<br>README<br>Architecture documentation<br>Integration diagrams<br>Sequence/activity diagrams<br>Kubernetes<br>AI assistant | `@molligoda` |
 
 Full per-member responsibilities for submission: `docs/contribution-sheet.md`.
 
