@@ -448,13 +448,13 @@ model owner).
 | Service | URL / port |
 |---|---|
 | web | <http://localhost:5173> |
-| api | <http://localhost:3000/api/v1> · Swagger <http://localhost:3000/api/docs> |
+| api | <http://localhost:4000/api/v1> · Swagger <http://localhost:4000/api/docs> |
 | worker | — (no HTTP; health on internal port) |
 | ai-assistant | <http://localhost:3100> |
 | postgres | `localhost:5432` |
 | rabbitmq | AMQP `localhost:5672` · UI <http://localhost:15672> |
 | mailpit | UI <http://localhost:8025> · SMTP `1025` |
-| mock-merchant | <http://localhost:4000> |
+| mock-merchant | <http://localhost:5000> |
 
 Health checks make `api` and `worker` wait until Postgres and RabbitMQ are ready. Database
 migrations run as a one-off `migrate` step before `api` starts.

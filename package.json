@@ -23,6 +23,12 @@
     "format": "prettier --write .",
     "up": "docker compose up -d --build",
     "down": "docker compose down",
-    "logs": "docker compose logs -f"
+    "logs": "docker compose logs -f",
+    "db:validate": "npm run db:validate -w apps/api",
+    "db:generate": "npm run db:generate -w apps/api",
+    "db:migrate": "npm run db:migrate -w apps/api",
+    "db:deploy": "npm run db:deploy -w apps/api",
+    "db:status": "npm run db:status -w apps/api",
+    "db:studio": "npm run db:studio -w apps/api"
   }
 }
