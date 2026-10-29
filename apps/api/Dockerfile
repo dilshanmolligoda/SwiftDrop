@@ -44,5 +44,5 @@ COPY --from=build /repo/apps/api/prisma ./apps/api/prisma
 RUN mkdir -p /app/uploads && chown -R node:node /app/uploads
 USER node
 
-EXPOSE 3000
+EXPOSE 4000
 CMD ["node", "apps/api/dist/main.js"]

@@ -162,11 +162,11 @@ docker compose down -v           # stop AND wipe database/broker data (fresh sta
 | Service | URL |
 |---|---|
 | Web app | <http://localhost:5173> |
-| API | <http://localhost:3000/api/v1> |
-| API docs (Swagger) | <http://localhost:3000/api/docs> |
+| API | <http://localhost:4000/api/v1> |
+| API docs (Swagger) | <http://localhost:4000/api/docs> |
 | RabbitMQ management | <http://localhost:15672> (user/pass from `.env`) |
 | Mailpit — see sent emails | <http://localhost:8025> |
-| Mock merchant store | <http://localhost:4000> |
+| Mock merchant store | <http://localhost:5000> |
 | AI assistant (bonus) | <http://localhost:3100> |
 
 ### 3. Run one app locally (faster while coding)
@@ -176,11 +176,28 @@ Keep the infrastructure in Docker and run your app with hot reload:
 ```bash
 docker compose up -d                             # infrastructure only
 npm install                                      # once, from the repo root
+cp apps/api/.env.example apps/api/.env           # once — local overrides for the API
 npm run dev:api        # or dev:web / dev:worker
 ```
 
-When running outside Docker, use `localhost` instead of the service names in `.env`
-(e.g. `POSTGRES_HOST=localhost`).
+Service names like `postgres` only resolve **inside** Docker. When an app runs on your
+machine it needs `localhost` instead — that's what `apps/<app>/.env` is for. It holds only
+the values that differ locally (e.g. `DATABASE_URL` with `@localhost:5432`); everything else
+still comes from the root `.env`. See [apps/api/README.md](apps/api/README.md#environment).
+
+Database (Prisma) commands, from the repo root:
+
+```bash
+npm run db:migrate -- --name <change>   # create + apply a migration (dev)
+npm run db:generate                     # regenerate the Prisma client
+npm run db:status                       # migration status
+npm run db:studio                       # browse data in the browser
+```
+
+> ⚠️ **Don't `source .env` or `export $(cat .env)` in your terminal.** Real environment
+> variables override `.env` files, so stale values stick to that terminal — the API ends up
+> on the wrong port or Prisma tries to reach `postgres:5432`. If that happens:
+> `unset DATABASE_URL API_PORT PORT` or open a new terminal.
 
 ### Demo accounts
 

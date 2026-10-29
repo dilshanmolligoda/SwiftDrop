@@ -90,7 +90,7 @@ services:
     env_file: .env
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "4000:4000"
     volumes:
       - uploads:/app/uploads
     depends_on:
@@ -101,7 +101,7 @@ services:
       migrate:
         condition: service_completed_successfully
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/v1/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4000/api/v1/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -146,7 +146,7 @@ services:
     env_file: .env
     restart: unless-stopped
     ports:
-      - "${MOCK_MERCHANT_PORT:-4000}:4000"
+      - "${MOCK_MERCHANT_PORT:-5000}:4000"
     depends_on:
       - api
 

@@ -86,8 +86,11 @@ The repo's `.gitattributes` keeps files as LF so shell scripts work inside Docke
 git clone https://github.com/dilshanmolligoda/SwiftDrop.git
 cd SwiftDrop
 cp .env.example .env            # then fill in the <change-me> values
+cp apps/api/.env.example apps/api/.env   # local overrides (localhost DB) for npm run dev:api
 docker compose up -d --build
 ```
+
+The API listens on **port 4000** (`API_PORT`): <http://localhost:4000/api/v1>.
 
 See the [README](README.md#getting-started) for URLs and running a single app with hot reload.
 
