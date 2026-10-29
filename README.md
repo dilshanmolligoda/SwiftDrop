@@ -9,7 +9,8 @@ notifications.
 ![Docker](https://img.shields.io/badge/run-docker%20compose-2496ED)
 
 > 🚧 **Setup stage.** The repository structure, architecture and team workflow are in place.
-> Each app folder has a README describing what goes there; services are being scaffolded.
+> `apps/api` (NestJS + Prisma) and `apps/web` (React + Vite) are scaffolded with health checks;
+> the other apps are still being scaffolded. Each app folder has a README describing what goes there.
 
 ---
 
@@ -161,8 +162,8 @@ docker compose down -v           # stop AND wipe database/broker data (fresh sta
 
 | Service | URL |
 |---|---|
-| Web app | <http://localhost:5173> |
-| API | <http://localhost:4000/api/v1> |
+| Web app | <http://localhost:5173> · health page <http://localhost:5173/health> |
+| API | <http://localhost:4000/api/v1> · health <http://localhost:4000/api/v1/health> |
 | API docs (Swagger) | <http://localhost:4000/api/docs> |
 | RabbitMQ management | <http://localhost:15672> (user/pass from `.env`) |
 | Mailpit — see sent emails | <http://localhost:8025> |
@@ -177,7 +178,8 @@ Keep the infrastructure in Docker and run your app with hot reload:
 docker compose up -d                             # infrastructure only
 npm install                                      # once, from the repo root
 cp apps/api/.env.example apps/api/.env           # once — local overrides for the API
-npm run dev:api        # or dev:web / dev:worker
+cp apps/web/.env.example apps/web/.env           # once — web app config
+npm run dev            # API + web together (or dev:api / dev:web / dev:worker)
 ```
 
 Service names like `postgres` only resolve **inside** Docker. When an app runs on your
@@ -218,6 +220,7 @@ All variables are documented in **[.env.example](.env.example)**. Main groups:
 
 | Group | Examples | Used by |
 |---|---|---|
+| API server | `API_PORT` (4000), `API_PREFIX`, `API_VERSION`, `CORS_ORIGINS` | api |
 | Database | `POSTGRES_*`, `DATABASE_URL` | api, worker |
 | Broker | `RABBITMQ_URL`, `RABBITMQ_EVENTS_EXCHANGE` | api, worker |
 | Auth | `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `GOOGLE_CLIENT_*` | api |
@@ -225,6 +228,15 @@ All variables are documented in **[.env.example](.env.example)**. Main groups:
 | Notifications | `SMTP_*`, `SMS_PROVIDER` | worker |
 | Frontend | `VITE_API_BASE_URL` (public!) | web |
 | AI assistant | `LLM_PROVIDER`, `LLM_MODEL`, `LLM_API_KEY` | ai-assistant |
+
+Besides the root `.env`, apps run on your machine have a small `.env` of their own, each
+with a committed `.env.example`:
+
+| File | What it holds |
+|---|---|
+| `.env` (root) | Shared config for every app and for Docker |
+| `apps/api/.env` | Local overrides only — `DATABASE_URL` with `localhost` instead of `postgres` |
+| `apps/web/.env` | `VITE_*` values for the frontend (public) |
 
 **Rules:** never commit `.env`; never hard-code a secret; anything starting with `VITE_` is
 visible in the browser. Adding a variable? Add it to `.env.example` in the same PR.
@@ -295,6 +307,9 @@ Full per-member responsibilities for submission: `docs/contribution-sheet.md`.
 - [x] Environment variables (`.env.example`)
 - [x] `docker-compose.yml` — PostgreSQL, RabbitMQ, Mailpit running; app services ready behind the `app` profile
 - [x] Dockerfile templates (api, worker, web) + nginx config
+- [x] API scaffolded — NestJS, env loading + validation, Prisma 7, `/health` and `/health/db`, port 4000
+- [x] Web scaffolded — React + Vite + React Router, `apps/web/.env`, `/health` status page
+- [x] Root scripts — `npm run dev` (API + web), `db:*` Prisma commands
 - [ ] Finalise Dockerfiles once apps are scaffolded; add mock-merchant + ai-assistant Dockerfiles
 - [ ] Remove the `app` profile so one `docker compose up -d --build` starts everything
 - [ ] Deployment configuration (Helm chart)

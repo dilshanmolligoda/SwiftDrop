@@ -87,6 +87,7 @@ git clone https://github.com/dilshanmolligoda/SwiftDrop.git
 cd SwiftDrop
 cp .env.example .env            # then fill in the <change-me> values
 cp apps/api/.env.example apps/api/.env   # local overrides (localhost DB) for npm run dev:api
+cp apps/web/.env.example apps/web/.env   # web app config (public VITE_* values)
 docker compose up -d --build
 ```
 

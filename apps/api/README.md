@@ -46,6 +46,7 @@ add it to the root [.env.example](../../.env.example) (and to `REQUIRED` if the 
 | `API_PORT` | `4000` | HTTP port |
 | `API_PREFIX` / `API_VERSION` | `api` / `1` | Routes are served under `/api/v1` |
 | `DATABASE_URL` | — (required) | PostgreSQL connection for Prisma |
+| `CORS_ORIGINS` | `http://localhost:5173` | Comma-separated origins allowed to call the API from a browser |
 
 ## Database (Prisma 7)
 
