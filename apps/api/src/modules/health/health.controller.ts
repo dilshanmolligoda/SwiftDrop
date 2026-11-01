@@ -6,7 +6,9 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DatabaseReport, HealthReport, HealthService } from './health.service';
+import { Public } from '../auth/decorators/public.decorator.js';
 
+@Public()
 @Controller('health')
 export class HealthController {
   constructor(
