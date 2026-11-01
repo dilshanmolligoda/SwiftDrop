@@ -66,6 +66,17 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
     alert('Logged out successfully.')
   }
 
+  const getBreadcrumbTitle = (path: string): string => {
+    if (path.includes('addresses')) return 'Address book'
+    if (path.includes('settings')) return 'Settings'
+    if (path.includes('deliveries')) return 'My deliveries'
+    if (path.includes('create-delivery')) return 'Create delivery'
+    if (path.includes('track')) return 'Track a parcel'
+    if (path.includes('notifications')) return 'Notifications'
+    if (path.includes('support')) return 'Help & support'
+    return 'Dashboard'
+  }
+
   return (
     <div className="customer-layout">
       {/* Mobile Drawer Overlay */}
@@ -196,7 +207,9 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
                 <Home className="w-4 h-4 text-slate-500" />
               </Link>
               <span className="customer-topbar__breadcrumb-separator">&gt;</span>
-              <span className="customer-topbar__breadcrumb-current">Settings</span>
+              <span className="customer-topbar__breadcrumb-current">
+                {getBreadcrumbTitle(activePath)}
+              </span>
             </div>
           </div>
 
@@ -207,7 +220,6 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
               aria-label="View notifications"
             >
               <Bell className="w-4 h-4 text-slate-600" />
-              <span className="customer-topbar__badge-dot" />
             </button>
 
             <div className="customer-topbar__user-wrapper">
