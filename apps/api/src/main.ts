@@ -1,6 +1,7 @@
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
-import { AppModule } from './app.module';
+import { AppModule } from './app.module.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -9,6 +10,14 @@ async function bootstrap() {
   const prefix = config.get<string>('API_PREFIX', 'api');
   const version = config.get<string>('API_VERSION', '1');
   app.setGlobalPrefix(`${prefix}/v${version}`);
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
   // Comma-separated list, e.g. "http://localhost:5173,https://app.example.com"
   const origins = config.get<string>('CORS_ORIGINS', 'http://localhost:5173');

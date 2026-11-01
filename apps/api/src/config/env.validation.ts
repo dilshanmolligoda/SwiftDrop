@@ -1,4 +1,4 @@
-const REQUIRED = ['DATABASE_URL'] as const;
+const REQUIRED = ['DATABASE_URL', 'JWT_ACCESS_SECRET'] as const;
 
 export function validateEnv(config: Record<string, unknown>) {
   const missing = REQUIRED.filter((key) => !config[key]);
