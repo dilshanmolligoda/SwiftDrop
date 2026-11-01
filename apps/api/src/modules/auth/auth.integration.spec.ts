@@ -1,6 +1,9 @@
 import {
   Controller,
   Get,
+  Post,
+  HttpCode,
+  HttpStatus,
   INestApplication,
   ValidationPipe,
 } from '@nestjs/common';
@@ -22,7 +25,12 @@ import { Public } from './decorators/public.decorator.js';
 import { Roles } from './decorators/roles.decorator.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 import { RolesGuard } from './guards/roles.guard.js';
+import { CsrfGuard } from './guards/csrf.guard.js';
 import { PasswordService } from './password.service.js';
+import {
+  cookieParserMiddleware,
+  AUTH_COOKIE_NAME,
+} from './utils/cookie.util.js';
 import type { AuthenticatedUser } from './decorators/current-user.decorator.js';
 
 const TEST_SECRET = 'this-is-a-test-secret-that-is-at-least-32-bytes-long!';
@@ -52,6 +60,13 @@ class TestRoleController {
     return { message: 'admin-ok', role: user.role };
   }
 
+  @Roles(Role.ADMIN)
+  @Post('admin-post')
+  @HttpCode(HttpStatus.OK)
+  adminPost(@CurrentUser() user: AuthenticatedUser) {
+    return { message: 'admin-post-ok', role: user.role };
+  }
+
   @Roles(Role.ADMIN, Role.DISPATCHER)
   @Get('admin-or-dispatcher')
   adminOrDispatcher(@CurrentUser() user: AuthenticatedUser) {
@@ -62,6 +77,7 @@ class TestRoleController {
 describe('Global Authentication and Authorization (Integration)', () => {
   let app: INestApplication<App>;
   let usersService: { findById: jest.Mock; findByEmail: jest.Mock };
+  let passwordService: PasswordService;
 
   beforeAll(async () => {
     usersService = {
@@ -75,8 +91,11 @@ describe('Global Authentication and Authorization (Integration)', () => {
           isGlobal: true,
           load: [
             () => ({
+              NODE_ENV: 'development',
               JWT_ACCESS_SECRET: TEST_SECRET,
               JWT_ACCESS_TTL: '15m',
+              CORS_ORIGINS: 'http://localhost:5173',
+              AUTH_COOKIE_PATH: '/api',
             }),
           ],
         }),
@@ -94,13 +113,17 @@ describe('Global Authentication and Authorization (Integration)', () => {
         AuthService,
         PasswordService,
         { provide: UsersService, useValue: usersService },
-        // Execution order: JwtAuthGuard first, then RolesGuard
+        // Execution order: CsrfGuard first, then JwtAuthGuard, then RolesGuard
+        { provide: APP_GUARD, useClass: CsrfGuard },
         { provide: APP_GUARD, useClass: JwtAuthGuard },
         { provide: APP_GUARD, useClass: RolesGuard },
       ],
     }).compile();
 
+    passwordService = moduleFixture.get<PasswordService>(PasswordService);
+
     app = moduleFixture.createNestApplication();
+    app.use(cookieParserMiddleware);
     app.useGlobalPipes(
       new ValidationPipe({
         whitelist: true,
@@ -154,15 +177,313 @@ describe('Global Authentication and Authorization (Integration)', () => {
     });
   });
 
-  describe('Protected endpoints authentication enforcement', () => {
-    it('GET /auth/me rejects request without token with 401 Unauthorized', async () => {
+  describe('Login, Cookie Setting & Response Body Sanitization', () => {
+    it('sets HTTP-only cookie on successful login and never exposes JWT in JSON response', async () => {
+      const passwordHash = await passwordService.hash('valid-pass-123');
+      usersService.findByEmail.mockResolvedValue({
+        id: 'user-login-1',
+        email: 'dispatcher@swiftdrop.local',
+        fullName: 'Demo Dispatcher',
+        passwordHash,
+        role: Role.DISPATCHER,
+        approvalStatus: ApprovalStatus.APPROVED,
+        isActive: true,
+      });
+
+      const res = await request(getHttpApp())
+        .post('/auth/login')
+        .send({
+          email: 'dispatcher@swiftdrop.local',
+          password: 'valid-pass-123',
+        })
+        .expect(200);
+
+      const body = res.body as Record<string, unknown>;
+      // Verify JSON body does NOT expose accessToken
+      expect(body['accessToken']).toBeUndefined();
+      expect(body['expiresIn']).toBe(900);
+      expect(body['user']).toEqual({
+        id: 'user-login-1',
+        email: 'dispatcher@swiftdrop.local',
+        fullName: 'Demo Dispatcher',
+        role: Role.DISPATCHER,
+      });
+
+      // Verify Set-Cookie header contains HTTP-only cookie with correct attributes
+      const setCookieHeader = res.headers['set-cookie'];
+      expect(setCookieHeader).toBeDefined();
+      const cookieStr = Array.isArray(setCookieHeader)
+        ? setCookieHeader.join('; ')
+        : String(setCookieHeader);
+
+      expect(cookieStr).toContain(`${AUTH_COOKIE_NAME}=`);
+      expect(cookieStr).toMatch(/httponly/i);
+      expect(cookieStr).toMatch(/samesite=lax/i);
+      expect(cookieStr).toMatch(/path=\/api/i);
+    });
+
+    it('does not set authentication cookie when credentials are invalid', async () => {
+      usersService.findByEmail.mockResolvedValue(null);
+
+      const res = await request(getHttpApp())
+        .post('/auth/login')
+        .send({
+          email: 'nonexistent@swiftdrop.local',
+          password: 'wrong-pass',
+        })
+        .expect(401);
+
+      expect(res.headers['set-cookie']).toBeUndefined();
+      const body = res.body as ErrorResponse;
+      expect(body.message).toBe('Invalid email or password');
+    });
+
+    it('does not set authentication cookie and returns generic 401 when account is inactive', async () => {
+      const passwordHash = await passwordService.hash('valid-pass-123');
+      usersService.findByEmail.mockResolvedValue({
+        id: 'user-inactive-1',
+        email: 'inactive@swiftdrop.local',
+        passwordHash,
+        role: Role.CUSTOMER,
+        isActive: false,
+      });
+
+      const res = await request(getHttpApp())
+        .post('/auth/login')
+        .send({
+          email: 'inactive@swiftdrop.local',
+          password: 'valid-pass-123',
+        })
+        .expect(401);
+
+      expect(res.headers['set-cookie']).toBeUndefined();
+      const body = res.body as ErrorResponse;
+      expect(body.message).toBe('Invalid email or password');
+    });
+  });
+
+  describe('Cookie-based authentication on protected routes', () => {
+    it('authenticates successfully using HTTP-only cookie on GET /auth/me', async () => {
+      const validCookieToken = createToken({
+        sub: 'cookie-user-1',
+        email: 'cookie@swiftdrop.local',
+        role: Role.CUSTOMER,
+      });
+
+      usersService.findById.mockResolvedValue({
+        id: 'cookie-user-1',
+        email: 'cookie@swiftdrop.local',
+        fullName: 'Cookie Customer',
+        role: Role.CUSTOMER,
+        approvalStatus: ApprovalStatus.APPROVED,
+        isActive: true,
+        createdAt: new Date('2026-01-01'),
+        updatedAt: new Date('2026-01-02'),
+      });
+
+      const res = await request(getHttpApp())
+        .get('/auth/me')
+        .set('Cookie', `${AUTH_COOKIE_NAME}=${validCookieToken}`)
+        .expect(200);
+
+      const body = res.body as Record<string, unknown>;
+      expect(body['id']).toBe('cookie-user-1');
+      expect(body['email']).toBe('cookie@swiftdrop.local');
+      expect(body['fullName']).toBe('Cookie Customer');
+      expect(body['role']).toBe(Role.CUSTOMER);
+    });
+
+    it('rejects expired cookie with 401', async () => {
+      const expiredToken = createToken(
+        {
+          sub: 'cookie-user-1',
+          email: 'cookie@swiftdrop.local',
+          role: Role.CUSTOMER,
+        },
+        { expiresIn: '-1s' },
+      );
+
+      const res = await request(getHttpApp())
+        .get('/auth/me')
+        .set('Cookie', `${AUTH_COOKIE_NAME}=${expiredToken}`)
+        .expect(401);
+
+      const body = res.body as ErrorResponse;
+      expect(body.message).toBe('Invalid or expired authorization token');
+    });
+
+    it('rejects invalid/tampered cookie with 401', async () => {
+      const res = await request(getHttpApp())
+        .get('/auth/me')
+        .set('Cookie', `${AUTH_COOKIE_NAME}=tampered.token.value`)
+        .expect(401);
+
+      const body = res.body as ErrorResponse;
+      expect(body.message).toBe('Invalid or expired authorization token');
+    });
+
+    it('allows access to role-protected endpoint using cookie authentication', async () => {
+      const adminCookieToken = createToken({
+        sub: 'admin-cookie-1',
+        email: 'admin@swiftdrop.local',
+        role: Role.ADMIN,
+      });
+
+      const res = await request(getHttpApp())
+        .get('/test-role/admin-only')
+        .set('Cookie', `${AUTH_COOKIE_NAME}=${adminCookieToken}`)
+        .expect(200);
+
+      expect(res.body).toEqual({
+        message: 'admin-ok',
+        role: Role.ADMIN,
+      });
+    });
+
+    it('enforces role authorization on cookie-authenticated requests with insufficient role', async () => {
+      const customerCookieToken = createToken({
+        sub: 'cust-cookie-1',
+        email: 'customer@swiftdrop.local',
+        role: Role.CUSTOMER,
+      });
+
+      const res = await request(getHttpApp())
+        .get('/test-role/admin-only')
+        .set('Cookie', `${AUTH_COOKIE_NAME}=${customerCookieToken}`)
+        .expect(403);
+
+      const body = res.body as ErrorResponse;
+      expect(body.message).toBe('Forbidden resource: insufficient permissions');
+    });
+  });
+
+  describe('Logout functionality', () => {
+    it('POST /auth/logout clears the authentication cookie with matching path', async () => {
+      const res = await request(getHttpApp()).post('/auth/logout').expect(200);
+
+      expect(res.body).toEqual({ message: 'Logged out successfully' });
+
+      const setCookie = res.headers['set-cookie'];
+      expect(setCookie).toBeDefined();
+      const cookieStr = Array.isArray(setCookie)
+        ? setCookie.join('; ')
+        : String(setCookie);
+
+      // Verify cookie is cleared (empty value and expired / max-age=0)
+      expect(cookieStr).toContain(`${AUTH_COOKIE_NAME}=;`);
+      expect(cookieStr).toMatch(/path=\/api/i);
+      expect(cookieStr).toMatch(/httponly/i);
+    });
+  });
+
+  describe('CSRF / Origin header validation on state-changing requests', () => {
+    it('rejects POST request with unauthorized Origin header with 403 Forbidden', async () => {
+      const res = await request(getHttpApp())
+        .post('/auth/login')
+        .set('Origin', 'http://malicious-attacker.com')
+        .send({
+          email: 'dispatcher@swiftdrop.local',
+          password: 'pass',
+        })
+        .expect(403);
+
+      const body = res.body as ErrorResponse;
+      expect(body.message).toBe(
+        'Cross-origin request rejected: unauthorized origin',
+      );
+    });
+
+    it('rejects cookie-authenticated POST with an unapproved Origin with 403 Forbidden', async () => {
+      const validCookieToken = createToken({
+        sub: 'cookie-user-1',
+        email: 'cookie@swiftdrop.local',
+        role: Role.CUSTOMER,
+      });
+
+      const res = await request(getHttpApp())
+        .post('/auth/logout')
+        .set('Origin', 'http://malicious-site.com')
+        .set('Cookie', `${AUTH_COOKIE_NAME}=${validCookieToken}`)
+        .expect(403);
+
+      const body = res.body as ErrorResponse;
+      expect(body.message).toBe(
+        'Cross-origin request rejected: unauthorized origin',
+      );
+    });
+
+    it('rejects cookie-authenticated POST without Origin and Referer with 403 Forbidden', async () => {
+      const validCookieToken = createToken({
+        sub: 'cookie-user-1',
+        email: 'cookie@swiftdrop.local',
+        role: Role.CUSTOMER,
+      });
+
+      const res = await request(getHttpApp())
+        .post('/auth/logout')
+        .set('Cookie', `${AUTH_COOKIE_NAME}=${validCookieToken}`)
+        .expect(403);
+
+      const body = res.body as ErrorResponse;
+      expect(body.message).toBe(
+        'Cross-origin request rejected: missing origin for cookie-authenticated request',
+      );
+    });
+
+    it('allows cookie-authenticated POST with an approved Origin', async () => {
+      const validCookieToken = createToken({
+        sub: 'cookie-user-1',
+        email: 'cookie@swiftdrop.local',
+        role: Role.CUSTOMER,
+      });
+
+      const res = await request(getHttpApp())
+        .post('/auth/logout')
+        .set('Origin', 'http://localhost:5173')
+        .set('Cookie', `${AUTH_COOKIE_NAME}=${validCookieToken}`)
+        .expect(200);
+
+      expect(res.body).toEqual({ message: 'Logged out successfully' });
+    });
+
+    it('allows non-browser Bearer-token POST without Origin and Referer to pass CSRF and reach JWT auth', async () => {
+      const adminToken = createToken({
+        sub: 'admin-1',
+        email: 'admin@example.com',
+        role: Role.ADMIN,
+      });
+
+      const res = await request(getHttpApp())
+        .post('/test-role/admin-post')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200);
+
+      const body = res.body as Record<string, unknown>;
+      expect(body).toEqual({
+        message: 'admin-post-ok',
+        role: Role.ADMIN,
+      });
+    });
+
+    it('preserves existing safe HTTP methods (GET) regardless of Origin', async () => {
+      const res = await request(getHttpApp())
+        .get('/test-role/public')
+        .set('Origin', 'http://unapproved-origin.com')
+        .expect(200);
+
+      expect(res.body).toEqual({ message: 'public-ok' });
+    });
+  });
+
+  describe('Protected endpoints authentication enforcement (Bearer token compatibility)', () => {
+    it('GET /auth/me rejects request without token or cookie with 401 Unauthorized', async () => {
       const res = await request(getHttpApp()).get('/auth/me').expect(401);
 
       const body = res.body as ErrorResponse;
       expect(body.message).toBe('Missing authorization token');
     });
 
-    it('GET /test-role/authenticated rejects request without token with 401', async () => {
+    it('GET /test-role/authenticated rejects request without token or cookie with 401', async () => {
       const res = await request(getHttpApp())
         .get('/test-role/authenticated')
         .expect(401);
@@ -183,7 +504,7 @@ describe('Global Authentication and Authorization (Integration)', () => {
       );
     });
 
-    it('GET /auth/me rejects expired token with 401', async () => {
+    it('GET /auth/me rejects expired Bearer token with 401', async () => {
       const expiredToken = createToken(
         { sub: 'user-1', email: 'user@example.com', role: Role.CUSTOMER },
         { expiresIn: '-1s' },
@@ -246,7 +567,7 @@ describe('Global Authentication and Authorization (Integration)', () => {
       expect(body.message).toBe('Invalid or expired authorization token');
     });
 
-    it('accepts tokens signed with HS256', async () => {
+    it('accepts tokens signed with HS256 via Bearer token', async () => {
       usersService.findById.mockResolvedValue({
         id: 'user-uuid-123',
         email: 'customer@example.com',
@@ -281,7 +602,7 @@ describe('Global Authentication and Authorization (Integration)', () => {
     });
   });
 
-  describe('Global role authorization', () => {
+  describe('Global role authorization via Bearer token', () => {
     it('allows any authenticated role on endpoints without @Roles() metadata', async () => {
       const customerToken = createToken({
         sub: 'cust-1',

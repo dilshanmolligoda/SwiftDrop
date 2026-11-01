@@ -148,7 +148,7 @@ describe('AuthService', () => {
       expect(passwordService.verify).not.toHaveBeenCalled();
     });
 
-    it('throws UnauthorizedException when account is inactive', async () => {
+    it('throws generic UnauthorizedException when account is inactive (prevents enumeration)', async () => {
       const inactiveUser: User = {
         ...validUser,
         isActive: false,
@@ -161,11 +161,7 @@ describe('AuthService', () => {
           email: 'user@example.com',
           password: 'correct-password',
         }),
-      ).rejects.toThrow(
-        new UnauthorizedException(
-          'Account is inactive. Please contact support.',
-        ),
-      );
+      ).rejects.toThrow(new UnauthorizedException('Invalid email or password'));
 
       expect(jwtService.signAsync).not.toHaveBeenCalled();
     });

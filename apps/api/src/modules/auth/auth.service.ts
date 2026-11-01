@@ -14,12 +14,14 @@ export interface UserSummary {
   role: Role;
 }
 
-export interface LoginResponse {
+export interface LoginResult {
   accessToken: string;
   tokenType: 'Bearer';
   expiresIn: number;
   user: UserSummary;
 }
+
+export type LoginResponse = LoginResult;
 
 export interface UserProfile {
   id: string;
@@ -65,11 +67,11 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
-  async login(dto: LoginDto): Promise<LoginResponse> {
+  async login(dto: LoginDto): Promise<LoginResult> {
     const normalizedEmail = dto.email.trim().toLowerCase();
     const user = await this.usersService.findByEmail(normalizedEmail);
 
-    // Generic error to prevent email enumeration
+    // Generic error to prevent email and account existence enumeration
     const invalidCredentialsError = new UnauthorizedException(
       'Invalid email or password',
     );
@@ -90,10 +92,9 @@ export class AuthService {
       throw invalidCredentialsError;
     }
 
+    // Inactive accounts receive generic error to prevent account enumeration
     if (!user.isActive) {
-      throw new UnauthorizedException(
-        'Account is inactive. Please contact support.',
-      );
+      throw invalidCredentialsError;
     }
 
     const secret = this.configService.getOrThrow<string>('JWT_ACCESS_SECRET');

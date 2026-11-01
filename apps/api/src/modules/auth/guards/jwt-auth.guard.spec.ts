@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtAuthGuard } from './jwt-auth.guard.js';
 import { Role } from '../../../generated/prisma/enums.js';
+import type { AuthenticatedUser } from '../decorators/current-user.decorator.js';
 
 describe('JwtAuthGuard', () => {
   let guard: JwtAuthGuard;
@@ -32,15 +33,22 @@ describe('JwtAuthGuard', () => {
   });
 
   interface MockRequest {
-    headers: { authorization?: string };
+    headers: { authorization?: string; cookie?: string };
+    cookies?: Record<string, string>;
     user?: AuthenticatedUser;
   }
 
-  const createMockContext = (authHeader?: string): ExecutionContext => {
+  const createMockContext = (
+    authHeader?: string,
+    cookieHeader?: string,
+    parsedCookies?: Record<string, string>,
+  ): ExecutionContext => {
     const request: MockRequest = {
       headers: {
         authorization: authHeader,
+        cookie: cookieHeader,
       },
+      cookies: parsedCookies,
       user: undefined,
     };
 
@@ -87,7 +95,55 @@ describe('JwtAuthGuard', () => {
     });
   });
 
-  it('throws UnauthorizedException when authorization header is missing', async () => {
+  it('allows access and attaches user when a valid cookie is provided via request.cookies', async () => {
+    reflector.getAllAndOverride.mockReturnValue(false);
+    const context = createMockContext(undefined, undefined, {
+      access_token: 'cookie-jwt-token',
+    });
+
+    jwtService.verifyAsync.mockResolvedValue({
+      sub: 'user-uuid-cookie',
+      email: 'cookie@example.com',
+      role: Role.DISPATCHER,
+    });
+
+    const result = await guard.canActivate(context);
+    expect(result).toBe(true);
+    expect(jwtService.verifyAsync).toHaveBeenCalledWith('cookie-jwt-token', {
+      secret: 'test-jwt-secret',
+      algorithms: ['HS256'],
+    });
+
+    const req = context.switchToHttp().getRequest<MockRequest>();
+    expect(req.user).toEqual({
+      id: 'user-uuid-cookie',
+      email: 'cookie@example.com',
+      role: Role.DISPATCHER,
+    });
+  });
+
+  it('allows access and parses cookie from headers.cookie when request.cookies is not pre-populated', async () => {
+    reflector.getAllAndOverride.mockReturnValue(false);
+    const context = createMockContext(
+      undefined,
+      'other_cookie=xyz; access_token=header-parsed-jwt; session=123',
+    );
+
+    jwtService.verifyAsync.mockResolvedValue({
+      sub: 'user-uuid-header',
+      email: 'header@example.com',
+      role: Role.COURIER,
+    });
+
+    const result = await guard.canActivate(context);
+    expect(result).toBe(true);
+    expect(jwtService.verifyAsync).toHaveBeenCalledWith('header-parsed-jwt', {
+      secret: 'test-jwt-secret',
+      algorithms: ['HS256'],
+    });
+  });
+
+  it('throws UnauthorizedException when authorization header and cookie are both missing', async () => {
     reflector.getAllAndOverride.mockReturnValue(false);
     const context = createMockContext(undefined);
 
@@ -107,9 +163,12 @@ describe('JwtAuthGuard', () => {
     );
   });
 
-  it('throws UnauthorizedException when token is invalid or expired', async () => {
+  it('throws UnauthorizedException when cookie token is invalid or expired', async () => {
     reflector.getAllAndOverride.mockReturnValue(false);
-    const context = createMockContext('Bearer expired-or-invalid-token');
+    const context = createMockContext(
+      undefined,
+      'access_token=expired-cookie-token',
+    );
 
     jwtService.verifyAsync.mockRejectedValue(new Error('jwt expired'));
 

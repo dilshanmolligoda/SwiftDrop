@@ -8,6 +8,7 @@ import { AuthService } from './auth.service.js';
 import { PasswordService } from './password.service.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 import { RolesGuard } from './guards/roles.guard.js';
+import { CsrfGuard } from './guards/csrf.guard.js';
 
 @Module({
   imports: [
@@ -29,7 +30,20 @@ import { RolesGuard } from './guards/roles.guard.js';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, PasswordService, JwtAuthGuard, RolesGuard],
-  exports: [AuthService, PasswordService, JwtAuthGuard, RolesGuard, JwtModule],
+  providers: [
+    AuthService,
+    PasswordService,
+    JwtAuthGuard,
+    RolesGuard,
+    CsrfGuard,
+  ],
+  exports: [
+    AuthService,
+    PasswordService,
+    JwtAuthGuard,
+    RolesGuard,
+    CsrfGuard,
+    JwtModule,
+  ],
 })
 export class AuthModule {}
