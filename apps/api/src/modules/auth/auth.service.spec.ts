@@ -90,6 +90,7 @@ describe('AuthService', () => {
         {
           secret: 'test-access-secret',
           expiresIn: 900,
+          algorithm: 'HS256',
         },
       );
       expect(response).toEqual({

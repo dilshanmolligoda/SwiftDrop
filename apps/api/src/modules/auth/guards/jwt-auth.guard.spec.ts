@@ -74,6 +74,10 @@ describe('JwtAuthGuard', () => {
 
     const result = await guard.canActivate(context);
     expect(result).toBe(true);
+    expect(jwtService.verifyAsync).toHaveBeenCalledWith('valid-jwt-token', {
+      secret: 'test-jwt-secret',
+      algorithms: ['HS256'],
+    });
 
     const req = context.switchToHttp().getRequest<MockRequest>();
     expect(req.user).toEqual({
@@ -108,6 +112,19 @@ describe('JwtAuthGuard', () => {
     const context = createMockContext('Bearer expired-or-invalid-token');
 
     jwtService.verifyAsync.mockRejectedValue(new Error('jwt expired'));
+
+    await expect(guard.canActivate(context)).rejects.toThrow(
+      new UnauthorizedException('Invalid or expired authorization token'),
+    );
+  });
+
+  it('throws UnauthorizedException when token uses an unsupported algorithm', async () => {
+    reflector.getAllAndOverride.mockReturnValue(false);
+    const context = createMockContext('Bearer token-with-unsupported-alg');
+
+    jwtService.verifyAsync.mockRejectedValue(
+      new Error('invalid algorithm: RS256 is not allowed'),
+    );
 
     await expect(guard.canActivate(context)).rejects.toThrow(
       new UnauthorizedException('Invalid or expired authorization token'),

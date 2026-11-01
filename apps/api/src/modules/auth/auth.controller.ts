@@ -5,7 +5,6 @@ import {
   HttpCode,
   HttpStatus,
   Post,
-  UseGuards,
 } from '@nestjs/common';
 import {
   AuthService,
@@ -13,7 +12,6 @@ import {
   type UserProfile,
 } from './auth.service.js';
 import { LoginDto } from './dto/login.dto.js';
-import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 import {
   CurrentUser,
   type AuthenticatedUser,
@@ -31,7 +29,6 @@ export class AuthController {
     return this.authService.login(dto);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Get('me')
   async getProfile(
     @CurrentUser() user: AuthenticatedUser,
