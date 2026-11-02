@@ -1,0 +1,140 @@
+.layoutContainer {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f9fafb;
+}
+
+.mainWrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.topHeader {
+  height: 64px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.mobileMenuButton {
+  display: none;
+  background: none;
+  border: none;
+  color: #374151;
+  cursor: pointer;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.breadcrumbHome {
+  display: flex;
+  align-items: center;
+  color: #4b5563;
+}
+
+.breadcrumbSeparator {
+  color: #9ca3af;
+}
+
+.breadcrumbCurrent {
+  color: #111827;
+  font-weight: 500;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.iconButton {
+  background: none;
+  border: none;
+  color: #4b5563;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s;
+}
+
+.iconButton:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.userDropdown {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background-color 0.15s;
+}
+
+.userDropdown:hover {
+  background-color: #f3f4f6;
+}
+
+.smallAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #dbeafe;
+  color: #1e40af;
+  font-size: 0.775rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.userFullName {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #111827;
+}
+
+.contentArea {
+  flex: 1;
+  padding: 28px;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .mobileMenuButton {
+    display: flex;
+  }
+
+  .topHeader {
+    padding: 0 16px;
+  }
+
+  .contentArea {
+    padding: 16px;
+  }
+}
+
