@@ -1,0 +1,17 @@
+{
+  "name": "mock-merchant",
+  "version": "0.0.1",
+  "description": "Demo merchant store: creates orders through the SwiftDrop merchant API and receives signed webhooks",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/main.js",
+    "dev": "tsc -p tsconfig.json && node dist/main.js",
+    "test": "tsc -p tsconfig.json && node --test \"dist/**/*.test.js\""
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.7.3"
+  }
+}
