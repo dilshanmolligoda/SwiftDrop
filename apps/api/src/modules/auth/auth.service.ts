@@ -19,6 +19,7 @@ import {
   VehicleType,
 } from '../../generated/prisma/enums.js';
 import type { JwtPayload } from './guards/jwt-auth.guard.js';
+import type { GoogleUserIdentity } from './google-auth.service.js';
 
 export interface UserSummary {
   id: string;
@@ -44,6 +45,7 @@ export interface UserProfile {
   role: Role;
   approvalStatus: ApprovalStatus;
   isActive: boolean;
+  isGoogleLinked?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -91,7 +93,7 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
-  private async createAuthSession(user: {
+  async createAuthSession(user: {
     id: string;
     email: string;
     fullName: string;
@@ -319,6 +321,192 @@ export class AuthService {
     }
   }
 
+  getRoleDashboardUrl(role: Role, approvalStatus: ApprovalStatus): string {
+    const webAppUrl = this.configService.get<string>(
+      'WEB_APP_URL',
+      'http://localhost:5173',
+    );
+    if (
+      approvalStatus === ApprovalStatus.PENDING ||
+      approvalStatus === ApprovalStatus.REJECTED
+    ) {
+      return `${webAppUrl}/application-status`;
+    }
+    switch (role) {
+      case Role.CUSTOMER:
+        return `${webAppUrl}/customer/dashboard`;
+      case Role.MERCHANT:
+        return `${webAppUrl}/merchant/dashboard`;
+      case Role.COURIER:
+        return `${webAppUrl}/courier/dashboard`;
+      case Role.ADMIN:
+      case Role.DISPATCHER:
+        return `${webAppUrl}/admin-landing`;
+      default:
+        return `${webAppUrl}/customer/dashboard`;
+    }
+  }
+
+  async resolveLinkUserDashboardUrl(userId?: string): Promise<string | null> {
+    if (!userId) {
+      return null;
+    }
+    try {
+      const user = await this.usersService.findById(userId);
+      if (!user || !user.isActive) {
+        return null;
+      }
+      return this.getRoleDashboardUrl(user.role, user.approvalStatus);
+    } catch {
+      return null;
+    }
+  }
+
+  async handleGoogleSignIn(identity: GoogleUserIdentity): Promise<
+    | {
+        type: 'authenticated';
+        loginResult: LoginResult;
+        redirectUrl: string;
+      }
+    | {
+        type: 'account_exists_link_required';
+        redirectUrl: string;
+      }
+    | {
+        type: 'account_deactivated';
+        redirectUrl: string;
+      }
+  > {
+    const webAppUrl = this.configService.get<string>(
+      'WEB_APP_URL',
+      'http://localhost:5173',
+    );
+
+    // 1. Find account using Google's verified sub (googleSubject)
+    const userByGoogle = await this.usersService.findByGoogleSubject(
+      identity.googleSubject,
+    );
+
+    if (userByGoogle) {
+      if (!userByGoogle.isActive) {
+        return {
+          type: 'account_deactivated',
+          redirectUrl: `${webAppUrl}/login?error=account_deactivated`,
+        };
+      }
+
+      const session = await this.createAuthSession({
+        id: userByGoogle.id,
+        email: userByGoogle.email,
+        fullName: userByGoogle.fullName,
+        role: userByGoogle.role,
+        approvalStatus: userByGoogle.approvalStatus,
+      });
+
+      const redirectUrl = this.getRoleDashboardUrl(
+        userByGoogle.role,
+        userByGoogle.approvalStatus,
+      );
+
+      return {
+        type: 'authenticated',
+        loginResult: session,
+        redirectUrl,
+      };
+    }
+
+    // 2. If not found by googleSubject, check if verified email belongs to an existing SwiftDrop account
+    const userByEmail = await this.usersService.findByEmail(identity.email);
+
+    if (userByEmail) {
+      // Do NOT automatically link. Require manual sign in first, then link from settings/dashboard.
+      return {
+        type: 'account_exists_link_required',
+        redirectUrl: `${webAppUrl}/login?error=account_exists_link_required`,
+      };
+    }
+
+    // 3. No existing account: create a new CUSTOMER account with APPROVED status
+    const newCustomer = await this.usersService.createGoogleCustomer({
+      email: identity.email,
+      fullName: identity.fullName,
+      googleSubject: identity.googleSubject,
+    });
+
+    const session = await this.createAuthSession({
+      id: newCustomer.id,
+      email: newCustomer.email,
+      fullName: newCustomer.fullName,
+      role: newCustomer.role,
+      approvalStatus: newCustomer.approvalStatus,
+    });
+
+    return {
+      type: 'authenticated',
+      loginResult: session,
+      redirectUrl: `${webAppUrl}/customer/dashboard`,
+    };
+  }
+
+  async handleGoogleLink(
+    userId: string,
+    identity: GoogleUserIdentity,
+  ): Promise<{ redirectUrl: string }> {
+    const webAppUrl = this.configService.get<string>(
+      'WEB_APP_URL',
+      'http://localhost:5173',
+    );
+
+    const currentUser = await this.usersService.findById(userId);
+    if (!currentUser || !currentUser.isActive) {
+      return {
+        redirectUrl: `${webAppUrl}/login?error=account_deactivated`,
+      };
+    }
+
+    const dashboardUrl = this.getRoleDashboardUrl(
+      currentUser.role,
+      currentUser.approvalStatus,
+    );
+
+    // Rule: Only allow linking when Google's verified email matches currently authenticated user's email
+    if (identity.email.toLowerCase() !== currentUser.email.toLowerCase()) {
+      return {
+        redirectUrl: `${dashboardUrl}?link_error=email_mismatch`,
+      };
+    }
+
+    // Rule: Never allow a Google identity already linked to another SwiftDrop account to be linked again
+    const existingGoogleUser = await this.usersService.findByGoogleSubject(
+      identity.googleSubject,
+    );
+    if (existingGoogleUser && existingGoogleUser.id !== currentUser.id) {
+      return {
+        redirectUrl: `${dashboardUrl}?link_error=google_already_linked`,
+      };
+    }
+
+    // Rule: Never overwrite an existing Google identity association
+    if (
+      currentUser.googleSubject &&
+      currentUser.googleSubject !== identity.googleSubject
+    ) {
+      return {
+        redirectUrl: `${dashboardUrl}?link_error=already_has_google`,
+      };
+    }
+
+    // Link the account
+    await this.usersService.linkGoogleSubject(
+      currentUser.id,
+      identity.googleSubject,
+    );
+
+    return {
+      redirectUrl: `${dashboardUrl}?link_success=google_connected`,
+    };
+  }
+
   async getProfile(userId: string): Promise<UserProfile> {
     const user = await this.usersService.findById(userId);
 
@@ -326,7 +514,7 @@ export class AuthService {
       throw new UnauthorizedException('User not found or account is inactive');
     }
 
-    return {
+    const profile: UserProfile = {
       id: user.id,
       email: user.email,
       fullName: user.fullName,
@@ -336,6 +524,12 @@ export class AuthService {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };
+
+    if (user.googleSubject) {
+      profile.isGoogleLinked = true;
+    }
+
+    return profile;
   }
 
   async getApplicationStatus(

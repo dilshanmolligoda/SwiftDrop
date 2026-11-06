@@ -29,6 +29,28 @@ export class UsersService {
     return this.usersRepository.findById(id);
   }
 
+  async findByGoogleSubject(googleSubject: string): Promise<User | null> {
+    if (!googleSubject) {
+      return null;
+    }
+    return this.usersRepository.findByGoogleSubject(googleSubject);
+  }
+
+  async createGoogleCustomer(data: {
+    email: string;
+    fullName: string;
+    googleSubject: string;
+  }): Promise<User> {
+    return this.usersRepository.createGoogleCustomer(data);
+  }
+
+  async linkGoogleSubject(
+    userId: string,
+    googleSubject: string,
+  ): Promise<User> {
+    return this.usersRepository.linkGoogleSubject(userId, googleSubject);
+  }
+
   async createCustomer(data: CreateCustomerData): Promise<User> {
     return this.usersRepository.createCustomer(data);
   }
