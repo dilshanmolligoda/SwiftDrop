@@ -13,6 +13,35 @@ interface AuthenticatedUser {
   approvalStatus: 'PENDING' | 'APPROVED' | 'REJECTED';
 }
 
+function getInitialOAuthError(): string | null {
+  try {
+    const searchParams = new URLSearchParams(window.location.search);
+    const oauthError = searchParams.get('error');
+    if (oauthError) {
+      switch (oauthError) {
+        case 'account_exists_link_required':
+          return 'An account with this email already exists. Please sign in with your email and password first, then connect your Google account from your dashboard.';
+        case 'google_not_configured':
+          return 'Google Sign-In is not currently configured on the server. Please sign in with your email and password.';
+        case 'access_denied':
+          return 'Google Sign-In was cancelled or access was denied.';
+        case 'account_deactivated':
+          return 'This account has been deactivated. Please contact support.';
+        case 'email_unverified':
+          return 'Your Google email address is not verified. Please verify it with Google and try again.';
+        case 'oauth_invalid_state':
+        case 'oauth_missing_state':
+          return 'Google authentication session expired or invalid. Please try again.';
+        default:
+          return 'Google Sign-In could not be completed. Please try again.';
+      }
+    }
+  } catch {
+    // fallback
+  }
+  return null;
+}
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -21,7 +50,7 @@ export default function LoginPage() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(getInitialOAuthError);
   const [sessionNotice, setSessionNotice] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
   const [authenticatedUser, setAuthenticatedUser] = useState<AuthenticatedUser | null>(null);
@@ -300,11 +329,13 @@ export default function LoginPage() {
         ) : (
           /* Form View */
           <>
-            {/* Google OAuth Button (Figma Reproduction, Non-Functional) */}
+            {/* Google OAuth Button */}
             <button
               type="button"
               className="login-google-btn"
-              onClick={() => showUnderDevelopmentNotice('Google Sign-In')}
+              onClick={() => {
+                window.location.href = `${env.apiBaseUrl}/auth/google`;
+              }}
               aria-label="Continue with Google"
             >
               <GoogleIcon size={18} />

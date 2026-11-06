@@ -55,6 +55,48 @@ export class UsersRepository {
     });
   }
 
+  async findByGoogleSubject(googleSubject: string): Promise<User | null> {
+    const trimmed = googleSubject?.trim();
+    if (!trimmed) {
+      return null;
+    }
+    return this.prisma.user.findUnique({
+      where: { googleSubject: trimmed },
+    });
+  }
+
+  async createGoogleCustomer(data: {
+    email: string;
+    fullName: string;
+    googleSubject: string;
+  }): Promise<User> {
+    const normalizedEmail = data.email.trim().toLowerCase();
+    return this.prisma.user.create({
+      data: {
+        email: normalizedEmail,
+        fullName: data.fullName.trim(),
+        googleSubject: data.googleSubject.trim(),
+        role: Role.CUSTOMER,
+        approvalStatus: ApprovalStatus.APPROVED,
+        isActive: true,
+        phoneNumber: null,
+        passwordHash: null,
+      },
+    });
+  }
+
+  async linkGoogleSubject(
+    userId: string,
+    googleSubject: string,
+  ): Promise<User> {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        googleSubject: googleSubject.trim(),
+      },
+    });
+  }
+
   async createCustomer(data: CreateCustomerData): Promise<User> {
     const normalizedEmail = data.email.trim().toLowerCase();
     return this.prisma.user.create({
