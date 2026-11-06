@@ -5,6 +5,11 @@ import './index.css'
 import App from './App.tsx'
 import HealthPage from './features/health/HealthPage.tsx'
 import LoginPage from './features/auth/LoginPage.tsx'
+import RegisterRoleSelectPage from './features/auth/RegisterRoleSelectPage.tsx'
+import RegisterCustomerPage from './features/auth/RegisterCustomerPage.tsx'
+import RegisterMerchantPage from './features/auth/RegisterMerchantPage.tsx'
+import RegisterCourierPage from './features/auth/RegisterCourierPage.tsx'
+import ApplicationStatusPage from './features/auth/ApplicationStatusPage.tsx'
 import { CustomerProfileProvider } from './features/customer/context/CustomerProfileProvider.tsx'
 import { CustomerDeliveryProvider } from './features/customer/context/CustomerDeliveryProvider.tsx'
 import { CustomerLayout } from './features/customer/components/CustomerLayout.tsx'
@@ -13,6 +18,10 @@ import { AddressBookPage } from './features/customer/pages/AddressBookPage.tsx'
 import { AdminLayout } from './components/layout/AdminLayout.tsx'
 import { AdminPlaceholderPage } from './features/admin/pages/AdminPlaceholderPage.tsx'
 import { AdminSettingsPage } from './features/admin/pages/AdminSettingsPage.tsx'
+import CustomerDashboard from './features/customer/pages/CustomerDashboard';
+import MerchantDashboard from './features/merchant/pages/MerchantDashboard';
+import CourierDashboard from './features/courier/pages/CourierDashboard';
+import AdminLandingPage from './features/admin/pages/AdminLandingPage';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -22,6 +31,11 @@ createRoot(document.getElementById('root')!).render(
           <Routes>
             <Route path="/" element={<LoginPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterRoleSelectPage />} />
+            <Route path="/register/customer" element={<RegisterCustomerPage />} />
+            <Route path="/register/merchant" element={<RegisterMerchantPage />} />
+            <Route path="/register/courier" element={<RegisterCourierPage />} />
+            <Route path="/application-status" element={<ApplicationStatusPage />} />
             <Route
               path="/settings"
               element={
@@ -57,6 +71,11 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/health" element={<HealthPage />} />
             <Route path="/welcome" element={<App />} />
             <Route path="/vite-demo" element={<App />} />
+            {/* Temporary role‑specific dashboards */}
+            <Route path="/customer/dashboard" element={<CustomerDashboard />} />
+            <Route path="/merchant/dashboard" element={<MerchantDashboard />} />
+            <Route path="/courier/dashboard" element={<CourierDashboard />} />
+            <Route path="/admin-landing" element={<AdminLandingPage />} />
 
             {/* Member 7 Admin & Dispatcher Routes */}
             <Route path="/admin" element={<AdminLayout />}>

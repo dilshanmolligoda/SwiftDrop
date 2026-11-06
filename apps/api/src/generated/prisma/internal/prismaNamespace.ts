@@ -396,7 +396,9 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 
 export const ModelName = {
-  User: 'User'
+  User: 'User',
+  MerchantProfile: 'MerchantProfile',
+  CourierProfile: 'CourierProfile'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -412,7 +414,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user"
+    modelProps: "user" | "merchantProfile" | "courierProfile"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -490,6 +492,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    MerchantProfile: {
+      payload: Prisma.$MerchantProfilePayload<ExtArgs>
+      fields: Prisma.MerchantProfileFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.MerchantProfileFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantProfilePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.MerchantProfileFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantProfilePayload>
+        }
+        findFirst: {
+          args: Prisma.MerchantProfileFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantProfilePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.MerchantProfileFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantProfilePayload>
+        }
+        findMany: {
+          args: Prisma.MerchantProfileFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantProfilePayload>[]
+        }
+        create: {
+          args: Prisma.MerchantProfileCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantProfilePayload>
+        }
+        createMany: {
+          args: Prisma.MerchantProfileCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.MerchantProfileCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantProfilePayload>[]
+        }
+        delete: {
+          args: Prisma.MerchantProfileDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantProfilePayload>
+        }
+        update: {
+          args: Prisma.MerchantProfileUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantProfilePayload>
+        }
+        deleteMany: {
+          args: Prisma.MerchantProfileDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.MerchantProfileUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.MerchantProfileUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantProfilePayload>[]
+        }
+        upsert: {
+          args: Prisma.MerchantProfileUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantProfilePayload>
+        }
+        aggregate: {
+          args: Prisma.MerchantProfileAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMerchantProfile>
+        }
+        groupBy: {
+          args: Prisma.MerchantProfileGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MerchantProfileGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.MerchantProfileCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MerchantProfileCountAggregateOutputType> | number
+        }
+      }
+    }
+    CourierProfile: {
+      payload: Prisma.$CourierProfilePayload<ExtArgs>
+      fields: Prisma.CourierProfileFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CourierProfileFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CourierProfilePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CourierProfileFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CourierProfilePayload>
+        }
+        findFirst: {
+          args: Prisma.CourierProfileFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CourierProfilePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CourierProfileFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CourierProfilePayload>
+        }
+        findMany: {
+          args: Prisma.CourierProfileFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CourierProfilePayload>[]
+        }
+        create: {
+          args: Prisma.CourierProfileCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CourierProfilePayload>
+        }
+        createMany: {
+          args: Prisma.CourierProfileCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CourierProfileCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CourierProfilePayload>[]
+        }
+        delete: {
+          args: Prisma.CourierProfileDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CourierProfilePayload>
+        }
+        update: {
+          args: Prisma.CourierProfileUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CourierProfilePayload>
+        }
+        deleteMany: {
+          args: Prisma.CourierProfileDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CourierProfileUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CourierProfileUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CourierProfilePayload>[]
+        }
+        upsert: {
+          args: Prisma.CourierProfileUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CourierProfilePayload>
+        }
+        aggregate: {
+          args: Prisma.CourierProfileAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCourierProfile>
+        }
+        groupBy: {
+          args: Prisma.CourierProfileGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CourierProfileGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CourierProfileCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CourierProfileCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -533,15 +683,46 @@ export const UserScalarFieldEnum = {
   id: 'id',
   email: 'email',
   fullName: 'fullName',
+  phoneNumber: 'phoneNumber',
   passwordHash: 'passwordHash',
   role: 'role',
   approvalStatus: 'approvalStatus',
   isActive: 'isActive',
+  googleSubject: 'googleSubject',
+  reviewedAt: 'reviewedAt',
+  reviewedBy: 'reviewedBy',
+  rejectionReason: 'rejectionReason',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const MerchantProfileScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  businessName: 'businessName',
+  businessAddress: 'businessAddress',
+  businessType: 'businessType',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MerchantProfileScalarFieldEnum = (typeof MerchantProfileScalarFieldEnum)[keyof typeof MerchantProfileScalarFieldEnum]
+
+
+export const CourierProfileScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  vehicleType: 'vehicleType',
+  licensePlate: 'licensePlate',
+  licenseNumber: 'licenseNumber',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CourierProfileScalarFieldEnum = (typeof CourierProfileScalarFieldEnum)[keyof typeof CourierProfileScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -634,6 +815,20 @@ export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel
  * Reference to a field of type 'DateTime[]'
  */
 export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
+    
+
+
+/**
+ * Reference to a field of type 'VehicleType'
+ */
+export type EnumVehicleTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'VehicleType'>
+    
+
+
+/**
+ * Reference to a field of type 'VehicleType[]'
+ */
+export type ListEnumVehicleTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'VehicleType[]'>
     
 
 
@@ -802,6 +997,8 @@ export interface PrismaClientOptionsWithAdapter extends PrismaClientBaseOptions 
 export type PrismaClientOptions = PrismaClientOptionsWithAccelerateUrl | PrismaClientOptionsWithAdapter
 export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
+  merchantProfile?: Prisma.MerchantProfileOmit
+  courierProfile?: Prisma.CourierProfileOmit
 }
 
 /* Types for Logging */

@@ -7,6 +7,7 @@ import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { PasswordService } from './password.service.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
+import { ApprovalGuard } from './guards/approval.guard.js';
 import { RolesGuard } from './guards/roles.guard.js';
 import { CsrfGuard } from './guards/csrf.guard.js';
 
@@ -34,6 +35,7 @@ import { CsrfGuard } from './guards/csrf.guard.js';
     AuthService,
     PasswordService,
     JwtAuthGuard,
+    ApprovalGuard,
     RolesGuard,
     CsrfGuard,
   ],
@@ -41,6 +43,7 @@ import { CsrfGuard } from './guards/csrf.guard.js';
     AuthService,
     PasswordService,
     JwtAuthGuard,
+    ApprovalGuard,
     RolesGuard,
     CsrfGuard,
     JwtModule,

@@ -26,3 +26,13 @@ export const ApprovalStatus = {
 } as const
 
 export type ApprovalStatus = (typeof ApprovalStatus)[keyof typeof ApprovalStatus]
+
+
+export const VehicleType = {
+  BICYCLE: 'BICYCLE',
+  MOTORCYCLE: 'MOTORCYCLE',
+  CAR: 'CAR',
+  VAN: 'VAN'
+} as const
+
+export type VehicleType = (typeof VehicleType)[keyof typeof VehicleType]

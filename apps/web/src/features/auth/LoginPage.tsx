@@ -1,4 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { env } from '../../lib/env';
 import { SwiftDropLogo } from './components/SwiftDropLogo';
 import { GoogleIcon } from './components/GoogleIcon';
@@ -9,9 +10,11 @@ interface AuthenticatedUser {
   email: string;
   fullName: string;
   role: 'CUSTOMER' | 'MERCHANT' | 'COURIER' | 'DISPATCHER' | 'ADMIN';
+  approvalStatus: 'PENDING' | 'APPROVED' | 'REJECTED';
 }
 
 export default function LoginPage() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -157,6 +160,31 @@ export default function LoginPage() {
       setAuthenticatedUser(userProfile);
       setPassword('');
       setFieldErrors({});
+
+      if (userProfile.approvalStatus === 'PENDING' || userProfile.approvalStatus === 'REJECTED') {
+        navigate('/application-status', { replace: true });
+        return;
+      }
+
+      if (userProfile.role === 'CUSTOMER') {
+        navigate('/customer/dashboard', { replace: true });
+        return;
+      }
+
+      if (userProfile.role === 'MERCHANT') {
+        navigate('/merchant/dashboard', { replace: true });
+        return;
+      }
+
+      if (userProfile.role === 'COURIER') {
+        navigate('/courier/dashboard', { replace: true });
+        return;
+      }
+
+      if (userProfile.role === 'ADMIN' || userProfile.role === 'DISPATCHER') {
+        navigate('/admin-landing', { replace: true });
+        return;
+      }
     } catch {
       setErrorMessage('Unable to connect to SwiftDrop server. Please ensure the backend is running.');
     } finally {
@@ -437,13 +465,9 @@ export default function LoginPage() {
             {/* Register Link */}
             <footer className="login-card__footer">
               <span>Don't have an account?</span>
-              <button
-                type="button"
-                className="login-register-btn"
-                onClick={() => showUnderDevelopmentNotice('Account registration')}
-              >
+              <Link to="/register" className="login-register-btn" style={{ textDecoration: 'none' }}>
                 Register
-              </button>
+              </Link>
             </footer>
           </>
         )}
