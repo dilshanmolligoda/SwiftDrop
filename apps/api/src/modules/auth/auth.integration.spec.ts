@@ -16,7 +16,11 @@ import request from 'supertest';
 import type { App } from 'supertest/types';
 import { AppController } from '../../app.controller.js';
 import { AppService } from '../../app.service.js';
-import { Role, ApprovalStatus } from '../../generated/prisma/enums.js';
+import {
+  Role,
+  ApprovalStatus,
+  VehicleType,
+} from '../../generated/prisma/enums.js';
 import { UsersService } from '../users/users.service.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
@@ -24,6 +28,7 @@ import { CurrentUser } from './decorators/current-user.decorator.js';
 import { Public } from './decorators/public.decorator.js';
 import { Roles } from './decorators/roles.decorator.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
+import { ApprovalGuard } from './guards/approval.guard.js';
 import { RolesGuard } from './guards/roles.guard.js';
 import { CsrfGuard } from './guards/csrf.guard.js';
 import { PasswordService } from './password.service.js';
@@ -76,13 +81,33 @@ class TestRoleController {
 
 describe('Global Authentication and Authorization (Integration)', () => {
   let app: INestApplication<App>;
-  let usersService: { findById: jest.Mock; findByEmail: jest.Mock };
+  let usersService: {
+    findById: jest.Mock;
+    findByEmail: jest.Mock;
+    createCustomer: jest.Mock;
+    createMerchant: jest.Mock;
+    createCourier: jest.Mock;
+  };
   let passwordService: PasswordService;
 
   beforeAll(async () => {
     usersService = {
-      findById: jest.fn(),
+      findById: jest.fn().mockImplementation((id: string) =>
+        Promise.resolve({
+          id,
+          email: `${id}@swiftdrop.local`,
+          fullName: 'Default Approved User',
+          role: Role.ADMIN,
+          approvalStatus: ApprovalStatus.APPROVED,
+          isActive: true,
+          createdAt: new Date('2026-01-01T00:00:00Z'),
+          updatedAt: new Date('2026-01-01T00:00:00Z'),
+        }),
+      ),
       findByEmail: jest.fn(),
+      createCustomer: jest.fn(),
+      createMerchant: jest.fn(),
+      createCourier: jest.fn(),
     };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -113,9 +138,10 @@ describe('Global Authentication and Authorization (Integration)', () => {
         AuthService,
         PasswordService,
         { provide: UsersService, useValue: usersService },
-        // Execution order: CsrfGuard first, then JwtAuthGuard, then RolesGuard
+        // Execution order: CsrfGuard first, then JwtAuthGuard, then ApprovalGuard, then RolesGuard
         { provide: APP_GUARD, useClass: CsrfGuard },
         { provide: APP_GUARD, useClass: JwtAuthGuard },
+        { provide: APP_GUARD, useClass: ApprovalGuard },
         { provide: APP_GUARD, useClass: RolesGuard },
       ],
     }).compile();
@@ -207,6 +233,7 @@ describe('Global Authentication and Authorization (Integration)', () => {
         email: 'dispatcher@swiftdrop.local',
         fullName: 'Demo Dispatcher',
         role: Role.DISPATCHER,
+        approvalStatus: ApprovalStatus.APPROVED,
       });
 
       // Verify Set-Cookie header contains HTTP-only cookie with correct attributes
@@ -684,6 +711,404 @@ describe('Global Authentication and Authorization (Integration)', () => {
 
       const body = res.body as ErrorResponse;
       expect(body.message).toBe('Missing authorization token');
+    });
+  });
+
+  describe('User Registration Endpoints', () => {
+    describe('POST /auth/register/customer', () => {
+      it('successfully registers customer, sets HTTP-only cookie, and returns safe user summary', async () => {
+        usersService.findByEmail.mockResolvedValueOnce(null);
+        usersService.createCustomer.mockResolvedValueOnce({
+          id: 'new-cust-id',
+          email: 'newcustomer@swiftdrop.local',
+          fullName: 'New Customer',
+          phoneNumber: '+94771234567',
+          passwordHash: '$2b$12$fakeHash',
+          role: Role.CUSTOMER,
+          approvalStatus: ApprovalStatus.APPROVED,
+          isActive: true,
+          googleSubject: null,
+          reviewedAt: null,
+          reviewedBy: null,
+          rejectionReason: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+
+        const res = await request(getHttpApp())
+          .post('/auth/register/customer')
+          .set('Origin', 'http://localhost:5173')
+          .send({
+            fullName: 'New Customer',
+            email: 'newcustomer@swiftdrop.local',
+            phoneNumber: '0771234567',
+            password: 'ValidPassword123!',
+          })
+          .expect(201);
+
+        const body = res.body as Record<string, unknown>;
+        expect(body['accessToken']).toBeUndefined();
+        expect(body['expiresIn']).toBe(900);
+        expect(body['user']).toEqual({
+          id: 'new-cust-id',
+          email: 'newcustomer@swiftdrop.local',
+          fullName: 'New Customer',
+          role: Role.CUSTOMER,
+          approvalStatus: ApprovalStatus.APPROVED,
+        });
+
+        const setCookieHeader = res.headers['set-cookie'];
+        expect(setCookieHeader).toBeDefined();
+        const cookieStr = Array.isArray(setCookieHeader)
+          ? setCookieHeader.join('; ')
+          : String(setCookieHeader);
+        expect(cookieStr).toContain(AUTH_COOKIE_NAME);
+        expect(cookieStr.toLowerCase()).toContain('httponly');
+      });
+
+      it('rejects registration with HTTP 400 when password is under 12 characters', async () => {
+        const res = await request(getHttpApp())
+          .post('/auth/register/customer')
+          .set('Origin', 'http://localhost:5173')
+          .send({
+            fullName: 'Short Pass User',
+            email: 'shortpass@swiftdrop.local',
+            phoneNumber: '0771234567',
+            password: 'short',
+          })
+          .expect(400);
+
+        const body = res.body as ErrorResponse;
+        expect(Array.isArray(body.message)).toBe(true);
+        expect(
+          (body.message as string[]).some((m) =>
+            m.includes('at least 12 characters'),
+          ),
+        ).toBe(true);
+      });
+
+      it('rejects registration with HTTP 409 Conflict when email is already registered', async () => {
+        usersService.findByEmail.mockResolvedValueOnce({
+          id: 'existing-id',
+          email: 'existing@swiftdrop.local',
+          fullName: 'Existing User',
+          passwordHash: '$2b$12$fake',
+          role: Role.CUSTOMER,
+          approvalStatus: ApprovalStatus.APPROVED,
+          isActive: true,
+        });
+
+        const res = await request(getHttpApp())
+          .post('/auth/register/customer')
+          .set('Origin', 'http://localhost:5173')
+          .send({
+            fullName: 'Duplicate Email User',
+            email: 'existing@swiftdrop.local',
+            phoneNumber: '0771234567',
+            password: 'ValidPassword123!',
+          })
+          .expect(409);
+
+        const body = res.body as ErrorResponse;
+        expect(body.message).toBe(
+          'An account with this email address already exists',
+        );
+      });
+    });
+
+    describe('POST /auth/register/merchant', () => {
+      it('successfully registers merchant with PENDING approval status', async () => {
+        usersService.findByEmail.mockResolvedValueOnce(null);
+        usersService.createMerchant.mockResolvedValueOnce({
+          id: 'new-merch-id',
+          email: 'merchant@swiftdrop.local',
+          fullName: 'Store Owner',
+          phoneNumber: '+94711234567',
+          role: Role.MERCHANT,
+          approvalStatus: ApprovalStatus.PENDING,
+          isActive: true,
+          merchantProfile: {
+            id: 'profile-id',
+            userId: 'new-merch-id',
+            businessName: 'Apex Store',
+            businessAddress: '123 Galle Rd, Colombo',
+            businessType: 'Retail',
+          },
+        });
+
+        const res = await request(getHttpApp())
+          .post('/auth/register/merchant')
+          .set('Origin', 'http://localhost:5173')
+          .send({
+            fullName: 'Store Owner',
+            email: 'merchant@swiftdrop.local',
+            phoneNumber: '0711234567',
+            password: 'ValidPassword123!',
+            businessName: 'Apex Store',
+            businessAddress: '123 Galle Rd, Colombo',
+            businessType: 'Retail',
+          })
+          .expect(201);
+
+        const body = res.body as Record<string, unknown>;
+        expect(body['user']).toEqual({
+          id: 'new-merch-id',
+          email: 'merchant@swiftdrop.local',
+          fullName: 'Store Owner',
+          role: Role.MERCHANT,
+          approvalStatus: ApprovalStatus.PENDING,
+        });
+      });
+    });
+
+    describe('POST /auth/register/courier', () => {
+      it('registers motorized courier with license plate and driving licence', async () => {
+        usersService.findByEmail.mockResolvedValueOnce(null);
+        usersService.createCourier.mockResolvedValueOnce({
+          id: 'new-courier-id',
+          email: 'rider@swiftdrop.local',
+          fullName: 'Express Rider',
+          phoneNumber: '+94751234567',
+          role: Role.COURIER,
+          approvalStatus: ApprovalStatus.PENDING,
+          isActive: true,
+          courierProfile: {
+            id: 'courier-profile-id',
+            userId: 'new-courier-id',
+            vehicleType: VehicleType.MOTORCYCLE,
+            licensePlate: 'WP-BEE-5544',
+            licenseNumber: 'DL99887766',
+          },
+        });
+
+        const res = await request(getHttpApp())
+          .post('/auth/register/courier')
+          .set('Origin', 'http://localhost:5173')
+          .send({
+            fullName: 'Express Rider',
+            email: 'rider@swiftdrop.local',
+            phoneNumber: '0751234567',
+            password: 'ValidPassword123!',
+            vehicleType: VehicleType.MOTORCYCLE,
+            licensePlate: 'WP-BEE-5544',
+            licenseNumber: 'DL99887766',
+          })
+          .expect(201);
+
+        const body = res.body as Record<string, unknown>;
+        expect(body['user']).toEqual({
+          id: 'new-courier-id',
+          email: 'rider@swiftdrop.local',
+          fullName: 'Express Rider',
+          role: Role.COURIER,
+          approvalStatus: ApprovalStatus.PENDING,
+        });
+      });
+
+      it('rejects motorized courier with HTTP 400 when licensePlate is missing', async () => {
+        const res = await request(getHttpApp())
+          .post('/auth/register/courier')
+          .set('Origin', 'http://localhost:5173')
+          .send({
+            fullName: 'Incomplete Rider',
+            email: 'incompleterider@swiftdrop.local',
+            phoneNumber: '0751234567',
+            password: 'ValidPassword123!',
+            vehicleType: VehicleType.MOTORCYCLE,
+            licenseNumber: 'DL99887766',
+          })
+          .expect(400);
+
+        const body = res.body as ErrorResponse;
+        expect(
+          (body.message as string[]).some((m) =>
+            m.includes('Vehicle registration number is required'),
+          ),
+        ).toBe(true);
+      });
+
+      it('registers bicycle courier without requiring plate or licence', async () => {
+        usersService.findByEmail.mockResolvedValueOnce(null);
+        usersService.createCourier.mockResolvedValueOnce({
+          id: 'bike-courier-id',
+          email: 'biker@swiftdrop.local',
+          fullName: 'Bike Courier',
+          phoneNumber: '+94751234567',
+          role: Role.COURIER,
+          approvalStatus: ApprovalStatus.PENDING,
+          isActive: true,
+        });
+
+        const res = await request(getHttpApp())
+          .post('/auth/register/courier')
+          .set('Origin', 'http://localhost:5173')
+          .send({
+            fullName: 'Bike Courier',
+            email: 'biker@swiftdrop.local',
+            phoneNumber: '0751234567',
+            password: 'ValidPassword123!',
+            vehicleType: VehicleType.BICYCLE,
+          })
+          .expect(201);
+
+        const body = res.body as Record<string, unknown>;
+        expect(body['user']).toEqual({
+          id: 'bike-courier-id',
+          email: 'biker@swiftdrop.local',
+          fullName: 'Bike Courier',
+          role: Role.COURIER,
+          approvalStatus: ApprovalStatus.PENDING,
+        });
+      });
+    });
+  });
+
+  describe('Approval Status and Restricted Session Behavior', () => {
+    it('GET /auth/application-status returns status details for authenticated applicant', async () => {
+      const pendingToken = createToken({
+        sub: 'pending-merch-1',
+        email: 'applicant@swiftdrop.local',
+        role: Role.MERCHANT,
+        approvalStatus: ApprovalStatus.PENDING,
+      });
+
+      const pendingApplicant = {
+        id: 'pending-merch-1',
+        email: 'applicant@swiftdrop.local',
+        fullName: 'Pending Applicant',
+        role: Role.MERCHANT,
+        approvalStatus: ApprovalStatus.PENDING,
+        isActive: true,
+        createdAt: new Date('2026-03-01T08:00:00Z'),
+        reviewedAt: null,
+        rejectionReason: null,
+      };
+      usersService.findById.mockResolvedValue(pendingApplicant);
+
+      const res = await request(getHttpApp())
+        .get('/auth/application-status')
+        .set('Authorization', `Bearer ${pendingToken}`)
+        .expect(200);
+
+      const body = res.body as Record<string, unknown>;
+      expect(body['approvalStatus']).toBe(ApprovalStatus.PENDING);
+      expect(body['status']).toBe(ApprovalStatus.PENDING);
+      expect(body['role']).toBe(Role.MERCHANT);
+      expect(body['submittedAt']).toBeDefined();
+      expect(body['reviewedAt']).toBeNull();
+      expect(body['rejectionReason']).toBeNull();
+      expect(body['reviewedBy']).toBeUndefined();
+    });
+
+    it('PENDING applicant CAN access GET /auth/me without 403 Forbidden', async () => {
+      const pendingToken = createToken({
+        sub: 'pending-courier-1',
+        email: 'pendingcourier@swiftdrop.local',
+        role: Role.COURIER,
+        approvalStatus: ApprovalStatus.PENDING,
+      });
+
+      const pendingCourier = {
+        id: 'pending-courier-1',
+        email: 'pendingcourier@swiftdrop.local',
+        fullName: 'Pending Courier',
+        role: Role.COURIER,
+        approvalStatus: ApprovalStatus.PENDING,
+        isActive: true,
+        createdAt: new Date('2026-03-01T08:00:00Z'),
+        updatedAt: new Date('2026-03-01T08:00:00Z'),
+      };
+      usersService.findById.mockResolvedValue(pendingCourier);
+
+      const res = await request(getHttpApp())
+        .get('/auth/me')
+        .set('Authorization', `Bearer ${pendingToken}`)
+        .expect(200);
+
+      const body = res.body as Record<string, unknown>;
+      expect(body['approvalStatus']).toBe(ApprovalStatus.PENDING);
+    });
+
+    it('PENDING applicant is BLOCKED with 403 Forbidden when trying to access normal protected routes', async () => {
+      const pendingToken = createToken({
+        sub: 'pending-courier-1',
+        email: 'pendingcourier@swiftdrop.local',
+        role: Role.COURIER,
+        approvalStatus: ApprovalStatus.PENDING,
+      });
+
+      usersService.findById.mockResolvedValueOnce({
+        id: 'pending-courier-1',
+        email: 'pendingcourier@swiftdrop.local',
+        fullName: 'Pending Courier',
+        role: Role.COURIER,
+        approvalStatus: ApprovalStatus.PENDING,
+        isActive: true,
+      });
+
+      const res = await request(getHttpApp())
+        .get('/test-role/authenticated')
+        .set('Authorization', `Bearer ${pendingToken}`)
+        .expect(403);
+
+      const body = res.body as ErrorResponse;
+      expect(body.message).toBe(
+        'Account approval is required to access this resource',
+      );
+    });
+
+    it('REJECTED applicant is BLOCKED with 403 Forbidden when trying to access normal protected routes', async () => {
+      const rejectedToken = createToken({
+        sub: 'rejected-merch-1',
+        email: 'rejected@swiftdrop.local',
+        role: Role.MERCHANT,
+        approvalStatus: ApprovalStatus.REJECTED,
+      });
+
+      usersService.findById.mockResolvedValueOnce({
+        id: 'rejected-merch-1',
+        email: 'rejected@swiftdrop.local',
+        fullName: 'Rejected Merchant',
+        role: Role.MERCHANT,
+        approvalStatus: ApprovalStatus.REJECTED,
+        isActive: true,
+      });
+
+      const res = await request(getHttpApp())
+        .get('/test-role/authenticated')
+        .set('Authorization', `Bearer ${rejectedToken}`)
+        .expect(403);
+
+      const body = res.body as ErrorResponse;
+      expect(body.message).toBe(
+        'Account approval is required to access this resource',
+      );
+    });
+
+    it('APPROVED user can access normal protected routes', async () => {
+      const approvedToken = createToken({
+        sub: 'approved-user-1',
+        email: 'approved@swiftdrop.local',
+        role: Role.CUSTOMER,
+        approvalStatus: ApprovalStatus.APPROVED,
+      });
+
+      usersService.findById.mockResolvedValueOnce({
+        id: 'approved-user-1',
+        email: 'approved@swiftdrop.local',
+        fullName: 'Approved Customer',
+        role: Role.CUSTOMER,
+        approvalStatus: ApprovalStatus.APPROVED,
+        isActive: true,
+      });
+
+      const res = await request(getHttpApp())
+        .get('/test-role/authenticated')
+        .set('Authorization', `Bearer ${approvedToken}`)
+        .expect(200);
+
+      const body = res.body as Record<string, unknown>;
+      expect(body['message']).toBe('authenticated-ok');
     });
   });
 });

@@ -1,16 +1,30 @@
-import { UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService, parseTtlToSeconds } from './auth.service.js';
 import { PasswordService } from './password.service.js';
 import { UsersService } from '../users/users.service.js';
-import { Role, ApprovalStatus } from '../../generated/prisma/enums.js';
+import {
+  Role,
+  ApprovalStatus,
+  VehicleType,
+} from '../../generated/prisma/enums.js';
 import type { User } from '../../generated/prisma/client.js';
 
 describe('AuthService', () => {
   let authService: AuthService;
-  let usersService: { findByEmail: jest.Mock; findById: jest.Mock };
+  let usersService: {
+    findByEmail: jest.Mock;
+    findById: jest.Mock;
+    createCustomer: jest.Mock;
+    createMerchant: jest.Mock;
+    createCourier: jest.Mock;
+  };
   let passwordService: { verify: jest.Mock; hash: jest.Mock };
   let jwtService: { signAsync: jest.Mock };
   let configService: { getOrThrow: jest.Mock; get: jest.Mock };
@@ -31,6 +45,9 @@ describe('AuthService', () => {
     usersService = {
       findByEmail: jest.fn(),
       findById: jest.fn(),
+      createCustomer: jest.fn(),
+      createMerchant: jest.fn(),
+      createCourier: jest.fn(),
     };
     passwordService = {
       verify: jest.fn(),
@@ -86,6 +103,7 @@ describe('AuthService', () => {
           sub: validUser.id,
           email: validUser.email,
           role: validUser.role,
+          approvalStatus: validUser.approvalStatus,
         },
         {
           secret: 'test-access-secret',
@@ -102,6 +120,7 @@ describe('AuthService', () => {
           email: validUser.email,
           fullName: validUser.fullName,
           role: validUser.role,
+          approvalStatus: validUser.approvalStatus,
         },
       });
     });
@@ -228,6 +247,230 @@ describe('AuthService', () => {
       await expect(authService.getProfile(validUser.id)).rejects.toThrow(
         new UnauthorizedException('User not found or account is inactive'),
       );
+    });
+  });
+
+  describe('registerCustomer', () => {
+    it('creates customer with normalized email/phone, hashes password, and returns auth session', async () => {
+      usersService.findByEmail.mockResolvedValue(null);
+      passwordService.hash.mockResolvedValue('$2b$12$hashedRegisteredPassword');
+      jwtService.signAsync.mockResolvedValue('signed-customer-token');
+
+      const createdUser: User = {
+        ...validUser,
+        id: 'new-customer-uuid',
+        email: 'newcustomer@example.com',
+        fullName: 'New Customer',
+        role: Role.CUSTOMER,
+        approvalStatus: ApprovalStatus.APPROVED,
+      };
+      usersService.createCustomer.mockResolvedValue(createdUser);
+
+      const result = await authService.registerCustomer({
+        fullName: 'New Customer',
+        email: '  NewCustomer@Example.COM ',
+        phoneNumber: '077 123 4567',
+        password: 'securePassword123!',
+      });
+
+      expect(usersService.findByEmail).toHaveBeenCalledWith(
+        'newcustomer@example.com',
+      );
+      expect(passwordService.hash).toHaveBeenCalledWith('securePassword123!');
+      expect(usersService.createCustomer).toHaveBeenCalledWith({
+        email: 'newcustomer@example.com',
+        fullName: 'New Customer',
+        phoneNumber: '+94771234567',
+        passwordHash: '$2b$12$hashedRegisteredPassword',
+      });
+      expect(result.user.approvalStatus).toBe(ApprovalStatus.APPROVED);
+      expect(result.user.role).toBe(Role.CUSTOMER);
+      expect(result.accessToken).toBe('signed-customer-token');
+    });
+
+    it('throws ConflictException when email is already registered', async () => {
+      usersService.findByEmail.mockResolvedValue(validUser);
+
+      await expect(
+        authService.registerCustomer({
+          fullName: 'Test User',
+          email: 'user@example.com',
+          phoneNumber: '0771234567',
+          password: 'securePassword123!',
+        }),
+      ).rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe('registerMerchant', () => {
+    it('creates merchant and profile in transaction with PENDING status', async () => {
+      usersService.findByEmail.mockResolvedValue(null);
+      passwordService.hash.mockResolvedValue('$2b$12$hashedMerchantPassword');
+      jwtService.signAsync.mockResolvedValue('signed-merchant-token');
+
+      const createdMerchant = {
+        ...validUser,
+        id: 'merchant-uuid',
+        email: 'store@example.com',
+        role: Role.MERCHANT,
+        approvalStatus: ApprovalStatus.PENDING,
+        merchantProfile: {
+          id: 'mp-1',
+          userId: 'merchant-uuid',
+          businessName: 'My Store',
+          businessAddress: 'Colombo 03',
+          businessType: 'Retail',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      };
+      usersService.createMerchant.mockResolvedValue(createdMerchant);
+
+      const result = await authService.registerMerchant({
+        fullName: 'Merchant Owner',
+        email: 'store@example.com',
+        phoneNumber: '0712345678',
+        password: 'merchantPassword123!',
+        businessName: 'My Store',
+        businessAddress: 'Colombo 03',
+        businessType: 'Retail',
+      });
+
+      expect(usersService.createMerchant).toHaveBeenCalledWith({
+        email: 'store@example.com',
+        fullName: 'Merchant Owner',
+        phoneNumber: '+94712345678',
+        passwordHash: '$2b$12$hashedMerchantPassword',
+        businessName: 'My Store',
+        businessAddress: 'Colombo 03',
+        businessType: 'Retail',
+      });
+      expect(result.user.approvalStatus).toBe(ApprovalStatus.PENDING);
+      expect(result.user.role).toBe(Role.MERCHANT);
+    });
+  });
+
+  describe('registerCourier', () => {
+    it('creates motorized courier with vehicle registration and driving licence', async () => {
+      usersService.findByEmail.mockResolvedValue(null);
+      passwordService.hash.mockResolvedValue('$2b$12$hashedCourierPassword');
+      jwtService.signAsync.mockResolvedValue('signed-courier-token');
+
+      const createdCourier = {
+        ...validUser,
+        id: 'courier-uuid',
+        email: 'rider@example.com',
+        role: Role.COURIER,
+        approvalStatus: ApprovalStatus.PENDING,
+        courierProfile: {
+          id: 'cp-1',
+          userId: 'courier-uuid',
+          vehicleType: VehicleType.MOTORCYCLE,
+          licensePlate: 'WP-BCC-1234',
+          licenseNumber: 'DL12345678',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      };
+      usersService.createCourier.mockResolvedValue(createdCourier);
+
+      const result = await authService.registerCourier({
+        fullName: 'Bike Rider',
+        email: 'rider@example.com',
+        phoneNumber: '0781234567',
+        password: 'courierPassword123!',
+        vehicleType: VehicleType.MOTORCYCLE,
+        licensePlate: 'WP-BCC-1234',
+        licenseNumber: 'DL12345678',
+      });
+
+      expect(usersService.createCourier).toHaveBeenCalledWith({
+        email: 'rider@example.com',
+        fullName: 'Bike Rider',
+        phoneNumber: '+94781234567',
+        passwordHash: '$2b$12$hashedCourierPassword',
+        vehicleType: VehicleType.MOTORCYCLE,
+        licensePlate: 'WP-BCC-1234',
+        licenseNumber: 'DL12345678',
+      });
+      expect(result.user.approvalStatus).toBe(ApprovalStatus.PENDING);
+      expect(result.user.role).toBe(Role.COURIER);
+    });
+
+    it('creates bicycle courier without requiring plate or driving licence', async () => {
+      usersService.findByEmail.mockResolvedValue(null);
+      passwordService.hash.mockResolvedValue('$2b$12$hashedCourierPassword');
+      jwtService.signAsync.mockResolvedValue('signed-bicycle-token');
+
+      const createdBicycleCourier = {
+        ...validUser,
+        id: 'courier-bike-uuid',
+        email: 'cyclist@example.com',
+        role: Role.COURIER,
+        approvalStatus: ApprovalStatus.PENDING,
+      };
+      usersService.createCourier.mockResolvedValue(createdBicycleCourier);
+
+      const result = await authService.registerCourier({
+        fullName: 'Eco Cyclist',
+        email: 'cyclist@example.com',
+        phoneNumber: '0781234567',
+        password: 'cyclistPassword123!',
+        vehicleType: VehicleType.BICYCLE,
+      });
+
+      expect(usersService.createCourier).toHaveBeenCalledWith({
+        email: 'cyclist@example.com',
+        fullName: 'Eco Cyclist',
+        phoneNumber: '+94781234567',
+        passwordHash: '$2b$12$hashedCourierPassword',
+        vehicleType: VehicleType.BICYCLE,
+        licensePlate: null,
+        licenseNumber: null,
+      });
+      expect(result.user.approvalStatus).toBe(ApprovalStatus.PENDING);
+    });
+
+    it('rejects motorized courier if licensePlate or licenseNumber is missing', async () => {
+      usersService.findByEmail.mockResolvedValue(null);
+
+      await expect(
+        authService.registerCourier({
+          fullName: 'Van Driver',
+          email: 'driver@example.com',
+          phoneNumber: '0781234567',
+          password: 'driverPassword123!',
+          vehicleType: VehicleType.VAN,
+          licensePlate: '',
+          licenseNumber: 'DL123',
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('getApplicationStatus', () => {
+    it('returns application status with timestamps and rejectionReason without exposing internal IDs', async () => {
+      usersService.findById.mockResolvedValue({
+        ...validUser,
+        role: Role.MERCHANT,
+        approvalStatus: ApprovalStatus.REJECTED,
+        reviewedAt: new Date('2026-02-01T10:00:00Z'),
+        reviewedBy: 'reviewer-admin-uuid',
+        rejectionReason: 'Invalid business address documentation',
+      });
+
+      const status = await authService.getApplicationStatus(validUser.id);
+
+      expect(status).toEqual({
+        approvalStatus: ApprovalStatus.REJECTED,
+        status: ApprovalStatus.REJECTED,
+        role: Role.MERCHANT,
+        submittedAt: validUser.createdAt,
+        createdAt: validUser.createdAt,
+        reviewedAt: new Date('2026-02-01T10:00:00Z'),
+        rejectionReason: 'Invalid business address documentation',
+      });
+      expect('reviewedBy' in status).toBe(false);
     });
   });
 
