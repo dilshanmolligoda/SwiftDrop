@@ -4,17 +4,24 @@ import type {
   NotificationPreferencesData,
   RegionalPreferencesData,
 } from '../types/admin-settings.types'
+import { useAdminAuth } from '../context/AdminAuthContext'
+import {
+  getUserInitials,
+  formatUserRole,
+} from '../utils/admin-auth.util'
 import styles from './AdminSettingsPage.module.css'
 
 export const AdminSettingsPage: React.FC = () => {
+  const { user } = useAdminAuth()
+
   // 1. Profile State
-  const [profile, setProfile] = useState<AdminProfileData>({
-    fullName: 'Anjali Perera',
+  const [profile, setProfile] = useState<AdminProfileData>(() => ({
+    fullName: user?.fullName || 'Anjali Perera',
     phoneNumber: '+94 77 345 6789',
-    email: 'anjali.perera@example.com',
-    role: 'Dispatcher',
-    initials: 'AP',
-  })
+    email: user?.email || 'anjali.perera@example.com',
+    role: user ? formatUserRole(user.role) : 'Dispatcher',
+    initials: user ? getUserInitials(user.fullName) : 'AP',
+  }))
 
   // 2. Regional Preferences State
   const [regional, setRegional] = useState<RegionalPreferencesData>({

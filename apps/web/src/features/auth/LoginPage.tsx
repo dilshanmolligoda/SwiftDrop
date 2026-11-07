@@ -211,7 +211,7 @@ export default function LoginPage() {
       }
 
       if (userProfile.role === 'ADMIN' || userProfile.role === 'DISPATCHER') {
-        navigate('/admin-landing', { replace: true });
+        navigate('/admin/dashboard', { replace: true });
         return;
       }
     } catch {

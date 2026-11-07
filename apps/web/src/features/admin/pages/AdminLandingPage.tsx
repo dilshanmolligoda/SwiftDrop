@@ -60,6 +60,7 @@ export default function AdminLandingPage() {
 
       if (userProfile.role === 'ADMIN' || userProfile.role === 'DISPATCHER') {
         setUser(userProfile);
+        navigate('/admin/dashboard', { replace: true });
         return;
       }
 
