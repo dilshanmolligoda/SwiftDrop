@@ -1,15 +1,12 @@
 import type { AuthenticatedUser, Role } from './session.api'
 
-/**
- * Where each role lands after login. Mirrors getRoleDashboardUrl() in
- * apps/api/src/modules/auth/auth.service.ts and the redirects in LoginPage.
- */
+/** Where each role lands after login. Mirrors the redirects in LoginPage. */
 const ROLE_HOME: Record<Role, string> = {
   CUSTOMER: '/customer/dashboard',
   MERCHANT: '/merchant/dashboard',
   COURIER: '/courier/dashboard',
-  ADMIN: '/admin-landing',
-  DISPATCHER: '/admin-landing',
+  ADMIN: '/admin/dashboard',
+  DISPATCHER: '/admin/dashboard',
 }
 
 export type MerchantAccess =
