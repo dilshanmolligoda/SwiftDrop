@@ -19,7 +19,12 @@ import { AdminLayout } from './components/layout/AdminLayout.tsx'
 import { AdminPlaceholderPage } from './features/admin/pages/AdminPlaceholderPage.tsx'
 import { AdminSettingsPage } from './features/admin/pages/AdminSettingsPage.tsx'
 import CustomerDashboard from './features/customer/pages/CustomerDashboard';
-import MerchantDashboard from './features/merchant/pages/MerchantDashboard';
+import { MerchantLayout } from './features/merchant/components/MerchantLayout.tsx'
+import { MerchantDashboardPage } from './features/merchant/pages/MerchantDashboardPage.tsx'
+import { MerchantOrdersPage } from './features/merchant/pages/MerchantOrdersPage.tsx'
+import { MerchantApiKeysPage } from './features/merchant/pages/MerchantApiKeysPage.tsx'
+import { MerchantWebhooksPage } from './features/merchant/pages/MerchantWebhooksPage.tsx'
+import { MerchantSettingsPage } from './features/merchant/pages/MerchantSettingsPage.tsx'
 import CourierDashboard from './features/courier/pages/CourierDashboard';
 import AdminLandingPage from './features/admin/pages/AdminLandingPage';
 
@@ -73,7 +78,15 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/vite-demo" element={<App />} />
             {/* Temporary role‑specific dashboards */}
             <Route path="/customer/dashboard" element={<CustomerDashboard />} />
-            <Route path="/merchant/dashboard" element={<MerchantDashboard />} />
+            {/* Merchant portal: MerchantLayout verifies the session and MERCHANT role once */}
+            <Route path="/merchant" element={<MerchantLayout />}>
+              <Route index element={<Navigate to="dashboard" replace />} />
+              <Route path="dashboard" element={<MerchantDashboardPage />} />
+              <Route path="orders" element={<MerchantOrdersPage />} />
+              <Route path="api-keys" element={<MerchantApiKeysPage />} />
+              <Route path="webhooks" element={<MerchantWebhooksPage />} />
+              <Route path="settings" element={<MerchantSettingsPage />} />
+            </Route>
             <Route path="/courier/dashboard" element={<CourierDashboard />} />
             <Route path="/admin-landing" element={<AdminLandingPage />} />
 
