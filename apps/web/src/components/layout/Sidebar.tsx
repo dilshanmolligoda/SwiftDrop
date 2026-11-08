@@ -1,14 +1,36 @@
 import React from 'react'
 import { NavLink } from 'react-router-dom'
 import { ADMIN_NAV_ITEMS, DEFAULT_ADMIN_USER } from '../../features/admin/config/admin-nav.config'
+import type { AuthenticatedUser } from '../../features/admin/context/AdminAuthContext'
+import {
+  getUserInitials,
+  formatUserRole,
+} from '../../features/admin/utils/admin-auth.util'
 import styles from './Sidebar.module.css'
 
 interface SidebarProps {
   readonly isOpen?: boolean
   readonly onCloseMobile?: () => void
+  readonly user?: AuthenticatedUser | null
+  readonly onLogout?: () => void | Promise<void>
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onCloseMobile }) => {
+export const Sidebar: React.FC<SidebarProps> = ({
+  isOpen = false,
+  onCloseMobile,
+  user,
+  onLogout,
+}) => {
+  const displayInitials = user ? getUserInitials(user.fullName) : DEFAULT_ADMIN_USER.initials
+  const displayFullName = user ? user.fullName : DEFAULT_ADMIN_USER.fullName
+  const displayRole = user ? formatUserRole(user.role) : DEFAULT_ADMIN_USER.role
+
+  const handleLogoutClick = () => {
+    if (onLogout) {
+      void onLogout()
+    }
+  }
+
   return (
     <>
       {isOpen && (
@@ -56,19 +78,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = false, onCloseMobile 
         {/* User Profile & Footer Actions */}
         <div className={styles.footer}>
           <div className={styles.userProfile}>
-            <div className={styles.avatar}>{DEFAULT_ADMIN_USER.initials}</div>
+            <div className={styles.avatar}>{displayInitials}</div>
             <div className={styles.userInfo}>
-              <span className={styles.userName}>{DEFAULT_ADMIN_USER.fullName}</span>
-              <span className={styles.userRole}>{DEFAULT_ADMIN_USER.role}</span>
+              <span className={styles.userName}>{displayFullName}</span>
+              <span className={styles.userRole}>{displayRole}</span>
             </div>
           </div>
 
           <button
             type="button"
             className={styles.logoutButton}
-            onClick={() => alert('Logout clicked')}
+            onClick={handleLogoutClick}
+            aria-label="Log out of SwiftDrop"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
               <polyline points="16 17 21 12 16 7" />
               <line x1="21" y1="12" x2="9" y2="12" />
@@ -94,7 +117,7 @@ function renderIcon(icon: string) {
       return (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <rect x="1" y="3" width="15" height="13" />
-          <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+          <polygon points="16 8 20 8 23 11 23 16 16 16 8" />
           <circle cx="5.5" cy="18.5" r="2.5" />
           <circle cx="18.5" cy="18.5" r="2.5" />
         </svg>
@@ -142,4 +165,4 @@ function renderIcon(icon: string) {
       return null
   }
 }
-
+export default Sidebar
