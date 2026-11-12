@@ -66,8 +66,27 @@ model MerchantProfile {
   updatedAt       DateTime @updatedAt
 
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  apiKeys         ApiKey[]
 
   @@map("merchant_profiles")
+}
+
+// Merchant API keys. Only a peppered hash of the key is stored; the full key
+// is shown to the merchant once, when it is created.
+model ApiKey {
+  id                String          @id @default(uuid()) @db.Uuid
+  merchantProfileId String          @db.Uuid
+  name              String
+  keyPrefix         String          @unique
+  keyHash           String          @unique
+  lastUsedAt        DateTime?
+  revokedAt         DateTime?
+  createdAt         DateTime        @default(now())
+
+  merchantProfile   MerchantProfile @relation(fields: [merchantProfileId], references: [id], onDelete: Cascade)
+
+  @@index([merchantProfileId])
+  @@map("api_keys")
 }
 
 model CourierProfile {

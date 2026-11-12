@@ -52,6 +52,7 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   User: 'User',
   MerchantProfile: 'MerchantProfile',
+  ApiKey: 'ApiKey',
   CourierProfile: 'CourierProfile'
 } as const
 
@@ -102,6 +103,20 @@ export const MerchantProfileScalarFieldEnum = {
 } as const
 
 export type MerchantProfileScalarFieldEnum = (typeof MerchantProfileScalarFieldEnum)[keyof typeof MerchantProfileScalarFieldEnum]
+
+
+export const ApiKeyScalarFieldEnum = {
+  id: 'id',
+  merchantProfileId: 'merchantProfileId',
+  name: 'name',
+  keyPrefix: 'keyPrefix',
+  keyHash: 'keyHash',
+  lastUsedAt: 'lastUsedAt',
+  revokedAt: 'revokedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type ApiKeyScalarFieldEnum = (typeof ApiKeyScalarFieldEnum)[keyof typeof ApiKeyScalarFieldEnum]
 
 
 export const CourierProfileScalarFieldEnum = {

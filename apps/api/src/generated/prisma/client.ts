@@ -49,6 +49,11 @@ export type User = Prisma.UserModel
  */
 export type MerchantProfile = Prisma.MerchantProfileModel
 /**
+ * Model ApiKey
+ * 
+ */
+export type ApiKey = Prisma.ApiKeyModel
+/**
  * Model CourierProfile
  * 
  */
