@@ -1,0 +1,177 @@
+.merchant-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f8fafc;
+  color: #1e293b;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+.merchant-sidebar {
+  width: 250px;
+  min-width: 250px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 16px;
+  box-sizing: border-box;
+  background: #fff;
+  border-right: 1px solid #eef2f6;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.merchant-sidebar__header,
+.merchant-topbar,
+.merchant-topbar__right,
+.merchant-topbar__breadcrumbs,
+.merchant-topbar__user,
+.merchant-sidebar__profile,
+.merchant-sidebar__nav-link,
+.merchant-sidebar__create,
+.merchant-sidebar__logout {
+  display: flex;
+  align-items: center;
+}
+
+.merchant-sidebar__header {
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.merchant-sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #0f172a;
+  font-size: 19px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.merchant-sidebar__logo { display: flex; color: #0d5e36; }
+.merchant-sidebar__close,
+.merchant-topbar__menu { display: none; }
+
+.merchant-sidebar__create {
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: #0d5e36;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.merchant-sidebar__nav {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.merchant-sidebar__nav-link {
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.merchant-sidebar__nav-link:hover { background: #f1f5f9; color: #0f172a; }
+.merchant-sidebar__nav-link--active {
+  padding-left: 10px;
+  border-left: 4px solid #0d5e36;
+  border-radius: 0 8px 8px 0;
+  background: #eaf7ee;
+  color: #0d5e36;
+  font-weight: 600;
+}
+
+.merchant-sidebar__footer {
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.merchant-sidebar__profile { gap: 10px; margin-bottom: 12px; }
+.merchant-sidebar__avatar,
+.merchant-topbar__avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #dbeafe;
+  color: #1e40af;
+  font-weight: 600;
+}
+.merchant-sidebar__avatar { width: 36px; height: 36px; font-size: 13px; }
+.merchant-sidebar__profile div:last-child { display: flex; min-width: 0; flex-direction: column; }
+.merchant-sidebar__profile strong { overflow: hidden; color: #0f172a; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.merchant-sidebar__profile span { color: #64748b; font-size: 12px; }
+
+.merchant-sidebar__logout {
+  gap: 8px;
+  padding: 6px 0;
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.merchant-layout__main { display: flex; min-width: 0; flex: 1; flex-direction: column; }
+.merchant-topbar {
+  height: 64px;
+  justify-content: space-between;
+  padding: 0 40px;
+  background: #fff;
+  border-bottom: 1px solid #eef2f6;
+}
+.merchant-topbar__breadcrumbs { gap: 8px; color: #64748b; font-size: 14px; }
+.merchant-topbar__breadcrumbs strong { color: #0f172a; font-weight: 500; }
+.merchant-topbar__right { gap: 16px; }
+.merchant-topbar__icon,
+.merchant-topbar__user {
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+}
+.merchant-topbar__user { gap: 8px; padding: 4px 8px 4px 4px; color: #1e293b; font-size: 13px; }
+.merchant-topbar__avatar { width: 28px; height: 28px; font-size: 12px; }
+.merchant-layout__content { width: 100%; max-width: 1200px; padding: 32px 40px 60px; box-sizing: border-box; }
+
+.merchant-layout__loading {
+  display: grid;
+  min-height: 100vh;
+  place-content: center;
+  gap: 16px;
+  color: #64748b;
+  font-size: 14px;
+}
+.merchant-layout__spinner {
+  width: 38px;
+  height: 38px;
+  margin: auto;
+  border: 3px solid #e5e7eb;
+  border-top-color: #059669;
+  border-radius: 50%;
+  animation: merchant-spin .8s linear infinite;
+}
+@keyframes merchant-spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 900px) {
+  .merchant-sidebar { position: fixed; transform: translateX(-100%); transition: transform .25s ease; }
+  .merchant-sidebar--open { transform: translateX(0); }
+  .merchant-sidebar__close,
+  .merchant-topbar__menu { display: flex; align-items: center; border: 0; background: transparent; color: #64748b; cursor: pointer; }
+  .merchant-layout__backdrop { position: fixed; inset: 0; z-index: 35; background: rgb(15 23 42 / 40%); }
+  .merchant-topbar { padding: 0 20px; }
+  .merchant-topbar__menu { margin-right: 12px; }
+  .merchant-layout__content { padding: 20px 16px 40px; }
+}
