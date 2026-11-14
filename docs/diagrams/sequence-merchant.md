@@ -103,6 +103,25 @@ sequenceDiagram
 **Blue block** = synchronous request/reply (merchant API).
 **Green block** = asynchronous publish/subscribe (webhook worker).
 
+## Merchant dashboard API
+
+These endpoints require an authenticated, approved merchant session. Responses are
+scoped to the current merchant; an order belonging to another merchant is returned
+as not found.
+
+| Method and path | Purpose |
+|---|---|
+| `GET /api/v1/merchant/dashboard` | Returns delivery metrics, the UTC reporting month, and the six most recently updated orders |
+| `GET /api/v1/merchant/orders` | Lists this merchant's orders; accepts `search`, `status`, `page` (1-based), and `pageSize` (1–100, default 20) |
+| `GET /api/v1/merchant/orders/{orderId}` | Returns one order by UUID |
+
+`search` matches order reference, tracking number, recipient, or destination,
+case-insensitively. `status` is one of `AWAITING_PICKUP`, `OUT_FOR_DELIVERY`,
+`IN_TRANSIT`, `PICKED_UP`, `DELIVERY_FAILED`, or `DELIVERED`. The list response
+contains `data`, `page`, `pageSize`, and `total`. Dashboard metrics count active
+orders, orders delivered during the UTC calendar month, and failed delivery
+attempts across the merchant's orders.
+
 ## Design notes
 
 | Step | Decision | Why |
