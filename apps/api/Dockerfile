@@ -23,7 +23,7 @@ RUN npm ci --workspace apps/api --workspace packages/contracts --include-workspa
 COPY packages/contracts packages/contracts
 COPY apps/api apps/api
 RUN npm run build --workspace packages/contracts --if-present \
- && npx --workspace apps/api prisma generate \
+ && DATABASE_URL=postgresql://build:build@localhost:5432/build npx --workspace apps/api prisma generate \
  && npm run build --workspace apps/api \
  && mkdir -p apps/api/node_modules
 
@@ -39,10 +39,12 @@ COPY --from=build /repo/apps/api/package.json ./apps/api/
 COPY --from=build /repo/apps/api/node_modules ./apps/api/node_modules
 COPY --from=build /repo/apps/api/dist ./apps/api/dist
 COPY --from=build /repo/apps/api/prisma ./apps/api/prisma
+# Prisma 7 reads the datasource URL from this file — `prisma migrate deploy` needs it
+COPY --from=build /repo/apps/api/prisma.config.ts ./apps/api/
 
 # Run as the non-root "node" user that ships with the image
 RUN mkdir -p /app/uploads && chown -R node:node /app/uploads
 USER node
 
 EXPOSE 4000
-CMD ["node", "apps/api/dist/main.js"]
+CMD ["node", "apps/api/dist/src/main.js"]
