@@ -107,8 +107,9 @@ services:
       retries: 10
       start_period: 20s
 
+  # Own profile until apps/worker is scaffolded — then change back to ["app"]
   worker:
-    profiles: ["app"]
+    profiles: ["worker"]
     build:
       context: .
       dockerfile: apps/worker/Dockerfile
@@ -146,7 +147,7 @@ services:
     env_file: .env
     restart: unless-stopped
     ports:
-      - "${MOCK_MERCHANT_PORT:-5000}:4000"
+      - "${MOCK_MERCHANT_PORT:-5000}:${MOCK_MERCHANT_PORT:-5000}"
     depends_on:
       - api
 
