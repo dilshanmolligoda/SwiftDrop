@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { Bell, ChevronDown, Home, Link as LinkIcon, LogOut, Menu, Package, Plus, Settings, Tag, X } from 'lucide-react'
-import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Bell, ChevronDown, Home } from 'lucide-react'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { env } from '../../../lib/env'
+import { MerchantSidebar } from './MerchantSidebar'
 import './MerchantLayout.css'
 
 interface MerchantUser {
@@ -10,19 +11,9 @@ interface MerchantUser {
   readonly approvalStatus?: string
 }
 
-const navigationItems = [
-  { label: 'Dashboard', path: '/merchant/dashboard', icon: Home },
-  { label: 'Orders', path: '/merchant/orders', icon: Package },
-  { label: 'Track a parcel', path: '/track', icon: LinkIcon },
-  { label: 'Pricing', path: '/merchant/pricing', icon: Tag },
-  { label: 'Store connections', path: '/merchant/connections', icon: LinkIcon },
-  { label: 'Settings', path: '/merchant/settings', icon: Settings },
-] as const
-
 export const MerchantLayout: React.FC = () => {
   const [user, setUser] = useState<MerchantUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -92,69 +83,10 @@ export const MerchantLayout: React.FC = () => {
 
   return (
     <div className="merchant-layout">
-      {isSidebarOpen && (
-        <div
-          className="merchant-layout__backdrop"
-          onClick={() => setIsSidebarOpen(false)}
-          aria-hidden="true"
-        />
-      )}
-
-      <aside className={`merchant-sidebar ${isSidebarOpen ? 'merchant-sidebar--open' : ''}`}>
-        <div className="merchant-sidebar__header">
-          <Link to="/merchant/orders" className="merchant-sidebar__brand">
-            <span className="merchant-sidebar__logo" aria-hidden="true"><Package size={22} /></span>
-            <span>SwiftDrop</span>
-          </Link>
-          <button type="button" className="merchant-sidebar__close" onClick={() => setIsSidebarOpen(false)} aria-label="Close navigation">
-            <X size={20} />
-          </button>
-        </div>
-
-        <Link to="/merchant/create-delivery" className="merchant-sidebar__create">
-          <Plus size={16} />
-          <span>Create delivery</span>
-        </Link>
-
-        <nav className="merchant-sidebar__nav" aria-label="Merchant navigation">
-          {navigationItems.map((item) => {
-            const Icon = item.icon
-            return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                onClick={() => setIsSidebarOpen(false)}
-                className={({ isActive }) =>
-                  `merchant-sidebar__nav-link ${isActive ? 'merchant-sidebar__nav-link--active' : ''}`
-                }
-              >
-                <Icon size={16} />
-                <span>{item.label}</span>
-              </NavLink>
-            )
-          })}
-        </nav>
-
-        <div className="merchant-sidebar__footer">
-          <div className="merchant-sidebar__profile">
-            <div className="merchant-sidebar__avatar">{initials}</div>
-            <div>
-              <strong>{displayName}</strong>
-              <span>Merchant account</span>
-            </div>
-          </div>
-          <button type="button" className="merchant-sidebar__logout" onClick={() => void handleLogout()}>
-            <LogOut size={16} />
-            <span>Log out</span>
-          </button>
-        </div>
-      </aside>
+      <MerchantSidebar merchantName={displayName} onLogout={() => void handleLogout()} />
 
       <div className="merchant-layout__main">
         <header className="merchant-topbar">
-          <button type="button" className="merchant-topbar__menu" onClick={() => setIsSidebarOpen(true)} aria-label="Open navigation">
-            <Menu size={20} />
-          </button>
           <nav className="merchant-topbar__breadcrumbs" aria-label="Breadcrumb">
             <Home size={14} />
             <span>›</span>
