@@ -21,6 +21,8 @@ import { AdminSettingsPage } from './features/admin/pages/AdminSettingsPage.tsx'
 import { AdminDashboardPage } from './features/admin/pages/AdminDashboardPage.tsx'
 import CustomerDashboard from './features/customer/pages/CustomerDashboard';
 import MerchantDashboard from './features/merchant/pages/MerchantDashboard';
+import MerchantOrdersPage from './features/merchant/pages/MerchantOrdersPage';
+import { MerchantLayout } from './features/merchant/components/MerchantLayout';
 import CourierDashboard from './features/courier/pages/CourierDashboard';
 import AdminLandingPage from './features/admin/pages/AdminLandingPage';
 
@@ -75,6 +77,10 @@ createRoot(document.getElementById('root')!).render(
             {/* Temporary role‑specific dashboards */}
             <Route path="/customer/dashboard" element={<CustomerDashboard />} />
             <Route path="/merchant/dashboard" element={<MerchantDashboard />} />
+            <Route path="/merchant" element={<MerchantLayout />}>
+              <Route index element={<Navigate to="orders" replace />} />
+              <Route path="orders" element={<MerchantOrdersPage />} />
+            </Route>
             <Route path="/courier/dashboard" element={<CourierDashboard />} />
             <Route path="/admin-landing" element={<AdminLandingPage />} />
 
