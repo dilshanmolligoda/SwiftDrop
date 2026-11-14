@@ -7,20 +7,14 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronRight,
-  CirclePlus,
-  FileText,
   Home,
-  Link as LinkIcon,
-  LogOut,
   MapPin,
   PackageCheck,
   Search,
-  Settings,
   X,
 } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
 import { env } from '../../../lib/env'
-import { SwiftDropLogo } from '../../auth/components/SwiftDropLogo'
+import { MerchantSidebar } from '../components/MerchantSidebar'
 import { MERCHANT_DASHBOARD_ORDERS } from '../config/merchant-dashboard.mock'
 import type { MerchantOrder, OrderStatus } from '../config/merchant-dashboard.mock'
 import styles from './MerchantDashboard.module.css'
@@ -34,19 +28,6 @@ interface AuthenticatedUser {
 }
 
 type StatusFilter = 'ALL' | OrderStatus
-
-const navigationItems: {
-  label: string
-  icon: LucideIcon
-  action: 'dashboard' | 'orders' | 'coming-soon'
-}[] = [
-  { label: 'Dashboard', icon: Home, action: 'dashboard' },
-  { label: 'Orders', icon: Box, action: 'orders' },
-  { label: 'Track a parcel', icon: LinkIcon, action: 'coming-soon' },
-  { label: 'Pricing', icon: FileText, action: 'coming-soon' },
-  { label: 'Store connections', icon: LinkIcon, action: 'coming-soon' },
-  { label: 'Settings', icon: Settings, action: 'coming-soon' },
-]
 
 const statusLabels: Record<OrderStatus, string> = {
   'Awaiting pickup': 'Awaiting pickup',
@@ -171,10 +152,9 @@ export default function MerchantDashboard() {
     }
   }
 
-  const handleNavigation = (action: (typeof navigationItems)[number]['action'], label: string) => {
+  const handleNavigation = (action: 'dashboard' | 'orders' | 'coming-soon', label: string) => {
     if (action === 'orders') {
-      setShowAllOrders(true)
-      document.getElementById('recent-orders')?.scrollIntoView({ behavior: 'smooth' })
+      navigate('/merchant/orders')
       return
     }
 
@@ -188,7 +168,7 @@ export default function MerchantDashboard() {
   }
 
   const handleViewAllOrders = () => {
-    setShowAllOrders((isShowingAll) => !isShowingAll)
+    navigate('/merchant/orders')
   }
 
   if (isLoading) {
@@ -224,61 +204,12 @@ export default function MerchantDashboard() {
 
   return (
     <div className={styles.dashboard}>
-      <aside className={styles.sidebar} aria-label="Merchant navigation">
-        <div className={styles.brand}>
-          <SwiftDropLogo size={24} />
-        </div>
-
-        <button
-          type="button"
-          className={styles.createButton}
-          onClick={() => setToast('Delivery creation will be available when the merchant order service is ready.')}
-        >
-          <CirclePlus size={16} aria-hidden="true" />
-          <span>Create delivery</span>
-        </button>
-
-        <nav className={styles.navigation}>
-          {navigationItems.map(({ label, icon: Icon, action }, index) => (
-            <button
-              type="button"
-              key={label}
-              className={`${styles.navItem} ${index === 0 ? styles.navItemActive : ''}`}
-              aria-current={index === 0 ? 'page' : undefined}
-              onClick={() => handleNavigation(action, label)}
-            >
-              <Icon size={16} aria-hidden="true" />
-              <span>{label}</span>
-            </button>
-          ))}
-        </nav>
-
-        <div className={styles.sidebarAccount}>
-          <button
-            type="button"
-            className={styles.accountButton}
-            aria-expanded={isAccountMenuOpen}
-            onClick={() => setIsAccountMenuOpen((isOpen) => !isOpen)}
-          >
-            <span className={styles.avatar}>{initials}</span>
-            <span className={styles.accountText}>
-              <strong>{merchantName}</strong>
-              <small>Merchant account</small>
-            </span>
-            <ChevronDown
-              size={15}
-              className={isAccountMenuOpen ? styles.chevronUp : ''}
-              aria-hidden="true"
-            />
-          </button>
-          {isAccountMenuOpen && (
-            <button type="button" className={styles.logoutButton} onClick={() => void handleLogout()}>
-              <LogOut size={15} aria-hidden="true" />
-              <span>Log out</span>
-            </button>
-          )}
-        </div>
-      </aside>
+      <MerchantSidebar
+        merchantName={merchantName}
+        onLogout={() => void handleLogout()}
+        onAction={handleNavigation}
+        onCreateDelivery={() => setToast('Delivery creation will be available when the merchant order service is ready.')}
+      />
 
       <main className={styles.main}>
         <header className={styles.topbar}>

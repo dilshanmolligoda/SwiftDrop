@@ -7,8 +7,8 @@
 }
 
 .merchant-sidebar {
-  width: 250px;
-  min-width: 250px;
+  width: 260px;
+  min-width: 260px;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -42,27 +42,22 @@
 .merchant-sidebar__brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  color: #0f172a;
-  font-size: 19px;
-  font-weight: 700;
   text-decoration: none;
 }
 
-.merchant-sidebar__logo { display: flex; color: #0d5e36; }
 .merchant-sidebar__close,
 .merchant-topbar__menu { display: none; }
 
 .merchant-sidebar__create {
   justify-content: center;
   gap: 8px;
-  margin-bottom: 24px;
+  margin: 0;
   padding: 10px 16px;
-  border-radius: 8px;
+  border-radius: 7px;
   background: #0d5e36;
   color: #fff;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: .875rem;
+  font-weight: 650;
   text-decoration: none;
 }
 
@@ -77,58 +72,82 @@
   gap: 12px;
   padding: 10px 14px;
   border-radius: 8px;
-  color: #475569;
-  font-size: 14px;
+  color: #42516a;
+  font-size: 0.925rem;
   font-weight: 500;
   text-decoration: none;
 }
 
-.merchant-sidebar__nav-link:hover { background: #f1f5f9; color: #0f172a; }
+.merchant-sidebar__nav-link:hover { background: #f3f7f5; color: #0e603c; }
 .merchant-sidebar__nav-link--active {
-  padding-left: 10px;
-  border-left: 4px solid #0d5e36;
-  border-radius: 0 8px 8px 0;
-  background: #eaf7ee;
-  color: #0d5e36;
-  font-weight: 600;
+  position: relative;
+  background: #eaf6ef;
+  color: #0b7546;
+  font-weight: 650;
+}
+.merchant-sidebar__nav-link--active::before {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 0;
+  width: 3px;
+  border-radius: 0 4px 4px 0;
+  background: #0b9a5c;
+  content: '';
 }
 
 .merchant-sidebar__footer {
-  padding-top: 16px;
-  border-top: 1px solid #f1f5f9;
+  padding: 16px;
+  border-top: 1px solid #e9edf3;
 }
 
-.merchant-sidebar__profile { gap: 10px; margin-bottom: 12px; }
+.merchant-sidebar__profile {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 4px;
+  border: 0;
+  background: none;
+  color: #263248;
+  text-align: left;
+  cursor: pointer;
+}
 .merchant-sidebar__avatar,
 .merchant-topbar__avatar {
   display: grid;
   place-items: center;
   flex-shrink: 0;
   border-radius: 50%;
-  background: #dbeafe;
-  color: #1e40af;
-  font-weight: 600;
+  background: #e8edf4;
+  color: #44536c;
+  font-weight: 700;
 }
-.merchant-sidebar__avatar { width: 36px; height: 36px; font-size: 13px; }
+.merchant-sidebar__avatar { width: 38px; height: 38px; font-size: .875rem; }
 .merchant-sidebar__profile div:last-child { display: flex; min-width: 0; flex-direction: column; }
-.merchant-sidebar__profile strong { overflow: hidden; color: #0f172a; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
-.merchant-sidebar__profile span { color: #64748b; font-size: 12px; }
+.merchant-sidebar__profile strong { overflow: hidden; color: #263248; font-size: .875rem; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.merchant-sidebar__profile span { color: #8794a9; font-size: .775rem; }
+.merchant-sidebar__profile svg { margin-left: auto; }
+.merchant-sidebar__chevron-up { transform: rotate(180deg); }
 
 .merchant-sidebar__logout {
+  width: 100%;
   gap: 8px;
-  padding: 6px 0;
+  padding: 8px;
   border: 0;
   background: transparent;
-  color: #64748b;
-  font-size: 13px;
+  color: #53617a;
+  font-size: .875rem;
+  text-align: left;
   cursor: pointer;
 }
 
 .merchant-layout__main { display: flex; min-width: 0; flex: 1; flex-direction: column; }
 .merchant-topbar {
-  height: 64px;
+  height: 56px;
   justify-content: space-between;
-  padding: 0 40px;
+  padding: 0 25px;
   background: #fff;
   border-bottom: 1px solid #eef2f6;
 }
@@ -144,7 +163,7 @@
 }
 .merchant-topbar__user { gap: 8px; padding: 4px 8px 4px 4px; color: #1e293b; font-size: 13px; }
 .merchant-topbar__avatar { width: 28px; height: 28px; font-size: 12px; }
-.merchant-layout__content { width: 100%; max-width: 1200px; padding: 32px 40px 60px; box-sizing: border-box; }
+.merchant-layout__content { width: 100%; max-width: 1120px; padding: 26px 25px 60px; box-sizing: border-box; }
 
 .merchant-layout__loading {
   display: grid;
