@@ -28,4 +28,3 @@ export function normalizePhoneNumber(rawPhone: string): string {
   // Validate final format
   return /^\+94\d{9}$/.test(cleaned) ? cleaned : '';
 }
-

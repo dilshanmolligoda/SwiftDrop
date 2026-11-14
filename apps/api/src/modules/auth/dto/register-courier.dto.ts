@@ -51,4 +51,3 @@ export class RegisterCourierDto {
   @IsString({ message: 'Driving licence number must be a string' })
   licenseNumber?: string;
 }
-

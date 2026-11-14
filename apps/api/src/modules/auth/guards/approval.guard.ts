@@ -62,4 +62,3 @@ export class ApprovalGuard implements CanActivate {
     );
   }
 }
-
