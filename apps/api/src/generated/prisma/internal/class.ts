@@ -267,6 +267,26 @@ export interface PrismaClient<
     * ```
     */
   get merchantOrder(): Prisma.MerchantOrderDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.parcel`: Exposes CRUD operations for the **Parcel** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Parcels
+    * const parcels = await prisma.parcel.findMany()
+    * ```
+    */
+  get parcel(): Prisma.ParcelDelegate<ExtArgs, { omit: OmitOpts }>;
+
+  /**
+   * `prisma.parcelStatusHistory`: Exposes CRUD operations for the **ParcelStatusHistory** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ParcelStatusHistories
+    * const parcelStatusHistories = await prisma.parcelStatusHistory.findMany()
+    * ```
+    */
+  get parcelStatusHistory(): Prisma.ParcelStatusHistoryDelegate<ExtArgs, { omit: OmitOpts }>;
 }
 
 export function getPrismaClientClass(): PrismaClientConstructor {

@@ -61,6 +61,22 @@ enum MerchantOrderStatus {
   DELIVERED
 }
 
+enum ParcelStatus {
+  PENDING
+  PICKED_UP
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  FAILED
+  RETURNED
+}
+
+enum PackageSize {
+  SMALL
+  MEDIUM
+  LARGE
+}
+
 model User {
   id              String          @id @default(uuid()) @db.Uuid
   email           String          @unique
@@ -80,6 +96,7 @@ model User {
   merchantProfile MerchantProfile?
   courierProfile  CourierProfile?
   merchantOrders  MerchantOrder[]
+  parcels         Parcel[]
 
   courierAssignments  DeliveryAssignment[] @relation("CourierAssignments")
   createdAssignments  DeliveryAssignment[] @relation("AssignmentCreators")
@@ -230,3 +247,45 @@ model MerchantOrder {
   @@index([merchantUserId, status])
   @@map("merchant_orders")
 }
+
+model Parcel {
+  id                     String         @id @default(uuid()) @db.Uuid
+  trackingNumber         String         @unique
+  customerId             String         @db.Uuid
+  senderName             String
+  senderAddress          String
+  recipientName          String
+  recipientAddress       String
+  recipientPhone         String
+  packageSize            PackageSize    @default(MEDIUM)
+  weightKg               Decimal        @db.Decimal(5, 2)
+  costLkr                Decimal        @db.Decimal(10, 2)
+  status                 ParcelStatus   @default(PENDING)
+  failureReason          String?
+  failedDeliveryAttempts Int            @default(0)
+  deliveredAt            DateTime?
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+
+  customer      User                  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  statusHistory ParcelStatusHistory[]
+
+  @@index([customerId, status])
+  @@index([trackingNumber])
+  @@map("parcels")
+}
+
+model ParcelStatusHistory {
+  id        String       @id @default(uuid()) @db.Uuid
+  parcelId  String       @db.Uuid
+  status    ParcelStatus
+  location  String?
+  note      String?
+  createdAt DateTime     @default(now())
+
+  parcel Parcel @relation(fields: [parcelId], references: [id], onDelete: Cascade)
+
+  @@index([parcelId, createdAt])
+  @@map("parcel_status_history")
+}
+

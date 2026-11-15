@@ -20,11 +20,14 @@ import { CourierLayout } from './features/courier/components/CourierLayout.tsx'
 import { CourierDashboardPage } from './features/courier/pages/CourierDashboardPage.tsx'
 import { MyDeliveriesPage } from './features/courier/pages/MyDeliveriesPage.tsx'
 import { DeliveryDetailsPage } from './features/courier/pages/DeliveryDetailsPage.tsx'
+import { HelpSupportPage } from './features/customer/pages/HelpSupportPage.tsx'
+import { NotificationsPage } from './features/customer/pages/NotificationsPage.tsx'
+import CustomerDashboard from './features/customer/pages/CustomerDashboard.tsx'
+import MyDeliveriesPage from './features/customer/pages/MyDeliveriesPage.tsx'
 import { AdminLayout } from './components/layout/AdminLayout.tsx'
 import { AdminPlaceholderPage } from './features/admin/pages/AdminPlaceholderPage.tsx'
 import { AdminSettingsPage } from './features/admin/pages/AdminSettingsPage.tsx'
 import { AdminDashboardPage } from './features/admin/pages/AdminDashboardPage.tsx'
-import CustomerDashboard from './features/customer/pages/CustomerDashboard';
 import MerchantDashboard from './features/merchant/pages/MerchantDashboard';
 import MerchantOrdersPage from './features/merchant/pages/MerchantOrdersPage';
 import { MerchantLayout } from './features/merchant/components/MerchantLayout';
@@ -89,11 +92,78 @@ createRoot(document.getElementById('root')!).render(
               <Route path="deliveries/:parcelId" element={<DeliveryDetailsPage />} />
               <Route path="*" element={<Navigate to="/courier/dashboard" replace />} />
             </Route>
+              path="/customer/support"
+              element={
+                <CustomerLayout>
+                  <HelpSupportPage />
+                </CustomerLayout>
+              }
+            />
+            <Route
+              path="/customer/help"
+              element={
+                <CustomerLayout>
+                  <HelpSupportPage />
+                </CustomerLayout>
+              }
+            />
+            <Route
+              path="/support"
+              element={
+                <CustomerLayout>
+                  <HelpSupportPage />
+                </CustomerLayout>
+              }
+            />
+            <Route
+              path="/customer/notifications"
+              element={
+                <CustomerLayout>
+                  <NotificationsPage />
+                </CustomerLayout>
+              }
+            />
+            <Route
+              path="/notifications"
+              element={
+                <CustomerLayout>
+                  <NotificationsPage />
+                </CustomerLayout>
+              }
+            />
             <Route path="/health" element={<HealthPage />} />
             <Route path="/welcome" element={<App />} />
             <Route path="/vite-demo" element={<App />} />
-            {/* Temporary role‑specific dashboards */}
-            <Route path="/customer/dashboard" element={<CustomerDashboard />} />
+            {/* Customer portal routes */}
+            <Route path="/customer" element={<Navigate to="/customer/dashboard" replace />} />
+            <Route
+              path="/customer/dashboard"
+              element={
+                <CustomerLayout>
+                  <CustomerDashboard />
+                </CustomerLayout>
+              }
+            />
+            <Route
+              path="/customer/deliveries"
+              element={
+                <CustomerLayout>
+                  <MyDeliveriesPage />
+                </CustomerLayout>
+              }
+            />
+            <Route
+              path="/deliveries"
+              element={
+                <CustomerLayout>
+                  <MyDeliveriesPage />
+                </CustomerLayout>
+              }
+            />
+            <Route
+              path="/customer/create-delivery"
+              element={<Navigate to="/customer/dashboard?create=true" replace />}
+            />
             <Route path="/merchant/dashboard" element={<MerchantDashboard />} />
             <Route path="/merchant" element={<MerchantLayout />}>
               <Route index element={<Navigate to="orders" replace />} />

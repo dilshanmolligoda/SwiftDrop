@@ -404,7 +404,9 @@ export const ModelName = {
   DeliveryProof: 'DeliveryProof',
   MerchantProfile: 'MerchantProfile',
   CourierProfile: 'CourierProfile',
-  MerchantOrder: 'MerchantOrder'
+  MerchantOrder: 'MerchantOrder',
+  Parcel: 'Parcel',
+  ParcelStatusHistory: 'ParcelStatusHistory'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -420,7 +422,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "parcel" | "deliveryAssignment" | "parcelStatusEvent" | "deliveryProof" | "merchantProfile" | "courierProfile" | "merchantOrder"
+    modelProps: "user" | "parcel" | "deliveryAssignment" | "parcelStatusEvent" | "deliveryProof" | "merchantProfile" | "courierProfile" | "merchantOrder" | "parcel" | "parcelStatusHistory"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1016,6 +1018,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    Parcel: {
+      payload: Prisma.$ParcelPayload<ExtArgs>
+      fields: Prisma.ParcelFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ParcelFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ParcelFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelPayload>
+        }
+        findFirst: {
+          args: Prisma.ParcelFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ParcelFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelPayload>
+        }
+        findMany: {
+          args: Prisma.ParcelFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelPayload>[]
+        }
+        create: {
+          args: Prisma.ParcelCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelPayload>
+        }
+        createMany: {
+          args: Prisma.ParcelCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ParcelCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelPayload>[]
+        }
+        delete: {
+          args: Prisma.ParcelDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelPayload>
+        }
+        update: {
+          args: Prisma.ParcelUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelPayload>
+        }
+        deleteMany: {
+          args: Prisma.ParcelDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ParcelUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ParcelUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelPayload>[]
+        }
+        upsert: {
+          args: Prisma.ParcelUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelPayload>
+        }
+        aggregate: {
+          args: Prisma.ParcelAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateParcel>
+        }
+        groupBy: {
+          args: Prisma.ParcelGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ParcelGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ParcelCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ParcelCountAggregateOutputType> | number
+        }
+      }
+    }
+    ParcelStatusHistory: {
+      payload: Prisma.$ParcelStatusHistoryPayload<ExtArgs>
+      fields: Prisma.ParcelStatusHistoryFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ParcelStatusHistoryFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelStatusHistoryPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ParcelStatusHistoryFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelStatusHistoryPayload>
+        }
+        findFirst: {
+          args: Prisma.ParcelStatusHistoryFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelStatusHistoryPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ParcelStatusHistoryFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelStatusHistoryPayload>
+        }
+        findMany: {
+          args: Prisma.ParcelStatusHistoryFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelStatusHistoryPayload>[]
+        }
+        create: {
+          args: Prisma.ParcelStatusHistoryCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelStatusHistoryPayload>
+        }
+        createMany: {
+          args: Prisma.ParcelStatusHistoryCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ParcelStatusHistoryCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelStatusHistoryPayload>[]
+        }
+        delete: {
+          args: Prisma.ParcelStatusHistoryDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelStatusHistoryPayload>
+        }
+        update: {
+          args: Prisma.ParcelStatusHistoryUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelStatusHistoryPayload>
+        }
+        deleteMany: {
+          args: Prisma.ParcelStatusHistoryDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ParcelStatusHistoryUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ParcelStatusHistoryUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelStatusHistoryPayload>[]
+        }
+        upsert: {
+          args: Prisma.ParcelStatusHistoryUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelStatusHistoryPayload>
+        }
+        aggregate: {
+          args: Prisma.ParcelStatusHistoryAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateParcelStatusHistory>
+        }
+        groupBy: {
+          args: Prisma.ParcelStatusHistoryGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ParcelStatusHistoryGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ParcelStatusHistoryCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ParcelStatusHistoryCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1180,6 +1330,41 @@ export const MerchantOrderScalarFieldEnum = {
 export type MerchantOrderScalarFieldEnum = (typeof MerchantOrderScalarFieldEnum)[keyof typeof MerchantOrderScalarFieldEnum]
 
 
+export const ParcelScalarFieldEnum = {
+  id: 'id',
+  trackingNumber: 'trackingNumber',
+  customerId: 'customerId',
+  senderName: 'senderName',
+  senderAddress: 'senderAddress',
+  recipientName: 'recipientName',
+  recipientAddress: 'recipientAddress',
+  recipientPhone: 'recipientPhone',
+  packageSize: 'packageSize',
+  weightKg: 'weightKg',
+  costLkr: 'costLkr',
+  status: 'status',
+  failureReason: 'failureReason',
+  failedDeliveryAttempts: 'failedDeliveryAttempts',
+  deliveredAt: 'deliveredAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ParcelScalarFieldEnum = (typeof ParcelScalarFieldEnum)[keyof typeof ParcelScalarFieldEnum]
+
+
+export const ParcelStatusHistoryScalarFieldEnum = {
+  id: 'id',
+  parcelId: 'parcelId',
+  status: 'status',
+  location: 'location',
+  note: 'note',
+  createdAt: 'createdAt'
+} as const
+
+export type ParcelStatusHistoryScalarFieldEnum = (typeof ParcelStatusHistoryScalarFieldEnum)[keyof typeof ParcelStatusHistoryScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1340,6 +1525,76 @@ export type EnumMerchantOrderStatusFieldRefInput<$PrismaModel> = FieldRefInputTy
  * Reference to a field of type 'MerchantOrderStatus[]'
  */
 export type ListEnumMerchantOrderStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MerchantOrderStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Int'
+ */
+export type EnumMerchantOrderStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MerchantOrderStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'MerchantOrderStatus[]'
+ */
+export type ListEnumMerchantOrderStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MerchantOrderStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Float'
+ */
+export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+/**
+ * Reference to a field of type 'Float[]'
+ */
+export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+    
+
+
+/**
+ * Reference to a field of type 'PackageSize'
+ */
+export type EnumPackageSizeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PackageSize'>
+    
+
+
+/**
+ * Reference to a field of type 'PackageSize[]'
+ */
+export type ListEnumPackageSizeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PackageSize[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Decimal'
+ */
+export type DecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal'>
+    
+
+
+/**
+ * Reference to a field of type 'Decimal[]'
+ */
+export type ListDecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal[]'>
+    
+
+
+/**
+ * Reference to a field of type 'ParcelStatus'
+ */
+export type EnumParcelStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ParcelStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'ParcelStatus[]'
+ */
+export type ListEnumParcelStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ParcelStatus[]'>
     
 
 
@@ -1515,6 +1770,8 @@ export type GlobalOmitConfig = {
   merchantProfile?: Prisma.MerchantProfileOmit
   courierProfile?: Prisma.CourierProfileOmit
   merchantOrder?: Prisma.MerchantOrderOmit
+  parcel?: Prisma.ParcelOmit
+  parcelStatusHistory?: Prisma.ParcelStatusHistoryOmit
 }
 
 /* Types for Logging */

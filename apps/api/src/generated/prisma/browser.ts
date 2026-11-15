@@ -57,3 +57,13 @@ export type CourierProfile = Prisma.CourierProfileModel
  * 
  */
 export type MerchantOrder = Prisma.MerchantOrderModel
+/**
+ * Model Parcel
+ * 
+ */
+export type Parcel = Prisma.ParcelModel
+/**
+ * Model ParcelStatusHistory
+ * 
+ */
+export type ParcelStatusHistory = Prisma.ParcelStatusHistoryModel

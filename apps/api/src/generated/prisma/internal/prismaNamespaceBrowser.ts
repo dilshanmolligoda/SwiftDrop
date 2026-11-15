@@ -58,7 +58,9 @@ export const ModelName = {
   DeliveryProof: 'DeliveryProof',
   MerchantProfile: 'MerchantProfile',
   CourierProfile: 'CourierProfile',
-  MerchantOrder: 'MerchantOrder'
+  MerchantOrder: 'MerchantOrder',
+  Parcel: 'Parcel',
+  ParcelStatusHistory: 'ParcelStatusHistory'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -200,6 +202,41 @@ export const MerchantOrderScalarFieldEnum = {
 } as const
 
 export type MerchantOrderScalarFieldEnum = (typeof MerchantOrderScalarFieldEnum)[keyof typeof MerchantOrderScalarFieldEnum]
+
+
+export const ParcelScalarFieldEnum = {
+  id: 'id',
+  trackingNumber: 'trackingNumber',
+  customerId: 'customerId',
+  senderName: 'senderName',
+  senderAddress: 'senderAddress',
+  recipientName: 'recipientName',
+  recipientAddress: 'recipientAddress',
+  recipientPhone: 'recipientPhone',
+  packageSize: 'packageSize',
+  weightKg: 'weightKg',
+  costLkr: 'costLkr',
+  status: 'status',
+  failureReason: 'failureReason',
+  failedDeliveryAttempts: 'failedDeliveryAttempts',
+  deliveredAt: 'deliveredAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ParcelScalarFieldEnum = (typeof ParcelScalarFieldEnum)[keyof typeof ParcelScalarFieldEnum]
+
+
+export const ParcelStatusHistoryScalarFieldEnum = {
+  id: 'id',
+  parcelId: 'parcelId',
+  status: 'status',
+  location: 'location',
+  note: 'note',
+  createdAt: 'createdAt'
+} as const
+
+export type ParcelStatusHistoryScalarFieldEnum = (typeof ParcelStatusHistoryScalarFieldEnum)[keyof typeof ParcelStatusHistoryScalarFieldEnum]
 
 
 export const SortOrder = {

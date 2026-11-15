@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Home,
   Package,
@@ -13,8 +13,11 @@ import {
   Menu,
   X,
 } from 'lucide-react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { env } from '../../../lib/env'
 import { useCustomerProfile } from '../context/useCustomerProfile'
+import { useCustomerDeliveries } from '../context/useCustomerDeliveries'
+import { CreateDeliveryModal } from './CreateDeliveryModal'
 import './CustomerLayout.css'
 
 interface NavigationItem {
@@ -37,17 +40,107 @@ interface CustomerLayoutProps {
   readonly children: React.ReactNode
 }
 
+interface AuthenticatedCustomer {
+  readonly id: string
+  readonly email: string
+  readonly fullName: string
+  readonly role: 'CUSTOMER' | 'MERCHANT' | 'COURIER' | 'DISPATCHER' | 'ADMIN'
+  readonly approvalStatus: 'PENDING' | 'APPROVED' | 'REJECTED'
+  readonly isActive: boolean
+  readonly isGoogleLinked?: boolean
+}
+
 /**
  * CustomerLayout shell providing the persistent responsive sidebar,
- * top navigation bar with breadcrumbs, and user session controls.
+ * top navigation bar with breadcrumbs, role-based session protection,
+ * and user session controls.
  */
 export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
   const location = useLocation()
+  const navigate = useNavigate()
   const { profile } = useCustomerProfile()
+  const { openCreateModal } = useCustomerDeliveries()
+  const [isVerifying, setIsVerifying] = useState(true)
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
 
   const activePath = location.pathname
+
+  // Open creation modal if navigated with create=true or to /customer/create-delivery
+  useEffect(() => {
+    if (location.search.includes('create=true') || location.pathname.includes('create-delivery')) {
+      openCreateModal()
+    }
+  }, [location, openCreateModal])
+
+  // Session verification and role protection
+  useEffect(() => {
+    let isMounted = true
+
+    const verifySession = async (): Promise<void> => {
+      try {
+        const response = await fetch(`${env.apiBaseUrl}/auth/me`, {
+          method: 'GET',
+          credentials: 'include',
+        })
+
+        if (!isMounted) return
+
+        if (response.status === 401) {
+          navigate('/login', { replace: true })
+          return
+        }
+
+        if (!response.ok) {
+          navigate('/login', { replace: true })
+          return
+        }
+
+        const userProfile = (await response.json()) as AuthenticatedCustomer
+        if (!isMounted) return
+
+        // Application approval status check
+        if (userProfile.approvalStatus === 'PENDING' || userProfile.approvalStatus === 'REJECTED') {
+          navigate('/application-status', { replace: true })
+          return
+        }
+
+        // Role authorization check
+        if (userProfile.role === 'MERCHANT') {
+          navigate('/merchant/dashboard', { replace: true })
+          return
+        }
+
+        if (userProfile.role === 'COURIER') {
+          navigate('/courier/dashboard', { replace: true })
+          return
+        }
+
+        if (userProfile.role === 'ADMIN' || userProfile.role === 'DISPATCHER') {
+          navigate('/admin/dashboard', { replace: true })
+          return
+        }
+
+        if (userProfile.role !== 'CUSTOMER') {
+          navigate('/login', { replace: true })
+          return
+        }
+
+        // Authorized as CUSTOMER
+        setIsVerifying(false)
+      } catch {
+        if (isMounted) {
+          navigate('/login', { replace: true })
+        }
+      }
+    }
+
+    void verifySession()
+
+    return () => {
+      isMounted = false
+    }
+  }, [navigate])
 
   const toggleMobileSidebar = (): void => {
     setIsMobileSidebarOpen((previousState) => !previousState)
@@ -61,9 +154,17 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
     setIsUserMenuOpen((previousState) => !previousState)
   }
 
-  const handleLogout = (): void => {
-    // In a real flow, clear tokens and redirect to login
-    alert('Logged out successfully.')
+  const handleLogout = async (): Promise<void> => {
+    try {
+      await fetch(`${env.apiBaseUrl}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      })
+    } catch {
+      // Proceed even on network error
+    } finally {
+      navigate('/login', { replace: true })
+    }
   }
 
   const getBreadcrumbTitle = (path: string): string => {
@@ -75,6 +176,15 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
     if (path.includes('notifications')) return 'Notifications'
     if (path.includes('support')) return 'Help & support'
     return 'Dashboard'
+  }
+
+  if (isVerifying) {
+    return (
+      <div className="customer-layout__loading" role="status">
+        <div className="customer-layout__spinner" aria-hidden="true" />
+        <span>Verifying customer session...</span>
+      </div>
+    )
   }
 
   return (
@@ -133,14 +243,17 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
         </div>
 
         <div className="customer-sidebar__action">
-          <Link
-            to="/customer/create-delivery"
+          <button
+            type="button"
             className="customer-sidebar__create-btn"
-            onClick={closeMobileSidebar}
+            onClick={() => {
+              closeMobileSidebar()
+              openCreateModal()
+            }}
           >
             <Plus className="w-4 h-4" />
             <span>Create delivery</span>
-          </Link>
+          </button>
         </div>
 
         <nav className="customer-sidebar__nav" aria-label="Customer Navigation">
@@ -214,13 +327,14 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
           </div>
 
           <div className="customer-topbar__right">
-            <button
-              type="button"
+            <Link
+              to="/customer/notifications"
               className="customer-topbar__icon-btn"
               aria-label="View notifications"
             >
               <Bell className="w-4 h-4 text-slate-600" />
-            </button>
+              <span className="customer-topbar__badge-dot" />
+            </Link>
 
             <div className="customer-topbar__user-wrapper">
               <button
@@ -262,11 +376,23 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
                 </div>
               )}
             </div>
+
+            <button
+              type="button"
+              onClick={openCreateModal}
+              className="customer-topbar__create-btn"
+            >
+              <Plus className="w-4 h-4 mr-1.5" />
+              <span>Create delivery</span>
+            </button>
           </div>
         </header>
 
         {/* Page Content Outlet */}
         <main className="customer-layout__content">{children}</main>
+
+        {/* Global Create Delivery Modal */}
+        <CreateDeliveryModal />
       </div>
     </div>
   )
