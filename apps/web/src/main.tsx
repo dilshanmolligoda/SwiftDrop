@@ -92,6 +92,7 @@ createRoot(document.getElementById('root')!).render(
               <Route path="deliveries/:parcelId" element={<DeliveryDetailsPage />} />
               <Route path="*" element={<Navigate to="/courier/dashboard" replace />} />
             </Route>
+            <Route
               path="/customer/support"
               element={
                 <CustomerLayout>
