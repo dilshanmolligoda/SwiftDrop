@@ -2,8 +2,12 @@
 
 This directory contains independently testable read-side business logic. It is
 **not a working tracking API**. Nothing is registered in `AppModule`; there are no
-HTTP controllers, database adapters, default data, status mappings, PDF generator,
+HTTP controllers, database adapters, default data, status mappings,
 or real-time connections. Existing application behavior is unchanged.
+
+The separate [receipt foundation](receipts/README.md) now provides validated
+server-side receipt formatting, in-memory PDF generation, and authorization
+orchestration. It also remains unregistered and requires a real receipt reader.
 
 ## Implemented components
 
@@ -121,9 +125,10 @@ rename the other members' types. No frontend page is connected by this phase.
 - **Member 8:** event schema/versioning, transactional outbox and RabbitMQ
   publication, deduplication/ordering, and the agreed SSE/real-time integration.
   REST read logic does not depend on a fake broker or simulated updates.
-- **Receipts (later phase):** agreed eligibility, authoritative fee/currency and
-  booking snapshot, approved PDF renderer/dependency, and an ownership check before
-  generating bytes. No receipt service/endpoint is implemented in Phase 1. Future
+- **Receipts:** authoritative persisted fee/currency and booking snapshots, plus
+  agreed eligibility, remain dependencies. The [receipt extension](receipts/README.md)
+  supplies PDF generation and an ownership-checking service; no receipt endpoint
+  or persistent adapter is registered. Future
   downloads should be attachments with private/no-store caching and no public
   filesystem paths or URLs.
 
