@@ -49,3 +49,25 @@ export const MerchantOrderStatus = {
 } as const
 
 export type MerchantOrderStatus = (typeof MerchantOrderStatus)[keyof typeof MerchantOrderStatus]
+
+
+export const ParcelStatus = {
+  PENDING: 'PENDING',
+  PICKED_UP: 'PICKED_UP',
+  IN_TRANSIT: 'IN_TRANSIT',
+  OUT_FOR_DELIVERY: 'OUT_FOR_DELIVERY',
+  DELIVERED: 'DELIVERED',
+  FAILED: 'FAILED',
+  RETURNED: 'RETURNED'
+} as const
+
+export type ParcelStatus = (typeof ParcelStatus)[keyof typeof ParcelStatus]
+
+
+export const PackageSize = {
+  SMALL: 'SMALL',
+  MEDIUM: 'MEDIUM',
+  LARGE: 'LARGE'
+} as const
+
+export type PackageSize = (typeof PackageSize)[keyof typeof PackageSize]

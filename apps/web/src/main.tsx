@@ -18,6 +18,7 @@ import { AddressBookPage } from './features/customer/pages/AddressBookPage.tsx'
 import { HelpSupportPage } from './features/customer/pages/HelpSupportPage.tsx'
 import { NotificationsPage } from './features/customer/pages/NotificationsPage.tsx'
 import CustomerDashboard from './features/customer/pages/CustomerDashboard.tsx'
+import MyDeliveriesPage from './features/customer/pages/MyDeliveriesPage.tsx'
 import { AdminLayout } from './components/layout/AdminLayout.tsx'
 import { AdminPlaceholderPage } from './features/admin/pages/AdminPlaceholderPage.tsx'
 import { AdminSettingsPage } from './features/admin/pages/AdminSettingsPage.tsx'
@@ -125,6 +126,26 @@ createRoot(document.getElementById('root')!).render(
                   <CustomerDashboard />
                 </CustomerLayout>
               }
+            />
+            <Route
+              path="/customer/deliveries"
+              element={
+                <CustomerLayout>
+                  <MyDeliveriesPage />
+                </CustomerLayout>
+              }
+            />
+            <Route
+              path="/deliveries"
+              element={
+                <CustomerLayout>
+                  <MyDeliveriesPage />
+                </CustomerLayout>
+              }
+            />
+            <Route
+              path="/customer/create-delivery"
+              element={<Navigate to="/customer/dashboard?create=true" replace />}
             />
             <Route path="/merchant/dashboard" element={<MerchantDashboard />} />
             <Route path="/merchant" element={<MerchantLayout />}>

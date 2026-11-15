@@ -16,6 +16,8 @@ import {
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { env } from '../../../lib/env'
 import { useCustomerProfile } from '../context/useCustomerProfile'
+import { useCustomerDeliveries } from '../context/useCustomerDeliveries'
+import { CreateDeliveryModal } from './CreateDeliveryModal'
 import './CustomerLayout.css'
 
 interface NavigationItem {
@@ -57,11 +59,19 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
   const location = useLocation()
   const navigate = useNavigate()
   const { profile } = useCustomerProfile()
+  const { openCreateModal } = useCustomerDeliveries()
   const [isVerifying, setIsVerifying] = useState(true)
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
 
   const activePath = location.pathname
+
+  // Open creation modal if navigated with create=true or to /customer/create-delivery
+  useEffect(() => {
+    if (location.search.includes('create=true') || location.pathname.includes('create-delivery')) {
+      openCreateModal()
+    }
+  }, [location, openCreateModal])
 
   // Session verification and role protection
   useEffect(() => {
@@ -233,14 +243,17 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
         </div>
 
         <div className="customer-sidebar__action">
-          <Link
-            to="/customer/create-delivery"
+          <button
+            type="button"
             className="customer-sidebar__create-btn"
-            onClick={closeMobileSidebar}
+            onClick={() => {
+              closeMobileSidebar()
+              openCreateModal()
+            }}
           >
             <Plus className="w-4 h-4" />
             <span>Create delivery</span>
-          </Link>
+          </button>
         </div>
 
         <nav className="customer-sidebar__nav" aria-label="Customer Navigation">
@@ -364,15 +377,22 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
               )}
             </div>
 
-            <Link to="/customer/create-delivery" className="customer-topbar__create-btn">
+            <button
+              type="button"
+              onClick={openCreateModal}
+              className="customer-topbar__create-btn"
+            >
               <Plus className="w-4 h-4 mr-1.5" />
               <span>Create delivery</span>
-            </Link>
+            </button>
           </div>
         </header>
 
         {/* Page Content Outlet */}
         <main className="customer-layout__content">{children}</main>
+
+        {/* Global Create Delivery Modal */}
+        <CreateDeliveryModal />
       </div>
     </div>
   )

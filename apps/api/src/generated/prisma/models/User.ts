@@ -257,6 +257,7 @@ export type UserWhereInput = {
   merchantProfile?: Prisma.XOR<Prisma.MerchantProfileNullableScalarRelationFilter, Prisma.MerchantProfileWhereInput> | null
   courierProfile?: Prisma.XOR<Prisma.CourierProfileNullableScalarRelationFilter, Prisma.CourierProfileWhereInput> | null
   merchantOrders?: Prisma.MerchantOrderListRelationFilter
+  parcels?: Prisma.ParcelListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -277,6 +278,7 @@ export type UserOrderByWithRelationInput = {
   merchantProfile?: Prisma.MerchantProfileOrderByWithRelationInput
   courierProfile?: Prisma.CourierProfileOrderByWithRelationInput
   merchantOrders?: Prisma.MerchantOrderOrderByRelationAggregateInput
+  parcels?: Prisma.ParcelOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -300,6 +302,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   merchantProfile?: Prisma.XOR<Prisma.MerchantProfileNullableScalarRelationFilter, Prisma.MerchantProfileWhereInput> | null
   courierProfile?: Prisma.XOR<Prisma.CourierProfileNullableScalarRelationFilter, Prisma.CourierProfileWhereInput> | null
   merchantOrders?: Prisma.MerchantOrderListRelationFilter
+  parcels?: Prisma.ParcelListRelationFilter
 }, "id" | "email" | "googleSubject">
 
 export type UserOrderByWithAggregationInput = {
@@ -360,6 +363,7 @@ export type UserCreateInput = {
   merchantProfile?: Prisma.MerchantProfileCreateNestedOneWithoutUserInput
   courierProfile?: Prisma.CourierProfileCreateNestedOneWithoutUserInput
   merchantOrders?: Prisma.MerchantOrderCreateNestedManyWithoutMerchantInput
+  parcels?: Prisma.ParcelCreateNestedManyWithoutCustomerInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -380,6 +384,7 @@ export type UserUncheckedCreateInput = {
   merchantProfile?: Prisma.MerchantProfileUncheckedCreateNestedOneWithoutUserInput
   courierProfile?: Prisma.CourierProfileUncheckedCreateNestedOneWithoutUserInput
   merchantOrders?: Prisma.MerchantOrderUncheckedCreateNestedManyWithoutMerchantInput
+  parcels?: Prisma.ParcelUncheckedCreateNestedManyWithoutCustomerInput
 }
 
 export type UserUpdateInput = {
@@ -400,6 +405,7 @@ export type UserUpdateInput = {
   merchantProfile?: Prisma.MerchantProfileUpdateOneWithoutUserNestedInput
   courierProfile?: Prisma.CourierProfileUpdateOneWithoutUserNestedInput
   merchantOrders?: Prisma.MerchantOrderUpdateManyWithoutMerchantNestedInput
+  parcels?: Prisma.ParcelUpdateManyWithoutCustomerNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -420,6 +426,7 @@ export type UserUncheckedUpdateInput = {
   merchantProfile?: Prisma.MerchantProfileUncheckedUpdateOneWithoutUserNestedInput
   courierProfile?: Prisma.CourierProfileUncheckedUpdateOneWithoutUserNestedInput
   merchantOrders?: Prisma.MerchantOrderUncheckedUpdateManyWithoutMerchantNestedInput
+  parcels?: Prisma.ParcelUncheckedUpdateManyWithoutCustomerNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -599,6 +606,20 @@ export type UserUpdateOneRequiredWithoutMerchantOrdersNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutMerchantOrdersInput, Prisma.UserUpdateWithoutMerchantOrdersInput>, Prisma.UserUncheckedUpdateWithoutMerchantOrdersInput>
 }
 
+export type UserCreateNestedOneWithoutParcelsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutParcelsInput, Prisma.UserUncheckedCreateWithoutParcelsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutParcelsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutParcelsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutParcelsInput, Prisma.UserUncheckedCreateWithoutParcelsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutParcelsInput
+  upsert?: Prisma.UserUpsertWithoutParcelsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutParcelsInput, Prisma.UserUpdateWithoutParcelsInput>, Prisma.UserUncheckedUpdateWithoutParcelsInput>
+}
+
 export type UserCreateWithoutMerchantProfileInput = {
   id?: string
   email: string
@@ -616,6 +637,7 @@ export type UserCreateWithoutMerchantProfileInput = {
   updatedAt?: Date | string
   courierProfile?: Prisma.CourierProfileCreateNestedOneWithoutUserInput
   merchantOrders?: Prisma.MerchantOrderCreateNestedManyWithoutMerchantInput
+  parcels?: Prisma.ParcelCreateNestedManyWithoutCustomerInput
 }
 
 export type UserUncheckedCreateWithoutMerchantProfileInput = {
@@ -635,6 +657,7 @@ export type UserUncheckedCreateWithoutMerchantProfileInput = {
   updatedAt?: Date | string
   courierProfile?: Prisma.CourierProfileUncheckedCreateNestedOneWithoutUserInput
   merchantOrders?: Prisma.MerchantOrderUncheckedCreateNestedManyWithoutMerchantInput
+  parcels?: Prisma.ParcelUncheckedCreateNestedManyWithoutCustomerInput
 }
 
 export type UserCreateOrConnectWithoutMerchantProfileInput = {
@@ -670,6 +693,7 @@ export type UserUpdateWithoutMerchantProfileInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   courierProfile?: Prisma.CourierProfileUpdateOneWithoutUserNestedInput
   merchantOrders?: Prisma.MerchantOrderUpdateManyWithoutMerchantNestedInput
+  parcels?: Prisma.ParcelUpdateManyWithoutCustomerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMerchantProfileInput = {
@@ -689,6 +713,7 @@ export type UserUncheckedUpdateWithoutMerchantProfileInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   courierProfile?: Prisma.CourierProfileUncheckedUpdateOneWithoutUserNestedInput
   merchantOrders?: Prisma.MerchantOrderUncheckedUpdateManyWithoutMerchantNestedInput
+  parcels?: Prisma.ParcelUncheckedUpdateManyWithoutCustomerNestedInput
 }
 
 export type UserCreateWithoutCourierProfileInput = {
@@ -708,6 +733,7 @@ export type UserCreateWithoutCourierProfileInput = {
   updatedAt?: Date | string
   merchantProfile?: Prisma.MerchantProfileCreateNestedOneWithoutUserInput
   merchantOrders?: Prisma.MerchantOrderCreateNestedManyWithoutMerchantInput
+  parcels?: Prisma.ParcelCreateNestedManyWithoutCustomerInput
 }
 
 export type UserUncheckedCreateWithoutCourierProfileInput = {
@@ -727,6 +753,7 @@ export type UserUncheckedCreateWithoutCourierProfileInput = {
   updatedAt?: Date | string
   merchantProfile?: Prisma.MerchantProfileUncheckedCreateNestedOneWithoutUserInput
   merchantOrders?: Prisma.MerchantOrderUncheckedCreateNestedManyWithoutMerchantInput
+  parcels?: Prisma.ParcelUncheckedCreateNestedManyWithoutCustomerInput
 }
 
 export type UserCreateOrConnectWithoutCourierProfileInput = {
@@ -762,6 +789,7 @@ export type UserUpdateWithoutCourierProfileInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   merchantProfile?: Prisma.MerchantProfileUpdateOneWithoutUserNestedInput
   merchantOrders?: Prisma.MerchantOrderUpdateManyWithoutMerchantNestedInput
+  parcels?: Prisma.ParcelUpdateManyWithoutCustomerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCourierProfileInput = {
@@ -781,6 +809,7 @@ export type UserUncheckedUpdateWithoutCourierProfileInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   merchantProfile?: Prisma.MerchantProfileUncheckedUpdateOneWithoutUserNestedInput
   merchantOrders?: Prisma.MerchantOrderUncheckedUpdateManyWithoutMerchantNestedInput
+  parcels?: Prisma.ParcelUncheckedUpdateManyWithoutCustomerNestedInput
 }
 
 export type UserCreateWithoutMerchantOrdersInput = {
@@ -800,6 +829,7 @@ export type UserCreateWithoutMerchantOrdersInput = {
   updatedAt?: Date | string
   merchantProfile?: Prisma.MerchantProfileCreateNestedOneWithoutUserInput
   courierProfile?: Prisma.CourierProfileCreateNestedOneWithoutUserInput
+  parcels?: Prisma.ParcelCreateNestedManyWithoutCustomerInput
 }
 
 export type UserUncheckedCreateWithoutMerchantOrdersInput = {
@@ -819,6 +849,7 @@ export type UserUncheckedCreateWithoutMerchantOrdersInput = {
   updatedAt?: Date | string
   merchantProfile?: Prisma.MerchantProfileUncheckedCreateNestedOneWithoutUserInput
   courierProfile?: Prisma.CourierProfileUncheckedCreateNestedOneWithoutUserInput
+  parcels?: Prisma.ParcelUncheckedCreateNestedManyWithoutCustomerInput
 }
 
 export type UserCreateOrConnectWithoutMerchantOrdersInput = {
@@ -854,6 +885,7 @@ export type UserUpdateWithoutMerchantOrdersInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   merchantProfile?: Prisma.MerchantProfileUpdateOneWithoutUserNestedInput
   courierProfile?: Prisma.CourierProfileUpdateOneWithoutUserNestedInput
+  parcels?: Prisma.ParcelUpdateManyWithoutCustomerNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMerchantOrdersInput = {
@@ -873,6 +905,103 @@ export type UserUncheckedUpdateWithoutMerchantOrdersInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   merchantProfile?: Prisma.MerchantProfileUncheckedUpdateOneWithoutUserNestedInput
   courierProfile?: Prisma.CourierProfileUncheckedUpdateOneWithoutUserNestedInput
+  parcels?: Prisma.ParcelUncheckedUpdateManyWithoutCustomerNestedInput
+}
+
+export type UserCreateWithoutParcelsInput = {
+  id?: string
+  email: string
+  fullName: string
+  phoneNumber?: string | null
+  passwordHash?: string | null
+  role?: $Enums.Role
+  approvalStatus?: $Enums.ApprovalStatus
+  isActive?: boolean
+  googleSubject?: string | null
+  reviewedAt?: Date | string | null
+  reviewedBy?: string | null
+  rejectionReason?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  merchantProfile?: Prisma.MerchantProfileCreateNestedOneWithoutUserInput
+  courierProfile?: Prisma.CourierProfileCreateNestedOneWithoutUserInput
+  merchantOrders?: Prisma.MerchantOrderCreateNestedManyWithoutMerchantInput
+}
+
+export type UserUncheckedCreateWithoutParcelsInput = {
+  id?: string
+  email: string
+  fullName: string
+  phoneNumber?: string | null
+  passwordHash?: string | null
+  role?: $Enums.Role
+  approvalStatus?: $Enums.ApprovalStatus
+  isActive?: boolean
+  googleSubject?: string | null
+  reviewedAt?: Date | string | null
+  reviewedBy?: string | null
+  rejectionReason?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  merchantProfile?: Prisma.MerchantProfileUncheckedCreateNestedOneWithoutUserInput
+  courierProfile?: Prisma.CourierProfileUncheckedCreateNestedOneWithoutUserInput
+  merchantOrders?: Prisma.MerchantOrderUncheckedCreateNestedManyWithoutMerchantInput
+}
+
+export type UserCreateOrConnectWithoutParcelsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutParcelsInput, Prisma.UserUncheckedCreateWithoutParcelsInput>
+}
+
+export type UserUpsertWithoutParcelsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutParcelsInput, Prisma.UserUncheckedUpdateWithoutParcelsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutParcelsInput, Prisma.UserUncheckedCreateWithoutParcelsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutParcelsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutParcelsInput, Prisma.UserUncheckedUpdateWithoutParcelsInput>
+}
+
+export type UserUpdateWithoutParcelsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  merchantProfile?: Prisma.MerchantProfileUpdateOneWithoutUserNestedInput
+  courierProfile?: Prisma.CourierProfileUpdateOneWithoutUserNestedInput
+  merchantOrders?: Prisma.MerchantOrderUpdateManyWithoutMerchantNestedInput
+}
+
+export type UserUncheckedUpdateWithoutParcelsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  merchantProfile?: Prisma.MerchantProfileUncheckedUpdateOneWithoutUserNestedInput
+  courierProfile?: Prisma.CourierProfileUncheckedUpdateOneWithoutUserNestedInput
+  merchantOrders?: Prisma.MerchantOrderUncheckedUpdateManyWithoutMerchantNestedInput
 }
 
 
@@ -882,10 +1011,12 @@ export type UserUncheckedUpdateWithoutMerchantOrdersInput = {
 
 export type UserCountOutputType = {
   merchantOrders: number
+  parcels: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   merchantOrders?: boolean | UserCountOutputTypeCountMerchantOrdersArgs
+  parcels?: boolean | UserCountOutputTypeCountParcelsArgs
 }
 
 /**
@@ -903,6 +1034,13 @@ export type UserCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensi
  */
 export type UserCountOutputTypeCountMerchantOrdersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.MerchantOrderWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountParcelsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ParcelWhereInput
 }
 
 
@@ -924,6 +1062,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   merchantProfile?: boolean | Prisma.User$merchantProfileArgs<ExtArgs>
   courierProfile?: boolean | Prisma.User$courierProfileArgs<ExtArgs>
   merchantOrders?: boolean | Prisma.User$merchantOrdersArgs<ExtArgs>
+  parcels?: boolean | Prisma.User$parcelsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -983,6 +1122,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   merchantProfile?: boolean | Prisma.User$merchantProfileArgs<ExtArgs>
   courierProfile?: boolean | Prisma.User$courierProfileArgs<ExtArgs>
   merchantOrders?: boolean | Prisma.User$merchantOrdersArgs<ExtArgs>
+  parcels?: boolean | Prisma.User$parcelsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -994,6 +1134,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     merchantProfile: Prisma.$MerchantProfilePayload<ExtArgs> | null
     courierProfile: Prisma.$CourierProfilePayload<ExtArgs> | null
     merchantOrders: Prisma.$MerchantOrderPayload<ExtArgs>[]
+    parcels: Prisma.$ParcelPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1407,6 +1548,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   merchantProfile<T extends Prisma.User$merchantProfileArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$merchantProfileArgs<ExtArgs>>): Prisma.Prisma__MerchantProfileClient<runtime.Types.Result.GetResult<Prisma.$MerchantProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   courierProfile<T extends Prisma.User$courierProfileArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$courierProfileArgs<ExtArgs>>): Prisma.Prisma__CourierProfileClient<runtime.Types.Result.GetResult<Prisma.$CourierProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   merchantOrders<T extends Prisma.User$merchantOrdersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$merchantOrdersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MerchantOrderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  parcels<T extends Prisma.User$parcelsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$parcelsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ParcelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1902,6 +2044,30 @@ export type User$merchantOrdersArgs<ExtArgs extends runtime.Types.Extensions.Int
   take?: number
   skip?: number
   distinct?: Prisma.MerchantOrderScalarFieldEnum | Prisma.MerchantOrderScalarFieldEnum[]
+}
+
+/**
+ * User.parcels
+ */
+export type User$parcelsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Parcel
+   */
+  select?: Prisma.ParcelSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Parcel
+   */
+  omit?: Prisma.ParcelOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ParcelInclude<ExtArgs> | null
+  where?: Prisma.ParcelWhereInput
+  orderBy?: Prisma.ParcelOrderByWithRelationInput | Prisma.ParcelOrderByWithRelationInput[]
+  cursor?: Prisma.ParcelWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ParcelScalarFieldEnum | Prisma.ParcelScalarFieldEnum[]
 }
 
 /**
