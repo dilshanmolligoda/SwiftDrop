@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { Lock, CheckCircle, AlertCircle, X, Eye, EyeOff } from 'lucide-react'
 import { ToggleSwitch } from '../components/ToggleSwitch'
 import { useCustomerProfile } from '../context/useCustomerProfile'
+import { GoogleIcon } from '../../auth/components/GoogleIcon'
+import { env } from '../../../lib/env'
 import './SettingsPage.css'
 
 interface UserProfileState {
@@ -327,6 +329,34 @@ export const SettingsPage: React.FC = () => {
               <Lock className="w-4 h-4 mr-2" />
               Change password
             </button>
+          </div>
+
+          <div className="settings-row mt-4">
+            <div>
+              <span className="settings-row__label">Google Account</span>
+              <p className="settings-row__hint">
+                {customerProfile.isGoogleLinked
+                  ? 'Your account is linked to Google for single-click sign in.'
+                  : 'Link your Google account for secure single-click login.'}
+              </p>
+            </div>
+            {customerProfile.isGoogleLinked ? (
+              <span className="settings-badge-connected">
+                <CheckCircle className="w-4 h-4 text-emerald-600 mr-1.5" />
+                <span>Connected</span>
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  window.location.href = `${env.apiBaseUrl}/auth/google/link`
+                }}
+                className="settings-btn-secondary"
+              >
+                <GoogleIcon size={16} />
+                <span className="ml-2">Connect Google</span>
+              </button>
+            )}
           </div>
         </section>
 
