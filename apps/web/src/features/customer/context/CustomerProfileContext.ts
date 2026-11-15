@@ -10,6 +10,8 @@ export interface CustomerProfile {
   email: string
   phoneNumber: string
   initials: string
+  role?: string
+  isGoogleLinked?: boolean
   notifications: CustomerNotificationPreferences
 }
 

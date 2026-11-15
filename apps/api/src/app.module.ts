@@ -13,6 +13,7 @@ import { CsrfGuard } from './modules/auth/guards/csrf.guard.js';
 import { cookieParserMiddleware } from './modules/auth/utils/cookie.util.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { UsersModule } from './modules/users/users.module.js';
+import { MerchantDashboardModule } from './modules/merchant-dashboard/merchant-dashboard.module.js';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { UsersModule } from './modules/users/users.module.js';
     }),
     AuthModule,
     HealthModule,
+    MerchantDashboardModule,
     PrismaModule,
     UsersModule,
   ],

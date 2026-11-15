@@ -34,6 +34,15 @@ enum VehicleType {
   VAN
 }
 
+enum MerchantOrderStatus {
+  AWAITING_PICKUP
+  OUT_FOR_DELIVERY
+  IN_TRANSIT
+  PICKED_UP
+  DELIVERY_FAILED
+  DELIVERED
+}
+
 model User {
   id              String          @id @default(uuid()) @db.Uuid
   email           String          @unique
@@ -52,6 +61,7 @@ model User {
 
   merchantProfile MerchantProfile?
   courierProfile  CourierProfile?
+  merchantOrders  MerchantOrder[]
 
   @@map("users")
 }
@@ -82,4 +92,25 @@ model CourierProfile {
   user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("courier_profiles")
+}
+
+model MerchantOrder {
+  id                      String              @id @default(uuid()) @db.Uuid
+  merchantUserId          String              @db.Uuid
+  reference               String
+  trackingNumber          String              @unique
+  recipientName           String
+  destination             String
+  status                  MerchantOrderStatus @default(AWAITING_PICKUP)
+  failedDeliveryAttempts  Int                 @default(0)
+  deliveredAt             DateTime?
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+
+  merchant User @relation(fields: [merchantUserId], references: [id], onDelete: Cascade)
+
+  @@unique([merchantUserId, reference])
+  @@index([merchantUserId, updatedAt])
+  @@index([merchantUserId, status])
+  @@map("merchant_orders")
 }

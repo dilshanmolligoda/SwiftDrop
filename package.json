@@ -21,6 +21,7 @@
     "preview:web": "npm run preview -w apps/web",
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
+    "lint:check": "npm run lint:check --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "test:cov": "npm run test:cov --workspaces --if-present",
     "format": "prettier --write .",
