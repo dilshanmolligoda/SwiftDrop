@@ -1,0 +1,69 @@
+.cp-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 48px 20px;
+  text-align: center;
+}
+
+.cp-state__icon {
+  width: 28px;
+  height: 28px;
+  margin-bottom: 4px;
+}
+
+.cp-state__icon--primary {
+  color: var(--cp-primary);
+}
+
+.cp-state__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 8px;
+  border-radius: 50%;
+  background: var(--cp-primary-soft);
+  color: var(--cp-primary);
+}
+
+.cp-state__badge svg {
+  width: 24px;
+  height: 24px;
+}
+
+.cp-state__badge--danger {
+  background: var(--cp-danger-soft);
+  color: var(--cp-danger);
+}
+
+.cp-state__title {
+  font-size: 16px;
+  font-weight: 650;
+  color: var(--cp-text);
+}
+
+.cp-state__text {
+  max-width: 420px;
+  font-size: 14px;
+  color: var(--cp-text-muted);
+}
+
+.cp-state__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.cp-state__actions:empty {
+  display: none;
+}
+
+.cp-state > .cp-btn {
+  margin-top: 12px;
+}
