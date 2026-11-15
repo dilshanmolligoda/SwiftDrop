@@ -1,4 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { env } from '../../lib/env';
 import { SwiftDropLogo } from './components/SwiftDropLogo';
 import { GoogleIcon } from './components/GoogleIcon';
@@ -11,7 +12,15 @@ interface AuthenticatedUser {
   role: 'CUSTOMER' | 'MERCHANT' | 'COURIER' | 'DISPATCHER' | 'ADMIN';
 }
 
+// Portal home for roles that already have a frontend area.
+const ROLE_PORTALS: Partial<Record<AuthenticatedUser['role'], { path: string; label: string }>> = {
+  COURIER: { path: '/courier/dashboard', label: 'Go to courier portal' },
+};
+
 export default function LoginPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const redirectFrom = (location.state as { from?: { pathname?: string; search?: string } } | null)?.from;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -157,6 +166,14 @@ export default function LoginPage() {
       setAuthenticatedUser(userProfile);
       setPassword('');
       setFieldErrors({});
+
+      // Return to the protected page that sent the user here, or the role's portal.
+      const target = redirectFrom?.pathname
+        ? `${redirectFrom.pathname}${redirectFrom.search ?? ''}`
+        : ROLE_PORTALS[userProfile.role]?.path;
+      if (target) {
+        navigate(target, { replace: true });
+      }
     } catch {
       setErrorMessage('Unable to connect to SwiftDrop server. Please ensure the backend is running.');
     } finally {
@@ -186,6 +203,8 @@ export default function LoginPage() {
   const showUnderDevelopmentNotice = (feature: string) => {
     setFeatureNotice(`${feature} is planned for a later phase.`);
   };
+
+  const rolePortal = authenticatedUser ? ROLE_PORTALS[authenticatedUser.role] : undefined;
 
   return (
     <div className="login-page">
@@ -264,6 +283,12 @@ export default function LoginPage() {
               <h2 className="user-profile-badge__name">{authenticatedUser.fullName}</h2>
               <p className="user-profile-badge__email">{authenticatedUser.email}</p>
             </div>
+
+            {rolePortal && (
+              <Link to={rolePortal.path} className="login-submit-btn login-portal-link">
+                {rolePortal.label}
+              </Link>
+            )}
 
             <button type="button" className="login-logout-btn" onClick={handleLogout}>
               Sign out
