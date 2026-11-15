@@ -260,7 +260,8 @@ export default function LoginPage() {
     setFeatureNotice(`${feature} is planned for a later phase.`);
   };
 
-  const rolePortal = authenticatedUser ? ROLE_PORTALS[authenticatedUser.role] : undefined;
+  const rolePortal =
+    authenticatedUser?.approvalStatus === 'APPROVED' ? ROLE_PORTALS[authenticatedUser.role] : undefined;
 
   return (
     <div className="login-page">

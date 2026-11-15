@@ -19,7 +19,8 @@ interface RequireRoleProps {
 /**
  * Route guard that reuses the existing cookie session (`GET /auth/me`).
  * Unauthenticated visitors are redirected to /login; signed-in users with the
- * wrong role see an access-denied screen instead of the protected page.
+ * wrong role see an access-denied screen instead of the protected page, and
+ * accounts that are not yet approved are sent to /application-status.
  */
 export function RequireRole({ roles, children }: RequireRoleProps) {
   const location = useLocation()
@@ -119,6 +120,12 @@ export function RequireRole({ roles, children }: RequireRoleProps) {
         </div>
       </div>
     )
+  }
+
+  // Pending or rejected applicants cannot use role portals; the API enforces the
+  // same rule, so send them to their application status instead of failing calls.
+  if (state.user.approvalStatus !== 'APPROVED') {
+    return <Navigate to="/application-status" replace />
   }
 
   return <SessionContext.Provider value={contextValue}>{children}</SessionContext.Provider>
