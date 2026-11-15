@@ -70,7 +70,7 @@ function getInitialLinkNotice(): { type: 'success' | 'error'; message: string } 
 
 
 export const CustomerDashboard: React.FC = () => {
-  const { metrics, deliveries, createDelivery } = useCustomerDeliveries()
+  const { metrics, deliveries, openCreateModal } = useCustomerDeliveries()
   const [linkNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(
     getInitialLinkNotice,
   )
@@ -82,7 +82,6 @@ export const CustomerDashboard: React.FC = () => {
   // Modal States
   const [selectedDelivery, setSelectedDelivery] = useState<CustomerDelivery | null>(null)
   const [isAssistantOpen, setIsAssistantOpen] = useState(false)
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
   // Assistant State
   const [assistantInput, setAssistantInput] = useState('')
@@ -94,13 +93,6 @@ export const CustomerDashboard: React.FC = () => {
       text: 'Hello! I am your SwiftDrop Delivery Assistant. How can I help you today? You can ask about parcel rates, tracking updates, or pickup schedules.',
     },
   ])
-
-  // New Delivery Form State
-  const [newRecipientName, setNewRecipientName] = useState('')
-  const [newRecipientAddress, setNewRecipientAddress] = useState('')
-  const [newRecipientPhone, setNewRecipientPhone] = useState('')
-  const [newPackageSize, setNewPackageSize] = useState<'SMALL' | 'MEDIUM' | 'LARGE'>('MEDIUM')
-  const [newWeight, setNewWeight] = useState(1.5)
 
   const handleTrackSubmit = (e: React.FormEvent): void => {
     e.preventDefault()
@@ -148,72 +140,10 @@ export const CustomerDashboard: React.FC = () => {
     }, 400)
   }
 
-  const handleCreateDeliverySubmit = (e: React.FormEvent): void => {
-    e.preventDefault()
-    if (!newRecipientName || !newRecipientAddress) return
-
-    createDelivery({
-      senderName: 'Jane Doe',
-      senderAddress: 'Colombo 03',
-      recipientName: newRecipientName,
-      recipientAddress: newRecipientAddress,
-      recipientPhone: newRecipientPhone || '+94 77 000 0000',
-      packageSize: newPackageSize,
-      weightKg: newWeight,
-      costLkr: newPackageSize === 'SMALL' ? 450 : newPackageSize === 'MEDIUM' ? 650 : 950,
-    })
-
-    setIsCreateModalOpen(false)
-    setNewRecipientName('')
-    setNewRecipientAddress('')
-    setNewRecipientPhone('')
-  }
-
-  // Find deliveries to display matching Figma mockup
-  const deliveryKandy = deliveries.find((d) => d.trackingNumber === 'SD-24819') || {
-    id: 'del-24819',
-    trackingNumber: 'SD-24819',
-    senderName: 'Jane Doe',
-    senderAddress: 'Colombo 03',
-    recipientName: 'Sunil Perera',
-    recipientAddress: 'Peradeniya Road, Kandy',
-    recipientPhone: '+94 77 123 4567',
-    packageSize: 'MEDIUM' as const,
-    weightKg: 2.5,
-    costLkr: 650,
-    status: 'IN_TRANSIT' as const,
-    createdAt: '2026-04-21T09:15:00.000Z',
-  }
-
-  const deliveryGalle = deliveries.find((d) => d.trackingNumber === 'SD-24820') || {
-    id: 'del-24820',
-    trackingNumber: 'SD-24820',
-    senderName: 'Jane Doe',
-    senderAddress: 'Colombo 03',
-    recipientName: 'Nimal Silva',
-    recipientAddress: 'Main Street, Galle',
-    recipientPhone: '+94 71 987 6543',
-    packageSize: 'SMALL' as const,
-    weightKg: 1.2,
-    costLkr: 450,
-    status: 'OUT_FOR_DELIVERY' as const,
-    createdAt: '2026-04-21T10:20:00.000Z',
-  }
-
-  const deliveryMatara = deliveries.find((d) => d.trackingNumber === 'SD-24817') || {
-    id: 'del-24817',
-    trackingNumber: 'SD-24817',
-    senderName: 'Jane Doe',
-    senderAddress: 'Colombo 03',
-    recipientName: 'Kamal Fernando',
-    recipientAddress: 'Beach Road, Matara',
-    recipientPhone: '+94 76 555 1234',
-    packageSize: 'MEDIUM' as const,
-    weightKg: 3.0,
-    costLkr: 750,
-    status: 'FAILED' as const,
-    createdAt: '2026-04-20T14:00:00.000Z',
-  }
+  const activeDeliveriesList = deliveries.filter((d) =>
+    ['PENDING', 'ACCEPTED', 'PICKED_UP', 'IN_TRANSIT', 'OUT_FOR_DELIVERY'].includes(d.status),
+  )
+  const attentionDelivery = deliveries.find((d) => ['FAILED', 'RETURNED'].includes(d.status))
 
   return (
     <div className="customer-dashboard">
@@ -227,7 +157,7 @@ export const CustomerDashboard: React.FC = () => {
         </div>
         <button
           type="button"
-          onClick={() => setIsCreateModalOpen(true)}
+          onClick={openCreateModal}
           className="customer-dashboard__cta-btn"
         >
           <Plus className="w-4 h-4 mr-1.5" />
@@ -262,7 +192,7 @@ export const CustomerDashboard: React.FC = () => {
           </div>
           <div className="metric-card__content">
             <span className="metric-card__label">Active deliveries</span>
-            <span className="metric-card__value">{metrics.activeDeliveries || 3}</span>
+            <span className="metric-card__value">{metrics.activeDeliveries ?? 0}</span>
           </div>
         </article>
 
@@ -272,7 +202,7 @@ export const CustomerDashboard: React.FC = () => {
           </div>
           <div className="metric-card__content">
             <span className="metric-card__label">Delivered this month</span>
-            <span className="metric-card__value">{metrics.deliveredThisMonth || 12}</span>
+            <span className="metric-card__value">{metrics.deliveredThisMonth ?? 0}</span>
           </div>
         </article>
 
@@ -282,7 +212,7 @@ export const CustomerDashboard: React.FC = () => {
           </div>
           <div className="metric-card__content">
             <span className="metric-card__label">Needs attention</span>
-            <span className="metric-card__value">{metrics.needsAttention || 1}</span>
+            <span className="metric-card__value">{metrics.needsAttention ?? 0}</span>
           </div>
         </article>
       </section>
@@ -327,198 +257,247 @@ export const CustomerDashboard: React.FC = () => {
             </Link>
           </div>
 
-          {/* Delivery Card 1: SD-24819 (To Kandy - In transit) */}
-          <article className="delivery-card">
-            <div className="delivery-card__header">
-              <div className="delivery-card__tracking-info">
-                <h3 className="delivery-card__tracking-number">{deliveryKandy.trackingNumber}</h3>
-                <span className="delivery-card__destination">To Kandy</span>
+          {/* Active Deliveries Dynamic List */}
+          {activeDeliveriesList.length === 0 ? (
+            <div className="empty-deliveries-card">
+              <div className="empty-deliveries-icon">
+                <Package className="w-8 h-8 text-emerald-800" />
               </div>
-              <span className="badge badge--in-transit">In transit</span>
-            </div>
-
-            {/* Stepper Timeline */}
-            <div className="delivery-stepper-container">
-              <div className="delivery-stepper-track">
-                {/* Stage 1: Picked up */}
-                <div className="stepper-node stepper-node--completed">
-                  <div className="stepper-dot-anchor">
-                    <div className="stepper-dot stepper-dot--completed" />
-                    <div className="stepper-label-box stepper-label-box--first">
-                      <span className="stepper-stage-title">Picked up</span>
-                      <span className="stepper-stage-time">Apr 21, 09:15</span>
-                    </div>
-                  </div>
-                  <div className="stepper-line stepper-line--active" />
-                </div>
-
-                {/* Stage 2: In transit */}
-                <div className="stepper-node stepper-node--active">
-                  <div className="stepper-dot-anchor">
-                    <div className="stepper-dot stepper-dot--completed" />
-                    <div className="stepper-label-box stepper-label-box--middle">
-                      <span className="stepper-stage-title">In transit</span>
-                      <span className="stepper-stage-time">Apr 22, 14:30</span>
-                    </div>
-                  </div>
-                  <div className="stepper-line stepper-line--pending" />
-                </div>
-
-                {/* Stage 3: Out for delivery */}
-                <div className="stepper-node stepper-node--pending">
-                  <div className="stepper-dot-anchor">
-                    <div className="stepper-dot stepper-dot--pending" />
-                    <div className="stepper-label-box stepper-label-box--middle">
-                      <span className="stepper-stage-title stepper-stage-title--muted">
-                        Out for delivery
-                      </span>
-                    </div>
-                  </div>
-                  <div className="stepper-line stepper-line--pending" />
-                </div>
-
-                {/* Stage 4: Delivered */}
-                <div className="stepper-node stepper-node--endpoint">
-                  <div className="stepper-dot-anchor">
-                    <div className="stepper-dot stepper-dot--pending" />
-                    <div className="stepper-label-box stepper-label-box--last">
-                      <span className="stepper-stage-title stepper-stage-title--muted">
-                        Delivered
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Delivery Card Footer */}
-            <div className="delivery-card__footer">
-              <div className="delivery-card__meta">
-                <Package className="w-4 h-4 text-slate-400" />
-                <span>Medium parcel · 2.5 kg</span>
-              </div>
+              <h3 className="empty-deliveries-title">No active deliveries</h3>
+              <p className="empty-deliveries-subtitle">
+                You haven't scheduled any deliveries yet. Click "Create delivery" to book your first courier pickup!
+              </p>
               <button
                 type="button"
-                onClick={() => setSelectedDelivery(deliveryKandy)}
-                className="delivery-card__details-btn"
+                onClick={openCreateModal}
+                className="empty-deliveries-btn"
               >
-                <span>View details</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <Plus className="w-4 h-4 mr-1.5" />
+                <span>Create delivery</span>
               </button>
             </div>
-          </article>
+          ) : (
+            activeDeliveriesList.map((delivery) => {
+              const destinationCity =
+                delivery.recipientAddress.split(',').pop()?.trim() || delivery.recipientAddress
+              const isPending = delivery.status === 'PENDING'
+              const isInTransit = delivery.status === 'IN_TRANSIT'
+              const isOutForDelivery = delivery.status === 'OUT_FOR_DELIVERY'
 
-          {/* Delivery Card 2: SD-24820 (To Galle - Out for delivery) */}
-          <article className="delivery-card">
-            <div className="delivery-card__header">
-              <div className="delivery-card__tracking-info">
-                <h3 className="delivery-card__tracking-number">{deliveryGalle.trackingNumber}</h3>
-                <span className="delivery-card__destination">To Galle</span>
-              </div>
-              <span className="badge badge--out-for-delivery">Out for delivery</span>
-            </div>
+              const stage1Completed = !isPending
+              const stage2Completed = isInTransit || isOutForDelivery
+              const stage3Active = isOutForDelivery
 
-            {/* Stepper Timeline */}
-            <div className="delivery-stepper-container">
-              <div className="delivery-stepper-track">
-                {/* Stage 1: Picked up */}
-                <div className="stepper-node stepper-node--completed">
-                  <div className="stepper-dot-anchor">
-                    <div className="stepper-dot stepper-dot--completed" />
-                    <div className="stepper-label-box stepper-label-box--first">
-                      <span className="stepper-stage-title">Picked up</span>
-                      <span className="stepper-stage-time">Apr 21, 10:20</span>
+              const badgeText =
+                delivery.status === 'OUT_FOR_DELIVERY'
+                  ? 'Out for delivery'
+                  : delivery.status === 'IN_TRANSIT'
+                    ? 'In transit'
+                    : delivery.status === 'PICKED_UP'
+                      ? 'Picked up'
+                      : 'Pending pickup'
+
+              const badgeClass =
+                delivery.status === 'OUT_FOR_DELIVERY'
+                  ? 'badge--out-for-delivery'
+                  : delivery.status === 'IN_TRANSIT' || delivery.status === 'PICKED_UP'
+                    ? 'badge--in-transit'
+                    : 'badge--pending'
+
+              return (
+                <article key={delivery.id} className="delivery-card">
+                  <div className="delivery-card__header">
+                    <div className="delivery-card__tracking-info">
+                      <h3 className="delivery-card__tracking-number">{delivery.trackingNumber}</h3>
+                      <span className="delivery-card__destination">To {destinationCity}</span>
+                    </div>
+                    <span className={`badge ${badgeClass}`}>{badgeText}</span>
+                  </div>
+
+                  {/* Stepper Timeline */}
+                  <div className="delivery-stepper-container">
+                    <div className="delivery-stepper-track">
+                      {/* Stage 1: Picked up */}
+                      <div
+                        className={`stepper-node ${
+                          stage1Completed
+                            ? 'stepper-node--completed'
+                            : isPending
+                              ? 'stepper-node--active'
+                              : 'stepper-node--pending'
+                        }`}
+                      >
+                        <div className="stepper-dot-anchor">
+                          <div
+                            className={`stepper-dot ${
+                              stage1Completed ? 'stepper-dot--completed' : 'stepper-dot--pending'
+                            }`}
+                          />
+                          <div className="stepper-label-box stepper-label-box--first">
+                            <span className="stepper-stage-title">Picked up</span>
+                            <span className="stepper-stage-time">
+                              {stage1Completed ? 'Confirmed' : 'Pending pickup'}
+                            </span>
+                          </div>
+                        </div>
+                        <div
+                          className={`stepper-line ${
+                            stage1Completed ? 'stepper-line--active' : 'stepper-line--pending'
+                          }`}
+                        />
+                      </div>
+
+                      {/* Stage 2: In transit */}
+                      <div
+                        className={`stepper-node ${
+                          stage2Completed
+                            ? 'stepper-node--completed'
+                            : isInTransit
+                              ? 'stepper-node--active'
+                              : 'stepper-node--pending'
+                        }`}
+                      >
+                        <div className="stepper-dot-anchor">
+                          <div
+                            className={`stepper-dot ${
+                              stage2Completed ? 'stepper-dot--completed' : 'stepper-dot--pending'
+                            }`}
+                          />
+                          <div className="stepper-label-box stepper-label-box--middle">
+                            <span
+                              className={`stepper-stage-title ${
+                                !stage2Completed && !isInTransit ? 'stepper-stage-title--muted' : ''
+                              }`}
+                            >
+                              In transit
+                            </span>
+                            {stage2Completed && (
+                              <span className="stepper-stage-time">En route</span>
+                            )}
+                          </div>
+                        </div>
+                        <div
+                          className={`stepper-line ${
+                            stage2Completed ? 'stepper-line--active' : 'stepper-line--pending'
+                          }`}
+                        />
+                      </div>
+
+                      {/* Stage 3: Out for delivery */}
+                      <div
+                        className={`stepper-node ${
+                          stage3Active ? 'stepper-node--active' : 'stepper-node--pending'
+                        }`}
+                      >
+                        <div className="stepper-dot-anchor">
+                          <div
+                            className={`stepper-dot ${
+                              stage3Active ? 'stepper-dot--completed' : 'stepper-dot--pending'
+                            }`}
+                          />
+                          <div className="stepper-label-box stepper-label-box--middle">
+                            <span
+                              className={`stepper-stage-title ${
+                                !stage3Active ? 'stepper-stage-title--muted' : ''
+                              }`}
+                            >
+                              Out for delivery
+                            </span>
+                            {stage3Active && (
+                              <span className="stepper-stage-time">With driver</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="stepper-line stepper-line--pending" />
+                      </div>
+
+                      {/* Stage 4: Delivered */}
+                      <div className="stepper-node stepper-node--endpoint">
+                        <div className="stepper-dot-anchor">
+                          <div className="stepper-dot stepper-dot--pending" />
+                          <div className="stepper-label-box stepper-label-box--last">
+                            <span className="stepper-stage-title stepper-stage-title--muted">
+                              Delivered
+                            </span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="stepper-line stepper-line--active" />
-                </div>
 
-                {/* Stage 2: In transit */}
-                <div className="stepper-node stepper-node--completed">
-                  <div className="stepper-dot-anchor">
-                    <div className="stepper-dot stepper-dot--completed" />
-                    <div className="stepper-label-box stepper-label-box--middle">
-                      <span className="stepper-stage-title">In transit</span>
-                      <span className="stepper-stage-time">Apr 22, 08:10</span>
-                    </div>
-                  </div>
-                  <div className="stepper-line stepper-line--active" />
-                </div>
-
-                {/* Stage 3: Out for delivery */}
-                <div className="stepper-node stepper-node--active">
-                  <div className="stepper-dot-anchor">
-                    <div className="stepper-dot stepper-dot--completed" />
-                    <div className="stepper-label-box stepper-label-box--middle">
-                      <span className="stepper-stage-title">Out for delivery</span>
-                      <span className="stepper-stage-time">Apr 22, 16:45</span>
-                    </div>
-                  </div>
-                  <div className="stepper-line stepper-line--pending" />
-                </div>
-
-                {/* Stage 4: Delivered */}
-                <div className="stepper-node stepper-node--endpoint">
-                  <div className="stepper-dot-anchor">
-                    <div className="stepper-dot stepper-dot--pending" />
-                    <div className="stepper-label-box stepper-label-box--last">
-                      <span className="stepper-stage-title stepper-stage-title--muted">
-                        Delivered
+                  {/* Delivery Card Footer */}
+                  <div className="delivery-card__footer">
+                    <div className="delivery-card__meta">
+                      <Package className="w-4 h-4 text-slate-400" />
+                      <span>
+                        {delivery.packageSize.charAt(0) + delivery.packageSize.slice(1).toLowerCase()}{' '}
+                        parcel · {delivery.weightKg} kg · LKR {delivery.costLkr.toLocaleString()}
                       </span>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDelivery(delivery)}
+                      className="delivery-card__details-btn"
+                    >
+                      <span>View details</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Delivery Card Footer */}
-            <div className="delivery-card__footer">
-              <div className="delivery-card__meta">
-                <Package className="w-4 h-4 text-slate-400" />
-                <span>Small parcel · 1.2 kg</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedDelivery(deliveryGalle)}
-                className="delivery-card__details-btn"
-              >
-                <span>View details</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </article>
+                </article>
+              )
+            })
+          )}
         </section>
 
         {/* Right Column: Attention & Assistant Cards */}
         <aside className="customer-dashboard__right-col" aria-label="Support & Notices">
           {/* Card 1: Delivery needs attention */}
-          <article className="attention-card">
-            <div className="attention-card__header">
-              <AlertTriangle className="attention-card__icon" />
-              <h2 className="attention-card__title">Delivery needs attention</h2>
-            </div>
-
-            <div className="attention-card__inner">
-              <div className="attention-card__inner-header">
-                <h3 className="attention-card__tracking">{deliveryMatara.trackingNumber}</h3>
-                <span className="attention-card__dest">To Matara</span>
+          {attentionDelivery ? (
+            <article className="attention-card">
+              <div className="attention-card__header">
+                <AlertTriangle className="attention-card__icon" />
+                <h2 className="attention-card__title">Delivery needs attention</h2>
               </div>
 
-              <h4 className="attention-card__issue-title">Recipient unavailable</h4>
-              <p className="attention-card__issue-desc">
-                Our driver couldn't reach the recipient.
-              </p>
+              <div className="attention-card__inner">
+                <div className="attention-card__inner-header">
+                  <h3 className="attention-card__tracking">{attentionDelivery.trackingNumber}</h3>
+                  <span className="attention-card__dest">
+                    To{' '}
+                    {attentionDelivery.recipientAddress.split(',').pop()?.trim() ||
+                      attentionDelivery.recipientAddress}
+                  </span>
+                </div>
 
-              <button
-                type="button"
-                onClick={() => setSelectedDelivery(deliveryMatara)}
-                className="attention-card__link-btn"
-              >
-                <span>View delivery</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </article>
+                <h4 className="attention-card__issue-title">Delivery failed / delayed</h4>
+                <p className="attention-card__issue-desc">
+                  Our driver could not reach the recipient. Please verify contact information.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedDelivery(attentionDelivery)}
+                  className="attention-card__link-btn"
+                >
+                  <span>View delivery</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </article>
+          ) : (
+            <article className="attention-card attention-card--safe">
+              <div className="attention-card__header">
+                <CheckCircle className="attention-card__icon text-emerald-600" />
+                <h2 className="attention-card__title">All deliveries on track</h2>
+              </div>
+
+              <div className="attention-card__inner">
+                <p className="attention-card__issue-desc">
+                  No delivery exceptions, failed attempts, or delays requiring your attention.
+                </p>
+              </div>
+            </article>
+          )}
 
           {/* Card 2: Need a hand? */}
           <article className="assistant-card">
@@ -733,134 +712,6 @@ export const CustomerDashboard: React.FC = () => {
                 <Send className="w-4 h-4" />
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* -------------------------------------------------------------
-       * Modal 3: Create Delivery Request Dialog
-       * ------------------------------------------------------------- */}
-      {isCreateModalOpen && (
-        <div className="modal-backdrop" onClick={() => setIsCreateModalOpen(false)}>
-          <div
-            className="modal-card"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="create-delivery-title"
-          >
-            <div className="modal-header">
-              <div>
-                <h3 id="create-delivery-title" className="modal-title">
-                  Create Delivery Request
-                </h3>
-                <p className="modal-subtitle">Schedule a pickup and book instant courier dispatch</p>
-              </div>
-              <button
-                type="button"
-                className="modal-close-btn"
-                onClick={() => setIsCreateModalOpen(false)}
-                aria-label="Close dialog"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateDeliverySubmit} className="modal-form">
-              <div className="modal-form-group">
-                <label htmlFor="create-recipient-name" className="modal-label">
-                  Recipient Name
-                </label>
-                <input
-                  id="create-recipient-name"
-                  type="text"
-                  required
-                  value={newRecipientName}
-                  onChange={(e) => setNewRecipientName(e.target.value)}
-                  placeholder="e.g. Sunil Perera"
-                  className="modal-input"
-                />
-              </div>
-
-              <div className="modal-form-group">
-                <label htmlFor="create-recipient-address" className="modal-label">
-                  Delivery Destination Address
-                </label>
-                <input
-                  id="create-recipient-address"
-                  type="text"
-                  required
-                  value={newRecipientAddress}
-                  onChange={(e) => setNewRecipientAddress(e.target.value)}
-                  placeholder="Street, City, Postal Code"
-                  className="modal-input"
-                />
-              </div>
-
-              <div className="modal-form-row">
-                <div className="modal-form-group">
-                  <label htmlFor="create-recipient-phone" className="modal-label">
-                    Contact Phone
-                  </label>
-                  <input
-                    id="create-recipient-phone"
-                    type="tel"
-                    value={newRecipientPhone}
-                    onChange={(e) => setNewRecipientPhone(e.target.value)}
-                    placeholder="+94 77 123 4567"
-                    className="modal-input"
-                  />
-                </div>
-
-              <div className="modal-form-row">
-                <div className="modal-form-group">
-                  <label htmlFor="create-package-size" className="modal-label">
-                    Package Size
-                  </label>
-                  <select
-                    id="create-package-size"
-                    value={newPackageSize}
-                    onChange={(e) =>
-                      setNewPackageSize(e.target.value as 'SMALL' | 'MEDIUM' | 'LARGE')
-                    }
-                    className="modal-input"
-                  >
-                    <option value="SMALL">Small (under 1 kg)</option>
-                    <option value="MEDIUM">Medium (1 - 5 kg)</option>
-                    <option value="LARGE">Large (5+ kg)</option>
-                  </select>
-                </div>
-
-                <div className="modal-form-group">
-                  <label htmlFor="create-package-weight" className="modal-label">
-                    Weight (kg)
-                  </label>
-                  <input
-                    id="create-package-weight"
-                    type="number"
-                    step="0.1"
-                    min="0.1"
-                    value={newWeight}
-                    onChange={(e) => setNewWeight(parseFloat(e.target.value) || 1.0)}
-                    className="modal-input"
-                  />
-                </div>
-              </div>
-              </div>
-
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  onClick={() => setIsCreateModalOpen(false)}
-                  className="modal-btn-secondary"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="modal-btn-primary">
-                  Book Delivery
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}

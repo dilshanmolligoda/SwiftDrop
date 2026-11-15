@@ -35,21 +35,28 @@ export interface DeliveryMetrics {
 }
 
 export interface NewDeliveryInput {
-  readonly senderName: string
+  readonly senderName?: string
   readonly senderAddress: string
   readonly recipientName: string
   readonly recipientAddress: string
   readonly recipientPhone: string
   readonly packageSize: PackageSize
   readonly weightKg: number
-  readonly costLkr: number
+  readonly costLkr?: number
+  readonly notes?: string
 }
 
 export interface CustomerDeliveryContextValue {
   readonly deliveries: readonly CustomerDelivery[]
   readonly metrics: DeliveryMetrics
-  readonly createDelivery: (input: NewDeliveryInput) => CustomerDelivery
+  readonly isLoading: boolean
+  readonly error: string | null
+  readonly isCreateModalOpen: boolean
+  readonly openCreateModal: () => void
+  readonly closeCreateModal: () => void
+  readonly createDelivery: (input: NewDeliveryInput) => Promise<CustomerDelivery>
   readonly updateDeliveryStatus: (id: string, status: DeliveryStatus) => void
+  readonly refreshDeliveries: () => Promise<void>
 }
 
 export const CustomerDeliveryContext = createContext<CustomerDeliveryContextValue | undefined>(

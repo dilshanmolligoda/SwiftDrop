@@ -14,6 +14,8 @@ import { cookieParserMiddleware } from './modules/auth/utils/cookie.util.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 import { MerchantDashboardModule } from './modules/merchant-dashboard/merchant-dashboard.module.js';
+import { PricingModule } from './modules/pricing/pricing.module.js';
+import { ParcelsModule } from './modules/parcels/parcels.module.js';
 
 @Module({
   imports: [
@@ -26,6 +28,8 @@ import { MerchantDashboardModule } from './modules/merchant-dashboard/merchant-d
     AuthModule,
     HealthModule,
     MerchantDashboardModule,
+    ParcelsModule,
+    PricingModule,
     PrismaModule,
     UsersModule,
   ],
