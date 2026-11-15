@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import React, { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Package,
   Truck,
@@ -12,6 +12,7 @@ import {
   ArrowRight,
 } from 'lucide-react'
 import { useCustomerDeliveries } from '../context/useCustomerDeliveries'
+import { type CustomerDelivery } from '../context/CustomerDeliveryContext'
 import './NotificationsPage.css'
 
 export interface NotificationItem {
@@ -25,79 +26,138 @@ export interface NotificationItem {
   readonly type: 'out_for_delivery' | 'in_transit' | 'attention' | 'delivered' | 'created'
 }
 
-const INITIAL_NOTIFICATIONS: readonly NotificationItem[] = [
-  {
-    id: 'notif-1',
-    title: 'Out for delivery',
-    description: 'SD-24820 is out for delivery to Galle.',
-    trackingNumber: 'SD-24820',
-    timestamp: '10 minutes ago',
-    timeCategory: 'TODAY',
-    isUnread: true,
-    type: 'out_for_delivery',
-  },
-  {
-    id: 'notif-2',
-    title: 'Parcel in transit',
-    description: 'SD-24819 is on its way to Kandy.',
-    trackingNumber: 'SD-24819',
-    timestamp: '1 hour ago',
-    timeCategory: 'TODAY',
-    isUnread: true,
-    type: 'in_transit',
-  },
-  {
-    id: 'notif-3',
-    title: 'Delivery needs attention',
-    description: 'SD-24817 could not be delivered. Recipient unavailable.',
-    trackingNumber: 'SD-24817',
-    timestamp: '2 hours ago',
-    timeCategory: 'TODAY',
-    isUnread: true,
-    type: 'attention',
-  },
-  {
-    id: 'notif-4',
-    title: 'Parcel delivered',
-    description: 'SD-24816 was delivered successfully.',
-    trackingNumber: 'SD-24816',
-    timestamp: '4:20 PM',
-    timeCategory: 'YESTERDAY',
-    isUnread: false,
-    type: 'delivered',
-  },
-  {
-    id: 'notif-5',
-    title: 'Delivery created',
-    description: 'Your delivery request SD-24818 has been confirmed.',
-    trackingNumber: 'SD-24818',
-    timestamp: '9:30 AM',
-    timeCategory: 'YESTERDAY',
-    isUnread: false,
-    type: 'created',
-  },
-]
+const READ_STORAGE_KEY = 'swiftdrop_notifications_read_v2'
+
+function deriveNotifications(
+  deliveries: readonly CustomerDelivery[],
+  readIds: Set<string>,
+): NotificationItem[] {
+  const items: NotificationItem[] = []
+
+  deliveries.forEach((delivery) => {
+    const destination =
+      delivery.recipientAddress.split(',').pop()?.trim() || delivery.recipientAddress
+    const createdDate = new Date(delivery.createdAt)
+    const isToday = new Date().toDateString() === createdDate.toDateString()
+    const timeFormatted = createdDate.toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+
+    if (delivery.status === 'OUT_FOR_DELIVERY') {
+      const id = `notif-${delivery.id}-out`
+      items.push({
+        id,
+        title: 'Out for delivery',
+        description: `${delivery.trackingNumber} is out for delivery to ${destination}.`,
+        trackingNumber: delivery.trackingNumber,
+        timestamp: isToday ? timeFormatted : 'Yesterday',
+        timeCategory: isToday ? 'TODAY' : 'YESTERDAY',
+        isUnread: !readIds.has(id),
+        type: 'out_for_delivery',
+      })
+    } else if (delivery.status === 'IN_TRANSIT' || delivery.status === 'PICKED_UP') {
+      const id = `notif-${delivery.id}-transit`
+      items.push({
+        id,
+        title: delivery.status === 'PICKED_UP' ? 'Parcel picked up' : 'Parcel in transit',
+        description: `${delivery.trackingNumber} is on its way to ${destination}.`,
+        trackingNumber: delivery.trackingNumber,
+        timestamp: isToday ? timeFormatted : 'Yesterday',
+        timeCategory: isToday ? 'TODAY' : 'YESTERDAY',
+        isUnread: !readIds.has(id),
+        type: 'in_transit',
+      })
+    } else if (delivery.status === 'DELIVERED') {
+      const id = `notif-${delivery.id}-delivered`
+      items.push({
+        id,
+        title: 'Parcel delivered',
+        description: `${delivery.trackingNumber} was delivered successfully.`,
+        trackingNumber: delivery.trackingNumber,
+        timestamp: isToday ? timeFormatted : 'Yesterday',
+        timeCategory: isToday ? 'TODAY' : 'YESTERDAY',
+        isUnread: !readIds.has(id),
+        type: 'delivered',
+      })
+    } else if (delivery.status === 'FAILED' || delivery.status === 'RETURNED') {
+      const id = `notif-${delivery.id}-attention`
+      items.push({
+        id,
+        title: 'Delivery needs attention',
+        description: `${delivery.trackingNumber} could not be delivered. Recipient unavailable.`,
+        trackingNumber: delivery.trackingNumber,
+        timestamp: isToday ? timeFormatted : 'Yesterday',
+        timeCategory: isToday ? 'TODAY' : 'YESTERDAY',
+        isUnread: !readIds.has(id),
+        type: 'attention',
+      })
+    }
+
+    // Every delivery has a creation confirmation notification
+    const createdId = `notif-${delivery.id}-created`
+    items.push({
+      id: createdId,
+      title: 'Delivery created',
+      description: `Your delivery request ${delivery.trackingNumber} has been confirmed.`,
+      trackingNumber: delivery.trackingNumber,
+      timestamp: isToday ? timeFormatted : 'Yesterday',
+      timeCategory: isToday ? 'TODAY' : 'YESTERDAY',
+      isUnread: !readIds.has(createdId),
+      type: 'created',
+    })
+  })
+
+  return items
+}
 
 export const NotificationsPage: React.FC = () => {
-  const { metrics } = useCustomerDeliveries()
+  const { metrics, deliveries, openCreateModal } = useCustomerDeliveries()
   const navigate = useNavigate()
 
-  const [notifications, setNotifications] = useState<readonly NotificationItem[]>(INITIAL_NOTIFICATIONS)
+  const [readIds, setReadIds] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem(READ_STORAGE_KEY)
+      if (stored) {
+        return new Set(JSON.parse(stored) as string[])
+      }
+    } catch {
+      // Fallback
+    }
+    return new Set<string>()
+  })
+
+  const notifications = useMemo(() => {
+    return deriveNotifications(deliveries, readIds)
+  }, [deliveries, readIds])
+
   const [activeTab, setActiveTab] = useState<'all' | 'unread'>('all')
   const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null)
 
   const unreadCount = notifications.filter((n) => n.isUnread).length
 
   const handleMarkAllAsRead = (): void => {
-    setNotifications((prev) => prev.map((item) => ({ ...item, isUnread: false })))
+    const allIds = new Set(notifications.map((n) => n.id))
+    setReadIds(allIds)
+    try {
+      localStorage.setItem(READ_STORAGE_KEY, JSON.stringify(Array.from(allIds)))
+    } catch {
+      // Handle storage quota
+    }
   }
 
   const handleNotificationClick = (item: NotificationItem): void => {
-    // Mark this specific notification as read
     if (item.isUnread) {
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === item.id ? { ...n, isUnread: false } : n)),
-      )
+      setReadIds((prev) => {
+        const next = new Set(prev)
+        next.add(item.id)
+        try {
+          localStorage.setItem(READ_STORAGE_KEY, JSON.stringify(Array.from(next)))
+        } catch {
+          // Handle storage quota
+        }
+        return next
+      })
     }
     setSelectedNotification(item)
   }
@@ -154,10 +214,14 @@ export const NotificationsPage: React.FC = () => {
           <h1 className="notifications-header__title">Notifications</h1>
           <p className="notifications-header__subtitle">Stay up to date with your deliveries.</p>
         </div>
-        <Link to="/customer/create-delivery" className="notifications-header__cta-btn">
+        <button
+          type="button"
+          onClick={openCreateModal}
+          className="notifications-header__cta-btn"
+        >
           <Plus className="w-4 h-4 mr-1.5" />
           <span>Create delivery</span>
-        </Link>
+        </button>
       </div>
 
       {/* Row of 3 Metric Cards */}
@@ -168,7 +232,7 @@ export const NotificationsPage: React.FC = () => {
           </div>
           <div className="notif-metric-card__content">
             <span className="notif-metric-card__label">Active deliveries</span>
-            <span className="notif-metric-card__value">{metrics.activeDeliveries || 3}</span>
+            <span className="notif-metric-card__value">{metrics.activeDeliveries ?? 0}</span>
           </div>
         </article>
 
@@ -178,7 +242,7 @@ export const NotificationsPage: React.FC = () => {
           </div>
           <div className="notif-metric-card__content">
             <span className="notif-metric-card__label">Delivered this month</span>
-            <span className="notif-metric-card__value">{metrics.deliveredThisMonth || 12}</span>
+            <span className="notif-metric-card__value">{metrics.deliveredThisMonth ?? 0}</span>
           </div>
         </article>
 
@@ -188,7 +252,7 @@ export const NotificationsPage: React.FC = () => {
           </div>
           <div className="notif-metric-card__content">
             <span className="notif-metric-card__label">Needs attention</span>
-            <span className="notif-metric-card__value">{metrics.needsAttention || 1}</span>
+            <span className="notif-metric-card__value">{metrics.needsAttention ?? 0}</span>
           </div>
         </article>
       </section>
@@ -234,9 +298,13 @@ export const NotificationsPage: React.FC = () => {
               <div className="notifications-empty-icon">
                 <Bell className="w-8 h-8 text-emerald-700" />
               </div>
-              <h3 className="notifications-empty-title">All caught up!</h3>
+              <h3 className="notifications-empty-title">
+                {notifications.length === 0 ? 'No notifications yet' : 'All caught up!'}
+              </h3>
               <p className="notifications-empty-subtitle">
-                You have no unread delivery notifications at the moment.
+                {notifications.length === 0
+                  ? 'When you schedule a delivery or receive tracking updates, your notifications will appear here.'
+                  : 'You have no unread delivery notifications at the moment.'}
               </p>
             </div>
           ) : (

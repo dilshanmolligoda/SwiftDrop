@@ -1,0 +1,184 @@
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
+import { ParcelStatus, PackageSize } from '../../generated/prisma/enums.js';
+
+export interface CustomerParcelRecord {
+  id: string;
+  trackingNumber: string;
+  customerId: string;
+  senderName: string;
+  senderAddress: string;
+  recipientName: string;
+  recipientAddress: string;
+  recipientPhone: string;
+  packageSize: PackageSize;
+  weightKg: number;
+  costLkr: number;
+  status: ParcelStatus;
+  failureReason: string | null;
+  failedDeliveryAttempts: number;
+  deliveredAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  statusHistory?: Array<{
+    id: string;
+    status: ParcelStatus;
+    location: string | null;
+    note: string | null;
+    createdAt: Date;
+  }>;
+}
+
+export interface CustomerMetrics {
+  activeDeliveries: number;
+  deliveredThisMonth: number;
+  needsAttention: number;
+}
+
+@Injectable()
+export class ParcelsRepository {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async createParcel(data: {
+    trackingNumber: string;
+    customerId: string;
+    senderName: string;
+    senderAddress: string;
+    recipientName: string;
+    recipientAddress: string;
+    recipientPhone: string;
+    packageSize: PackageSize;
+    weightKg: number;
+    costLkr: number;
+    note?: string;
+  }): Promise<CustomerParcelRecord> {
+    const parcel = await this.prisma.parcel.create({
+      data: {
+        trackingNumber: data.trackingNumber,
+        customerId: data.customerId,
+        senderName: data.senderName,
+        senderAddress: data.senderAddress,
+        recipientName: data.recipientName,
+        recipientAddress: data.recipientAddress,
+        recipientPhone: data.recipientPhone,
+        packageSize: data.packageSize,
+        weightKg: data.weightKg,
+        costLkr: data.costLkr,
+        status: ParcelStatus.PENDING,
+        statusHistory: {
+          create: {
+            status: ParcelStatus.PENDING,
+            note: data.note ?? 'Delivery request created by customer.',
+          },
+        },
+      },
+      include: {
+        statusHistory: {
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    });
+
+    return {
+      ...parcel,
+      weightKg: Number(parcel.weightKg),
+      costLkr: Number(parcel.costLkr),
+    };
+  }
+
+  async findCustomerParcels(
+    customerId: string,
+  ): Promise<CustomerParcelRecord[]> {
+    const list = await this.prisma.parcel.findMany({
+      where: { customerId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        statusHistory: {
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    });
+
+    return list.map((item) => ({
+      ...item,
+      weightKg: Number(item.weightKg),
+      costLkr: Number(item.costLkr),
+    }));
+  }
+
+  async findCustomerParcelById(
+    customerId: string,
+    parcelId: string,
+  ): Promise<CustomerParcelRecord | null> {
+    const parcel = await this.prisma.parcel.findFirst({
+      where: {
+        id: parcelId,
+        customerId,
+      },
+      include: {
+        statusHistory: {
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    });
+
+    if (!parcel) return null;
+
+    return {
+      ...parcel,
+      weightKg: Number(parcel.weightKg),
+      costLkr: Number(parcel.costLkr),
+    };
+  }
+
+  async getCustomerMetrics(customerId: string): Promise<CustomerMetrics> {
+    const now = new Date();
+    const monthStart = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
+    );
+    const nextMonthStart = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1),
+    );
+
+    const [activeDeliveries, deliveredThisMonth, needsAttention] =
+      await Promise.all([
+        this.prisma.parcel.count({
+          where: {
+            customerId,
+            status: {
+              in: [
+                ParcelStatus.PENDING,
+                ParcelStatus.PICKED_UP,
+                ParcelStatus.IN_TRANSIT,
+                ParcelStatus.OUT_FOR_DELIVERY,
+              ],
+            },
+          },
+        }),
+        this.prisma.parcel.count({
+          where: {
+            customerId,
+            status: ParcelStatus.DELIVERED,
+            deliveredAt: {
+              gte: monthStart,
+              lt: nextMonthStart,
+            },
+          },
+        }),
+        this.prisma.parcel.count({
+          where: {
+            customerId,
+            status: {
+              in: [ParcelStatus.FAILED, ParcelStatus.RETURNED],
+            },
+          },
+        }),
+      ]);
+
+    return {
+      activeDeliveries,
+      deliveredThisMonth,
+      needsAttention,
+    };
+  }
+}

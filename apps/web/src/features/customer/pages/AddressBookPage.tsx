@@ -15,7 +15,6 @@ import {
   Edit2,
   Bookmark,
 } from 'lucide-react'
-import { Link } from 'react-router-dom'
 import { useCustomerDeliveries } from '../context/useCustomerDeliveries'
 import './AddressBookPage.css'
 
@@ -30,34 +29,9 @@ export interface CustomerAddress {
   isDefault: boolean
 }
 
-const STORAGE_KEY = 'swiftdrop_customer_addresses'
+const STORAGE_KEY = 'swiftdrop_customer_addresses_v2'
 
-const DEFAULT_ADDRESSES: readonly CustomerAddress[] = [
-  {
-    id: 'addr-1',
-    category: 'Home',
-    contactName: 'Jane Doe',
-    streetAddress: '24 Lake Road, Colombo 05',
-    phoneNumber: '077 ••• ••24',
-    isDefault: true,
-  },
-  {
-    id: 'addr-2',
-    category: 'Work',
-    contactName: 'Jane Doe',
-    streetAddress: '18 Park Avenue, Colombo 02',
-    phoneNumber: '077 ••• ••24',
-    isDefault: false,
-  },
-  {
-    id: 'addr-3',
-    category: 'Family',
-    contactName: 'Sam Perera',
-    streetAddress: '12 Hill Road, Kandy',
-    phoneNumber: '071 ••• ••56',
-    isDefault: false,
-  },
-]
+const DEFAULT_ADDRESSES: readonly CustomerAddress[] = []
 
 interface AddressFormFields {
   category: AddressCategory
@@ -80,7 +54,7 @@ const INITIAL_FORM_FIELDS: AddressFormFields = {
  * Adheres to SOLID, DRY, and explicit naming guidelines.
  */
 export const AddressBookPage: React.FC = () => {
-  const { metrics } = useCustomerDeliveries()
+  const { metrics, openCreateModal } = useCustomerDeliveries()
 
   // Load addresses from localStorage with fallback to DEFAULT_ADDRESSES
   const [addresses, setAddresses] = useState<CustomerAddress[]>(() => {
@@ -302,10 +276,14 @@ export const AddressBookPage: React.FC = () => {
             Save addresses for faster delivery bookings.
           </p>
         </div>
-        <Link to="/customer/create-delivery" className="address-book-header__cta-btn">
+        <button
+          type="button"
+          onClick={openCreateModal}
+          className="address-book-header__cta-btn"
+        >
           <Plus className="w-4 h-4 mr-2" />
           <span>Create delivery</span>
-        </Link>
+        </button>
       </div>
 
       {/* Global Status Banner */}

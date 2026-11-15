@@ -575,6 +575,72 @@
   text-decoration: underline;
 }
 
+.attention-card--safe {
+  background-color: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.attention-card--safe .attention-card__title {
+  color: #166534;
+}
+
+.empty-deliveries-card {
+  background-color: #ffffff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 40px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin-top: 14px;
+}
+
+.empty-deliveries-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #eaf7ee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.empty-deliveries-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 6px 0;
+}
+
+.empty-deliveries-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  max-width: 380px;
+  margin: 0 0 18px 0;
+  line-height: 1.5;
+}
+
+.empty-deliveries-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 18px;
+  background-color: #0d5e36;
+  color: #ffffff;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.empty-deliveries-btn:hover {
+  background-color: #094225;
+}
+
 /* -------------------------------------------------------------
  * Right Column: Assistant Card
  * ------------------------------------------------------------- */
@@ -835,6 +901,51 @@
 
 .modal-input:focus {
   border-color: #0d5e36;
+}
+
+.modal-estimate-box {
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-top: 6px;
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.modal-estimate-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-estimate-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #166534;
+}
+
+.modal-estimate-price {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0d5e36;
+}
+
+.modal-estimate-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #15803d;
+}
+
+.modal-estimate-tag {
+  background-color: #dcfce7;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
 }
 
 /* Assistant Chat Styles */
