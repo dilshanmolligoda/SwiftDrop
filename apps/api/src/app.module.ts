@@ -10,6 +10,7 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard.js';
 import { RolesGuard } from './modules/auth/guards/roles.guard.js';
 import { CsrfGuard } from './modules/auth/guards/csrf.guard.js';
 import { cookieParserMiddleware } from './modules/auth/utils/cookie.util.js';
+import { CourierModule } from './modules/courier/courier.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 
@@ -22,6 +23,7 @@ import { UsersModule } from './modules/users/users.module.js';
       validate: validateEnv,
     }),
     AuthModule,
+    CourierModule,
     HealthModule,
     PrismaModule,
     UsersModule,
