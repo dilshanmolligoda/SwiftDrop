@@ -7,6 +7,7 @@ import {
   Role,
   ApprovalStatus,
 } from '../src/generated/prisma/client.js';
+import { seedDemoDeliveries } from './seed-deliveries.js';
 
 // Same environment lookup convention as the Nest app and prisma.config.ts:
 // apps/api/.env first, then repo-root .env
@@ -25,6 +26,8 @@ interface DemoAccountDefinition {
   fullName: string;
   role: Role;
   envKey: string;
+  /** Used when `envKey` is not set (keeps existing .env files working). */
+  fallbackEnvKey?: string;
 }
 
 const DEMO_ACCOUNTS: DemoAccountDefinition[] = [
@@ -41,6 +44,13 @@ const DEMO_ACCOUNTS: DemoAccountDefinition[] = [
     envKey: 'DEMO_COURIER_PASSWORD',
   },
   {
+    email: 'courier2@swiftdrop.local',
+    fullName: 'Second Courier',
+    role: Role.COURIER,
+    envKey: 'DEMO_COURIER2_PASSWORD',
+    fallbackEnvKey: 'DEMO_COURIER_PASSWORD',
+  },
+  {
     email: 'customer@swiftdrop.local',
     fullName: 'Demo Customer',
     role: Role.CUSTOMER,
@@ -55,7 +65,7 @@ const DEMO_ACCOUNTS: DemoAccountDefinition[] = [
 ];
 
 /**
- * Validates that all four required demo password environment variables
+ * Validates that every demo password environment variable
  * are set and are not obvious placeholder strings.
  * Throws before any database connection is opened.
  */
@@ -64,7 +74,9 @@ function validateDemoPasswords(env: NodeJS.ProcessEnv): Record<string, string> {
   const passwords: Record<string, string> = {};
 
   for (const account of DEMO_ACCOUNTS) {
-    const raw = env[account.envKey];
+    const raw =
+      env[account.envKey]?.trim() ||
+      (account.fallbackEnvKey ? env[account.fallbackEnvKey] : undefined);
     if (!raw || raw.trim().length === 0) {
       missingOrInvalid.push(`${account.envKey} is missing or empty`);
       continue;
@@ -104,12 +116,22 @@ async function main() {
     );
   }
 
-  const hashRounds = Number(process.env.PASSWORD_HASH_ROUNDS) || 12;
+  // Same fallback rule as PasswordService.
+  const configuredRounds = Number(process.env.PASSWORD_HASH_ROUNDS ?? 12);
+  const hashRounds =
+    Number.isInteger(configuredRounds) && configuredRounds > 0
+      ? configuredRounds
+      : 12;
+  const resetDemoDeliveries =
+    process.argv.includes('--reset-demo-deliveries') ||
+    process.env.SEED_RESET_DEMO_DELIVERIES === 'true';
 
   // 3. Connect via PrismaPg adapter and connection pool
   const pool = new Pool({ connectionString: databaseUrl });
   const adapter = new PrismaPg(pool);
   const prisma = new PrismaClient({ adapter });
+
+  const userIds = new Map<string, string>();
 
   try {
     for (const def of DEMO_ACCOUNTS) {
@@ -136,10 +158,12 @@ async function main() {
         console.log(
           `[Seed] Created account: ${created.email} (Role: ${created.role}, ID: ${created.id})`,
         );
+        userIds.set(normalizedEmail, created.id);
         continue;
       }
 
       // Existing account: preserve UUID, update only changed fields
+      userIds.set(normalizedEmail, existing.id);
       const updates: {
         role?: Role;
         fullName?: string;
@@ -205,6 +229,30 @@ async function main() {
     }
 
     console.log('[Seed] SwiftDrop demo accounts seeding completed successfully.');
+
+    // Courier delivery fixtures are for local development only.
+    if (process.env.NODE_ENV === 'production') {
+      console.log(
+        '[Seed] NODE_ENV=production: skipping demo courier deliveries.',
+      );
+      return;
+    }
+
+    const requireId = (email: string): string => {
+      const id = userIds.get(email);
+      if (!id) throw new Error(`[Seed Error] Missing demo user ${email}`);
+      return id;
+    };
+    await seedDemoDeliveries(
+      prisma,
+      {
+        dispatcherId: requireId('dispatcher@swiftdrop.local'),
+        merchantId: requireId('merchant@swiftdrop.local'),
+        courier1Id: requireId('courier1@swiftdrop.local'),
+        courier2Id: requireId('courier2@swiftdrop.local'),
+      },
+      { reset: resetDemoDeliveries },
+    );
   } finally {
     await prisma.$disconnect();
     await pool.end();
