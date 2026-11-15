@@ -3,6 +3,8 @@ import type { ConfigService } from '@nestjs/config';
 
 export const AUTH_COOKIE_NAME = 'access_token';
 export const AUTH_COOKIE_PATH = '/api';
+export const OAUTH_TX_COOKIE_NAME = 'swiftdrop_oauth_tx';
+export const OAUTH_TX_COOKIE_PATH = '/api/v1/auth/google';
 
 /**
  * Lightweight RFC 6265 cookie header parser.
@@ -98,5 +100,38 @@ export function getClearAuthCookieOptions(
     secure,
     sameSite: 'lax',
     path: cookiePath,
+  };
+}
+
+/**
+ * Returns security-hardened options for the temporary OAuth transaction cookie.
+ */
+export function getOAuthTxCookieOptions(
+  configService: ConfigService,
+  expiresInSeconds = 600,
+): CookieOptions {
+  const secure = isSecureCookie(configService);
+  return {
+    httpOnly: true,
+    secure,
+    sameSite: 'lax',
+    path: OAUTH_TX_COOKIE_PATH,
+    maxAge: expiresInSeconds * 1000,
+    expires: new Date(Date.now() + expiresInSeconds * 1000),
+  };
+}
+
+/**
+ * Returns matching options to clear the temporary OAuth transaction cookie.
+ */
+export function getClearOAuthTxCookieOptions(
+  configService: ConfigService,
+): CookieOptions {
+  const secure = isSecureCookie(configService);
+  return {
+    httpOnly: true,
+    secure,
+    sameSite: 'lax',
+    path: OAUTH_TX_COOKIE_PATH,
   };
 }

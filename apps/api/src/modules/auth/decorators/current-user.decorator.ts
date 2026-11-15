@@ -1,10 +1,11 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import type { Role } from '../../../generated/prisma/enums.js';
+import type { Role, ApprovalStatus } from '../../../generated/prisma/enums.js';
 
 export interface AuthenticatedUser {
   id: string;
   email: string;
   role: Role;
+  approvalStatus?: ApprovalStatus;
 }
 
 export const CurrentUser = createParamDecorator(

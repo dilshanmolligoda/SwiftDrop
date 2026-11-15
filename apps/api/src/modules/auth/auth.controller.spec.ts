@@ -5,7 +5,11 @@ import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 import { CsrfGuard } from './guards/csrf.guard.js';
-import { Role, ApprovalStatus } from '../../generated/prisma/enums.js';
+import {
+  Role,
+  ApprovalStatus,
+  VehicleType,
+} from '../../generated/prisma/enums.js';
 import type { LoginResult, UserProfile } from './auth.service.js';
 import {
   AUTH_COOKIE_NAME,
@@ -16,13 +20,24 @@ import {
 
 describe('AuthController', () => {
   let controller: AuthController;
-  let authService: { login: jest.Mock; getProfile: jest.Mock };
+  let authService: {
+    login: jest.Mock;
+    registerCustomer: jest.Mock;
+    registerMerchant: jest.Mock;
+    registerCourier: jest.Mock;
+    getProfile: jest.Mock;
+    getApplicationStatus: jest.Mock;
+  };
   let configService: { get: jest.Mock };
 
   beforeEach(async () => {
     authService = {
       login: jest.fn(),
+      registerCustomer: jest.fn(),
+      registerMerchant: jest.fn(),
+      registerCourier: jest.fn(),
       getProfile: jest.fn(),
+      getApplicationStatus: jest.fn(),
     };
     configService = {
       get: jest
@@ -134,6 +149,141 @@ describe('AuthController', () => {
       }),
     );
     expect(result).toEqual({ message: 'Logged out successfully' });
+  });
+
+  describe('registration endpoints', () => {
+    it('registerCustomer sets HTTP-only cookie and returns user summary', async () => {
+      const regResult: LoginResult = {
+        accessToken: 'customer-jwt-token',
+        tokenType: 'Bearer',
+        expiresIn: 900,
+        user: {
+          id: 'cust-1',
+          email: 'cust@example.com',
+          fullName: 'Customer One',
+          role: Role.CUSTOMER,
+          approvalStatus: ApprovalStatus.APPROVED,
+        },
+      };
+      authService.registerCustomer.mockResolvedValue(regResult);
+
+      const mockCookieFn = jest.fn();
+      const mockRes = { cookie: mockCookieFn } as unknown as Response;
+
+      const dto = {
+        fullName: 'Customer One',
+        email: 'cust@example.com',
+        phoneNumber: '0771234567',
+        password: 'Password123456!',
+      };
+
+      const result = await controller.registerCustomer(dto, mockRes);
+
+      expect(authService.registerCustomer).toHaveBeenCalledWith(dto);
+      expect(mockCookieFn).toHaveBeenCalledWith(
+        AUTH_COOKIE_NAME,
+        'customer-jwt-token',
+        expect.objectContaining({ httpOnly: true, path: '/api' }),
+      );
+      expect(result).toEqual({
+        expiresIn: 900,
+        user: regResult.user,
+      });
+    });
+
+    it('registerMerchant sets HTTP-only cookie and returns pending user summary', async () => {
+      const regResult: LoginResult = {
+        accessToken: 'merchant-jwt-token',
+        tokenType: 'Bearer',
+        expiresIn: 900,
+        user: {
+          id: 'merch-1',
+          email: 'merch@example.com',
+          fullName: 'Merchant One',
+          role: Role.MERCHANT,
+          approvalStatus: ApprovalStatus.PENDING,
+        },
+      };
+      authService.registerMerchant.mockResolvedValue(regResult);
+
+      const mockCookieFn = jest.fn();
+      const mockRes = { cookie: mockCookieFn } as unknown as Response;
+
+      const dto = {
+        fullName: 'Merchant One',
+        email: 'merch@example.com',
+        phoneNumber: '0711234567',
+        password: 'Password123456!',
+        businessName: 'Biz Name',
+        businessAddress: '123 Biz Rd',
+        businessType: 'Retail',
+      };
+
+      const result = await controller.registerMerchant(dto, mockRes);
+
+      expect(authService.registerMerchant).toHaveBeenCalledWith(dto);
+      expect(mockCookieFn).toHaveBeenCalled();
+      expect(result.user.approvalStatus).toBe(ApprovalStatus.PENDING);
+    });
+
+    it('registerCourier sets HTTP-only cookie and returns pending user summary', async () => {
+      const regResult: LoginResult = {
+        accessToken: 'courier-jwt-token',
+        tokenType: 'Bearer',
+        expiresIn: 900,
+        user: {
+          id: 'cour-1',
+          email: 'cour@example.com',
+          fullName: 'Courier One',
+          role: Role.COURIER,
+          approvalStatus: ApprovalStatus.PENDING,
+        },
+      };
+      authService.registerCourier.mockResolvedValue(regResult);
+
+      const mockCookieFn = jest.fn();
+      const mockRes = { cookie: mockCookieFn } as unknown as Response;
+
+      const dto = {
+        fullName: 'Courier One',
+        email: 'cour@example.com',
+        phoneNumber: '0711234567',
+        password: 'Password123456!',
+        vehicleType: VehicleType.MOTORCYCLE,
+        licensePlate: 'WP-1234',
+        licenseNumber: 'B1234',
+      };
+
+      const result = await controller.registerCourier(dto, mockRes);
+
+      expect(authService.registerCourier).toHaveBeenCalledWith(dto);
+      expect(mockCookieFn).toHaveBeenCalled();
+      expect(result.user.approvalStatus).toBe(ApprovalStatus.PENDING);
+    });
+  });
+
+  describe('application-status endpoint', () => {
+    it('returns application status for authenticated user', async () => {
+      const statusData = {
+        approvalStatus: ApprovalStatus.PENDING,
+        status: ApprovalStatus.PENDING,
+        role: Role.MERCHANT,
+        submittedAt: new Date('2026-01-01T00:00:00Z'),
+        createdAt: new Date('2026-01-01T00:00:00Z'),
+        reviewedAt: null,
+        rejectionReason: null,
+      };
+      authService.getApplicationStatus.mockResolvedValue(statusData);
+
+      const result = await controller.getApplicationStatus({
+        id: 'user-1',
+        email: 'user@example.com',
+        role: Role.MERCHANT,
+      });
+
+      expect(authService.getApplicationStatus).toHaveBeenCalledWith('user-1');
+      expect(result).toEqual(statusData);
+    });
   });
 
   describe('isSecureCookie fail-safe configuration', () => {

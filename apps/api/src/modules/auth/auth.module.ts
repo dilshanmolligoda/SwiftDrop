@@ -5,8 +5,10 @@ import type { SignOptions } from 'jsonwebtoken';
 import { UsersModule } from '../users/users.module.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
+import { GoogleAuthService } from './google-auth.service.js';
 import { PasswordService } from './password.service.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
+import { ApprovalGuard } from './guards/approval.guard.js';
 import { RolesGuard } from './guards/roles.guard.js';
 import { CsrfGuard } from './guards/csrf.guard.js';
 
@@ -32,15 +34,19 @@ import { CsrfGuard } from './guards/csrf.guard.js';
   controllers: [AuthController],
   providers: [
     AuthService,
+    GoogleAuthService,
     PasswordService,
     JwtAuthGuard,
+    ApprovalGuard,
     RolesGuard,
     CsrfGuard,
   ],
   exports: [
     AuthService,
+    GoogleAuthService,
     PasswordService,
     JwtAuthGuard,
+    ApprovalGuard,
     RolesGuard,
     CsrfGuard,
     JwtModule,

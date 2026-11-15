@@ -51,3 +51,25 @@ export const DeliveryFailureReason = {
 } as const
 
 export type DeliveryFailureReason = (typeof DeliveryFailureReason)[keyof typeof DeliveryFailureReason]
+
+
+export const VehicleType = {
+  BICYCLE: 'BICYCLE',
+  MOTORCYCLE: 'MOTORCYCLE',
+  CAR: 'CAR',
+  VAN: 'VAN'
+} as const
+
+export type VehicleType = (typeof VehicleType)[keyof typeof VehicleType]
+
+
+export const MerchantOrderStatus = {
+  AWAITING_PICKUP: 'AWAITING_PICKUP',
+  OUT_FOR_DELIVERY: 'OUT_FOR_DELIVERY',
+  IN_TRANSIT: 'IN_TRANSIT',
+  PICKED_UP: 'PICKED_UP',
+  DELIVERY_FAILED: 'DELIVERY_FAILED',
+  DELIVERED: 'DELIVERED'
+} as const
+
+export type MerchantOrderStatus = (typeof MerchantOrderStatus)[keyof typeof MerchantOrderStatus]

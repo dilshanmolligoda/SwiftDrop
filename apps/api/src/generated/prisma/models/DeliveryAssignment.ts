@@ -506,10 +506,6 @@ export type DeliveryAssignmentUncheckedUpdateManyWithoutParcelNestedInput = {
   deleteMany?: Prisma.DeliveryAssignmentScalarWhereInput | Prisma.DeliveryAssignmentScalarWhereInput[]
 }
 
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
-}
-
 export type DeliveryAssignmentCreateNestedOneWithoutStatusEventsInput = {
   create?: Prisma.XOR<Prisma.DeliveryAssignmentCreateWithoutStatusEventsInput, Prisma.DeliveryAssignmentUncheckedCreateWithoutStatusEventsInput>
   connectOrCreate?: Prisma.DeliveryAssignmentCreateOrConnectWithoutStatusEventsInput

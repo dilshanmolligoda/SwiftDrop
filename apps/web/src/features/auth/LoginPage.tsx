@@ -10,11 +10,41 @@ interface AuthenticatedUser {
   email: string;
   fullName: string;
   role: 'CUSTOMER' | 'MERCHANT' | 'COURIER' | 'DISPATCHER' | 'ADMIN';
+  approvalStatus: 'PENDING' | 'APPROVED' | 'REJECTED';
+}
+
+function getInitialOAuthError(): string | null {
+  try {
+    const searchParams = new URLSearchParams(window.location.search);
+    const oauthError = searchParams.get('error');
+    if (oauthError) {
+      switch (oauthError) {
+        case 'account_exists_link_required':
+          return 'An account with this email already exists. Please sign in with your email and password first, then connect your Google account from your dashboard.';
+        case 'google_not_configured':
+          return 'Google Sign-In is not currently configured on the server. Please sign in with your email and password.';
+        case 'access_denied':
+          return 'Google Sign-In was cancelled or access was denied.';
+        case 'account_deactivated':
+          return 'This account has been deactivated. Please contact support.';
+        case 'email_unverified':
+          return 'Your Google email address is not verified. Please verify it with Google and try again.';
+        case 'oauth_invalid_state':
+        case 'oauth_missing_state':
+          return 'Google authentication session expired or invalid. Please try again.';
+        default:
+          return 'Google Sign-In could not be completed. Please try again.';
+      }
+    }
+  } catch {
+    // fallback
+  }
+  return null;
 }
 
 // Portal home for roles that already have a frontend area.
-const ROLE_PORTALS: Partial<Record<AuthenticatedUser['role'], { path: string; label: string }>> = {
-  COURIER: { path: '/courier/dashboard', label: 'Go to courier portal' },
+const ROLE_PORTALS: Partial<Record<AuthenticatedUser['role'], { path: string; basePath: string; label: string }>> = {
+  COURIER: { path: '/courier/dashboard', basePath: '/courier', label: 'Go to courier portal' },
 };
 
 export default function LoginPage() {
@@ -27,7 +57,7 @@ export default function LoginPage() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(getInitialOAuthError);
   const [sessionNotice, setSessionNotice] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
   const [authenticatedUser, setAuthenticatedUser] = useState<AuthenticatedUser | null>(null);
@@ -167,12 +197,38 @@ export default function LoginPage() {
       setPassword('');
       setFieldErrors({});
 
-      // Return to the protected page that sent the user here, or the role's portal.
-      const target = redirectFrom?.pathname
-        ? `${redirectFrom.pathname}${redirectFrom.search ?? ''}`
-        : ROLE_PORTALS[userProfile.role]?.path;
-      if (target) {
-        navigate(target, { replace: true });
+      if (userProfile.approvalStatus === 'PENDING' || userProfile.approvalStatus === 'REJECTED') {
+        navigate('/application-status', { replace: true });
+        return;
+      }
+
+      // Return an approved user to the protected page that sent them to login,
+      // but only when it belongs to their own role's portal.
+      const portalBase = ROLE_PORTALS[userProfile.role]?.basePath;
+      const fromPath = redirectFrom?.pathname;
+      if (portalBase && fromPath && (fromPath === portalBase || fromPath.startsWith(`${portalBase}/`))) {
+        navigate(`${fromPath}${redirectFrom?.search ?? ''}`, { replace: true });
+        return;
+      }
+
+      if (userProfile.role === 'CUSTOMER') {
+        navigate('/customer/dashboard', { replace: true });
+        return;
+      }
+
+      if (userProfile.role === 'MERCHANT') {
+        navigate('/merchant/dashboard', { replace: true });
+        return;
+      }
+
+      if (userProfile.role === 'COURIER') {
+        navigate('/courier/dashboard', { replace: true });
+        return;
+      }
+
+      if (userProfile.role === 'ADMIN' || userProfile.role === 'DISPATCHER') {
+        navigate('/admin/dashboard', { replace: true });
+        return;
       }
     } catch {
       setErrorMessage('Unable to connect to SwiftDrop server. Please ensure the backend is running.');
@@ -297,11 +353,13 @@ export default function LoginPage() {
         ) : (
           /* Form View */
           <>
-            {/* Google OAuth Button (Figma Reproduction, Non-Functional) */}
+            {/* Google OAuth Button */}
             <button
               type="button"
               className="login-google-btn"
-              onClick={() => showUnderDevelopmentNotice('Google Sign-In')}
+              onClick={() => {
+                window.location.href = `${env.apiBaseUrl}/auth/google`;
+              }}
               aria-label="Continue with Google"
             >
               <GoogleIcon size={18} />
@@ -462,13 +520,9 @@ export default function LoginPage() {
             {/* Register Link */}
             <footer className="login-card__footer">
               <span>Don't have an account?</span>
-              <button
-                type="button"
-                className="login-register-btn"
-                onClick={() => showUnderDevelopmentNotice('Account registration')}
-              >
+              <Link to="/register" className="login-register-btn" style={{ textDecoration: 'none' }}>
                 Register
-              </button>
+              </Link>
             </footer>
           </>
         )}

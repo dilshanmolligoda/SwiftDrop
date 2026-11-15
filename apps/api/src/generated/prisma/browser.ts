@@ -42,3 +42,18 @@ export type ParcelStatusEvent = Prisma.ParcelStatusEventModel
  * 
  */
 export type DeliveryProof = Prisma.DeliveryProofModel
+/**
+ * Model MerchantProfile
+ * 
+ */
+export type MerchantProfile = Prisma.MerchantProfileModel
+/**
+ * Model CourierProfile
+ * 
+ */
+export type CourierProfile = Prisma.CourierProfileModel
+/**
+ * Model MerchantOrder
+ * 
+ */
+export type MerchantOrder = Prisma.MerchantOrderModel

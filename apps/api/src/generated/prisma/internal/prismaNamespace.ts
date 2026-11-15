@@ -401,7 +401,10 @@ export const ModelName = {
   Parcel: 'Parcel',
   DeliveryAssignment: 'DeliveryAssignment',
   ParcelStatusEvent: 'ParcelStatusEvent',
-  DeliveryProof: 'DeliveryProof'
+  DeliveryProof: 'DeliveryProof',
+  MerchantProfile: 'MerchantProfile',
+  CourierProfile: 'CourierProfile',
+  MerchantOrder: 'MerchantOrder'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -417,7 +420,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "parcel" | "deliveryAssignment" | "parcelStatusEvent" | "deliveryProof"
+    modelProps: "user" | "parcel" | "deliveryAssignment" | "parcelStatusEvent" | "deliveryProof" | "merchantProfile" | "courierProfile" | "merchantOrder"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -791,6 +794,228 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    MerchantProfile: {
+      payload: Prisma.$MerchantProfilePayload<ExtArgs>
+      fields: Prisma.MerchantProfileFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.MerchantProfileFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantProfilePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.MerchantProfileFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantProfilePayload>
+        }
+        findFirst: {
+          args: Prisma.MerchantProfileFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantProfilePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.MerchantProfileFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantProfilePayload>
+        }
+        findMany: {
+          args: Prisma.MerchantProfileFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantProfilePayload>[]
+        }
+        create: {
+          args: Prisma.MerchantProfileCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantProfilePayload>
+        }
+        createMany: {
+          args: Prisma.MerchantProfileCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.MerchantProfileCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantProfilePayload>[]
+        }
+        delete: {
+          args: Prisma.MerchantProfileDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantProfilePayload>
+        }
+        update: {
+          args: Prisma.MerchantProfileUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantProfilePayload>
+        }
+        deleteMany: {
+          args: Prisma.MerchantProfileDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.MerchantProfileUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.MerchantProfileUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantProfilePayload>[]
+        }
+        upsert: {
+          args: Prisma.MerchantProfileUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantProfilePayload>
+        }
+        aggregate: {
+          args: Prisma.MerchantProfileAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMerchantProfile>
+        }
+        groupBy: {
+          args: Prisma.MerchantProfileGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MerchantProfileGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.MerchantProfileCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MerchantProfileCountAggregateOutputType> | number
+        }
+      }
+    }
+    CourierProfile: {
+      payload: Prisma.$CourierProfilePayload<ExtArgs>
+      fields: Prisma.CourierProfileFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CourierProfileFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CourierProfilePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CourierProfileFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CourierProfilePayload>
+        }
+        findFirst: {
+          args: Prisma.CourierProfileFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CourierProfilePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CourierProfileFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CourierProfilePayload>
+        }
+        findMany: {
+          args: Prisma.CourierProfileFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CourierProfilePayload>[]
+        }
+        create: {
+          args: Prisma.CourierProfileCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CourierProfilePayload>
+        }
+        createMany: {
+          args: Prisma.CourierProfileCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CourierProfileCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CourierProfilePayload>[]
+        }
+        delete: {
+          args: Prisma.CourierProfileDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CourierProfilePayload>
+        }
+        update: {
+          args: Prisma.CourierProfileUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CourierProfilePayload>
+        }
+        deleteMany: {
+          args: Prisma.CourierProfileDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CourierProfileUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CourierProfileUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CourierProfilePayload>[]
+        }
+        upsert: {
+          args: Prisma.CourierProfileUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CourierProfilePayload>
+        }
+        aggregate: {
+          args: Prisma.CourierProfileAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCourierProfile>
+        }
+        groupBy: {
+          args: Prisma.CourierProfileGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CourierProfileGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CourierProfileCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CourierProfileCountAggregateOutputType> | number
+        }
+      }
+    }
+    MerchantOrder: {
+      payload: Prisma.$MerchantOrderPayload<ExtArgs>
+      fields: Prisma.MerchantOrderFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.MerchantOrderFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantOrderPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.MerchantOrderFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantOrderPayload>
+        }
+        findFirst: {
+          args: Prisma.MerchantOrderFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantOrderPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.MerchantOrderFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantOrderPayload>
+        }
+        findMany: {
+          args: Prisma.MerchantOrderFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantOrderPayload>[]
+        }
+        create: {
+          args: Prisma.MerchantOrderCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantOrderPayload>
+        }
+        createMany: {
+          args: Prisma.MerchantOrderCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.MerchantOrderCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantOrderPayload>[]
+        }
+        delete: {
+          args: Prisma.MerchantOrderDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantOrderPayload>
+        }
+        update: {
+          args: Prisma.MerchantOrderUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantOrderPayload>
+        }
+        deleteMany: {
+          args: Prisma.MerchantOrderDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.MerchantOrderUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.MerchantOrderUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantOrderPayload>[]
+        }
+        upsert: {
+          args: Prisma.MerchantOrderUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantOrderPayload>
+        }
+        aggregate: {
+          args: Prisma.MerchantOrderAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMerchantOrder>
+        }
+        groupBy: {
+          args: Prisma.MerchantOrderGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MerchantOrderGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.MerchantOrderCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MerchantOrderCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -834,10 +1059,15 @@ export const UserScalarFieldEnum = {
   id: 'id',
   email: 'email',
   fullName: 'fullName',
+  phoneNumber: 'phoneNumber',
   passwordHash: 'passwordHash',
   role: 'role',
   approvalStatus: 'approvalStatus',
   isActive: 'isActive',
+  googleSubject: 'googleSubject',
+  reviewedAt: 'reviewedAt',
+  reviewedBy: 'reviewedBy',
+  rejectionReason: 'rejectionReason',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -905,6 +1135,49 @@ export const DeliveryProofScalarFieldEnum = {
 } as const
 
 export type DeliveryProofScalarFieldEnum = (typeof DeliveryProofScalarFieldEnum)[keyof typeof DeliveryProofScalarFieldEnum]
+
+
+export const MerchantProfileScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  businessName: 'businessName',
+  businessAddress: 'businessAddress',
+  businessType: 'businessType',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MerchantProfileScalarFieldEnum = (typeof MerchantProfileScalarFieldEnum)[keyof typeof MerchantProfileScalarFieldEnum]
+
+
+export const CourierProfileScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  vehicleType: 'vehicleType',
+  licensePlate: 'licensePlate',
+  licenseNumber: 'licenseNumber',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CourierProfileScalarFieldEnum = (typeof CourierProfileScalarFieldEnum)[keyof typeof CourierProfileScalarFieldEnum]
+
+
+export const MerchantOrderScalarFieldEnum = {
+  id: 'id',
+  merchantUserId: 'merchantUserId',
+  reference: 'reference',
+  trackingNumber: 'trackingNumber',
+  recipientName: 'recipientName',
+  destination: 'destination',
+  status: 'status',
+  failedDeliveryAttempts: 'failedDeliveryAttempts',
+  deliveredAt: 'deliveredAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MerchantOrderScalarFieldEnum = (typeof MerchantOrderScalarFieldEnum)[keyof typeof MerchantOrderScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -1039,6 +1312,34 @@ export type EnumDeliveryFailureReasonFieldRefInput<$PrismaModel> = FieldRefInput
  * Reference to a field of type 'DeliveryFailureReason[]'
  */
 export type ListEnumDeliveryFailureReasonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DeliveryFailureReason[]'>
+    
+
+
+/**
+ * Reference to a field of type 'VehicleType'
+ */
+export type EnumVehicleTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'VehicleType'>
+    
+
+
+/**
+ * Reference to a field of type 'VehicleType[]'
+ */
+export type ListEnumVehicleTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'VehicleType[]'>
+    
+
+
+/**
+ * Reference to a field of type 'MerchantOrderStatus'
+ */
+export type EnumMerchantOrderStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MerchantOrderStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'MerchantOrderStatus[]'
+ */
+export type ListEnumMerchantOrderStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MerchantOrderStatus[]'>
     
 
 
@@ -1211,6 +1512,9 @@ export type GlobalOmitConfig = {
   deliveryAssignment?: Prisma.DeliveryAssignmentOmit
   parcelStatusEvent?: Prisma.ParcelStatusEventOmit
   deliveryProof?: Prisma.DeliveryProofOmit
+  merchantProfile?: Prisma.MerchantProfileOmit
+  courierProfile?: Prisma.CourierProfileOmit
+  merchantOrder?: Prisma.MerchantOrderOmit
 }
 
 /* Types for Logging */

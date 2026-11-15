@@ -45,16 +45,41 @@ enum DeliveryFailureReason {
   OTHER
 }
 
+enum VehicleType {
+  BICYCLE
+  MOTORCYCLE
+  CAR
+  VAN
+}
+
+enum MerchantOrderStatus {
+  AWAITING_PICKUP
+  OUT_FOR_DELIVERY
+  IN_TRANSIT
+  PICKED_UP
+  DELIVERY_FAILED
+  DELIVERED
+}
+
 model User {
-  id             String         @id @default(uuid()) @db.Uuid
-  email          String         @unique
-  fullName       String         
-  passwordHash   String?
-  role           Role           @default(CUSTOMER)
-  approvalStatus ApprovalStatus @default(PENDING)
-  isActive       Boolean        @default(true)
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  id              String          @id @default(uuid()) @db.Uuid
+  email           String          @unique
+  fullName        String         
+  phoneNumber     String?
+  passwordHash    String?
+  role            Role            @default(CUSTOMER)
+  approvalStatus  ApprovalStatus  @default(PENDING)
+  isActive        Boolean         @default(true)
+  googleSubject   String?         @unique
+  reviewedAt      DateTime?
+  reviewedBy      String?         @db.Uuid
+  rejectionReason String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  merchantProfile MerchantProfile?
+  courierProfile  CourierProfile?
+  merchantOrders  MerchantOrder[]
 
   courierAssignments  DeliveryAssignment[] @relation("CourierAssignments")
   createdAssignments  DeliveryAssignment[] @relation("AssignmentCreators")
@@ -155,4 +180,53 @@ model DeliveryProof {
   @@unique([id, parcelId])
   @@index([parcelId, uploadedAt])
   @@map("delivery_proofs")
+}
+
+model MerchantProfile {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @unique @db.Uuid
+  businessName    String
+  businessAddress String
+  businessType    String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("merchant_profiles")
+}
+
+model CourierProfile {
+  id            String      @id @default(uuid()) @db.Uuid
+  userId        String      @unique @db.Uuid
+  vehicleType   VehicleType
+  licensePlate  String?
+  licenseNumber String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("courier_profiles")
+}
+
+model MerchantOrder {
+  id                      String              @id @default(uuid()) @db.Uuid
+  merchantUserId          String              @db.Uuid
+  reference               String
+  trackingNumber          String              @unique
+  recipientName           String
+  destination             String
+  status                  MerchantOrderStatus @default(AWAITING_PICKUP)
+  failedDeliveryAttempts  Int                 @default(0)
+  deliveredAt             DateTime?
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+
+  merchant User @relation(fields: [merchantUserId], references: [id], onDelete: Cascade)
+
+  @@unique([merchantUserId, reference])
+  @@index([merchantUserId, updatedAt])
+  @@index([merchantUserId, status])
+  @@map("merchant_orders")
 }

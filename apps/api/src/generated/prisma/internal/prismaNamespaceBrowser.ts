@@ -55,7 +55,10 @@ export const ModelName = {
   Parcel: 'Parcel',
   DeliveryAssignment: 'DeliveryAssignment',
   ParcelStatusEvent: 'ParcelStatusEvent',
-  DeliveryProof: 'DeliveryProof'
+  DeliveryProof: 'DeliveryProof',
+  MerchantProfile: 'MerchantProfile',
+  CourierProfile: 'CourierProfile',
+  MerchantOrder: 'MerchantOrder'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -78,10 +81,15 @@ export const UserScalarFieldEnum = {
   id: 'id',
   email: 'email',
   fullName: 'fullName',
+  phoneNumber: 'phoneNumber',
   passwordHash: 'passwordHash',
   role: 'role',
   approvalStatus: 'approvalStatus',
   isActive: 'isActive',
+  googleSubject: 'googleSubject',
+  reviewedAt: 'reviewedAt',
+  reviewedBy: 'reviewedBy',
+  rejectionReason: 'rejectionReason',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -149,6 +157,49 @@ export const DeliveryProofScalarFieldEnum = {
 } as const
 
 export type DeliveryProofScalarFieldEnum = (typeof DeliveryProofScalarFieldEnum)[keyof typeof DeliveryProofScalarFieldEnum]
+
+
+export const MerchantProfileScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  businessName: 'businessName',
+  businessAddress: 'businessAddress',
+  businessType: 'businessType',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MerchantProfileScalarFieldEnum = (typeof MerchantProfileScalarFieldEnum)[keyof typeof MerchantProfileScalarFieldEnum]
+
+
+export const CourierProfileScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  vehicleType: 'vehicleType',
+  licensePlate: 'licensePlate',
+  licenseNumber: 'licenseNumber',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CourierProfileScalarFieldEnum = (typeof CourierProfileScalarFieldEnum)[keyof typeof CourierProfileScalarFieldEnum]
+
+
+export const MerchantOrderScalarFieldEnum = {
+  id: 'id',
+  merchantUserId: 'merchantUserId',
+  reference: 'reference',
+  trackingNumber: 'trackingNumber',
+  recipientName: 'recipientName',
+  destination: 'destination',
+  status: 'status',
+  failedDeliveryAttempts: 'failedDeliveryAttempts',
+  deliveredAt: 'deliveredAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MerchantOrderScalarFieldEnum = (typeof MerchantOrderScalarFieldEnum)[keyof typeof MerchantOrderScalarFieldEnum]
 
 
 export const SortOrder = {
