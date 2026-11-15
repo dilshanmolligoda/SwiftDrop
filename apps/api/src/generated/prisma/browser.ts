@@ -32,3 +32,8 @@ export type MerchantProfile = Prisma.MerchantProfileModel
  * 
  */
 export type CourierProfile = Prisma.CourierProfileModel
+/**
+ * Model MerchantOrder
+ * 
+ */
+export type MerchantOrder = Prisma.MerchantOrderModel

@@ -53,7 +53,8 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   User: 'User',
   MerchantProfile: 'MerchantProfile',
-  CourierProfile: 'CourierProfile'
+  CourierProfile: 'CourierProfile',
+  MerchantOrder: 'MerchantOrder'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -116,6 +117,23 @@ export const CourierProfileScalarFieldEnum = {
 } as const
 
 export type CourierProfileScalarFieldEnum = (typeof CourierProfileScalarFieldEnum)[keyof typeof CourierProfileScalarFieldEnum]
+
+
+export const MerchantOrderScalarFieldEnum = {
+  id: 'id',
+  merchantUserId: 'merchantUserId',
+  reference: 'reference',
+  trackingNumber: 'trackingNumber',
+  recipientName: 'recipientName',
+  destination: 'destination',
+  status: 'status',
+  failedDeliveryAttempts: 'failedDeliveryAttempts',
+  deliveredAt: 'deliveredAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type MerchantOrderScalarFieldEnum = (typeof MerchantOrderScalarFieldEnum)[keyof typeof MerchantOrderScalarFieldEnum]
 
 
 export const SortOrder = {

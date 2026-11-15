@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { env } from '../../../lib/env'
 import {
   type CustomerProfile,
   CustomerProfileContext,
@@ -77,6 +78,42 @@ export const CustomerProfileProvider: React.FC<{ children: React.ReactNode }> = 
       // Handle storage quota exceeded or private browsing restrictions gracefully
     }
   }, [profile])
+
+  // Automatically sync with authenticated backend session if available
+  useEffect(() => {
+    let isMounted = true
+    const syncWithBackendSession = async (): Promise<void> => {
+      try {
+        const response = await fetch(`${env.apiBaseUrl}/auth/me`, {
+          credentials: 'include',
+        })
+        if (response.ok && isMounted) {
+          const user = (await response.json()) as {
+            fullName?: string
+            email?: string
+            role?: string
+            isGoogleLinked?: boolean
+          }
+          if (user?.fullName) {
+            setProfile((prev) => ({
+              ...prev,
+              fullName: user.fullName || prev.fullName,
+              email: user.email || prev.email,
+              role: user.role || prev.role,
+              isGoogleLinked: user.isGoogleLinked ?? prev.isGoogleLinked,
+              initials: computeUserInitials(user.fullName || prev.fullName),
+            }))
+          }
+        }
+      } catch {
+        // Fallback to local profile silently if offline
+      }
+    }
+    void syncWithBackendSession()
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const updateProfile = (updatedFields: Partial<Omit<CustomerProfile, 'initials'>>): void => {
     setProfile((previousProfile) => {

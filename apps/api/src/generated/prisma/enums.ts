@@ -37,3 +37,15 @@ export const VehicleType = {
 } as const
 
 export type VehicleType = (typeof VehicleType)[keyof typeof VehicleType]
+
+
+export const MerchantOrderStatus = {
+  AWAITING_PICKUP: 'AWAITING_PICKUP',
+  OUT_FOR_DELIVERY: 'OUT_FOR_DELIVERY',
+  IN_TRANSIT: 'IN_TRANSIT',
+  PICKED_UP: 'PICKED_UP',
+  DELIVERY_FAILED: 'DELIVERY_FAILED',
+  DELIVERED: 'DELIVERED'
+} as const
+
+export type MerchantOrderStatus = (typeof MerchantOrderStatus)[keyof typeof MerchantOrderStatus]
