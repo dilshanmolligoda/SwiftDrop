@@ -30,11 +30,13 @@ enum ApprovalStatus {
 enum ParcelStatus {
   CREATED
   ASSIGNED
+  PENDING
   PICKED_UP
   IN_TRANSIT
   OUT_FOR_DELIVERY
   DELIVERED
   FAILED
+  RETURNED
 }
 
 enum DeliveryFailureReason {
@@ -61,16 +63,6 @@ enum MerchantOrderStatus {
   DELIVERED
 }
 
-enum ParcelStatus {
-  PENDING
-  PICKED_UP
-  IN_TRANSIT
-  OUT_FOR_DELIVERY
-  DELIVERED
-  FAILED
-  RETURNED
-}
-
 enum PackageSize {
   SMALL
   MEDIUM
@@ -78,69 +70,45 @@ enum PackageSize {
 }
 
 model User {
-  id              String          @id @default(uuid()) @db.Uuid
-  email           String          @unique
-  fullName        String         
+  id              String         @id @default(uuid()) @db.Uuid
+  email           String         @unique
+  fullName        String
   phoneNumber     String?
   passwordHash    String?
-  role            Role            @default(CUSTOMER)
-  approvalStatus  ApprovalStatus  @default(PENDING)
-  isActive        Boolean         @default(true)
-  googleSubject   String?         @unique
+  role            Role           @default(CUSTOMER)
+  approvalStatus  ApprovalStatus @default(PENDING)
+  isActive        Boolean        @default(true)
+  googleSubject   String?        @unique
   reviewedAt      DateTime?
-  reviewedBy      String?         @db.Uuid
+  reviewedBy      String?        @db.Uuid
   rejectionReason String?
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
   merchantProfile MerchantProfile?
   courierProfile  CourierProfile?
   merchantOrders  MerchantOrder[]
   parcels         Parcel[]
 
-  courierAssignments  DeliveryAssignment[] @relation("CourierAssignments")
-  createdAssignments  DeliveryAssignment[] @relation("AssignmentCreators")
-  parcelStatusEvents  ParcelStatusEvent[]  @relation("StatusEventActors")
-  deliveryProofs      DeliveryProof[]      @relation("ProofCouriers")
+  courierAssignments DeliveryAssignment[] @relation("CourierAssignments")
+  createdAssignments DeliveryAssignment[] @relation("AssignmentCreators")
+  parcelStatusEvents ParcelStatusEvent[]  @relation("StatusEventActors")
+  deliveryProofs     DeliveryProof[]      @relation("ProofCouriers")
 
   @@map("users")
 }
 
-model Parcel {
-  id                    String       @id @default(uuid()) @db.Uuid
-  trackingNumber        String       @unique @db.VarChar(64)
-  recipientName         String       @db.VarChar(200)
-  recipientPhone        String       @db.VarChar(32)
-  recipientAddress      String       @db.Text
-  deliveryInstructions  String?      @db.Text
-  contentsDescription   String?      @db.VarChar(500)
-  weightGrams           Int?
-  status                ParcelStatus @default(CREATED)
-  deliveredProofId      String?      @unique @db.Uuid
-  createdAt             DateTime     @default(now()) @db.Timestamptz(3)
-  updatedAt             DateTime     @updatedAt @db.Timestamptz(3)
-
-  assignments  DeliveryAssignment[]
-  statusEvents ParcelStatusEvent[]
-  proofs       DeliveryProof[]
-  deliveredProof DeliveryProof? @relation("ParcelDeliveredProof", fields: [deliveredProofId, id], references: [id, parcelId], onDelete: Restrict)
-
-  @@unique([deliveredProofId, id])
-  @@index([status, updatedAt])
-  @@map("parcels")
-}
-
 model DeliveryAssignment {
-  id           String    @id @default(uuid()) @db.Uuid
-  parcelId     String    @db.Uuid
-  courierId    String    @db.Uuid
-  assignedById String    @db.Uuid
-  assignedAt   DateTime  @default(now()) @db.Timestamptz(3)
+  id           String   @id @default(uuid()) @db.Uuid
+  parcelId     String   @db.Uuid
+  courierId    String   @db.Uuid
+  assignedById String   @db.Uuid
+  assignedAt   DateTime @default(now()) @db.Timestamptz(3)
   endedAt      DateTime? @db.Timestamptz(3)
 
-  parcel       Parcel   @relation(fields: [parcelId], references: [id], onDelete: Restrict)
-  courier      User     @relation("CourierAssignments", fields: [courierId], references: [id], onDelete: Restrict)
-  assignedBy   User     @relation("AssignmentCreators", fields: [assignedById], references: [id], onDelete: Restrict)
+  parcel       Parcel              @relation(fields: [parcelId], references: [id], onDelete: Restrict)
+  courier      User                @relation("CourierAssignments", fields: [courierId], references: [id], onDelete: Restrict)
+  assignedBy   User                @relation("AssignmentCreators", fields: [assignedById], references: [id], onDelete: Restrict)
   statusEvents ParcelStatusEvent[]
   proofs       DeliveryProof[]
 
@@ -188,11 +156,11 @@ model DeliveryProof {
   checksumSha256   String?  @db.Char(64)
   uploadedAt       DateTime @default(now()) @db.Timestamptz(3)
 
-  parcel      Parcel              @relation(fields: [parcelId], references: [id], onDelete: Restrict)
-  assignment  DeliveryAssignment  @relation(fields: [assignmentId, parcelId, courierId], references: [id, parcelId, courierId], onDelete: Restrict)
-  courier     User                @relation("ProofCouriers", fields: [courierId], references: [id], onDelete: Restrict)
-  statusEvent ParcelStatusEvent?
-  deliveredParcel Parcel? @relation("ParcelDeliveredProof")
+  parcel         Parcel             @relation(fields: [parcelId], references: [id], onDelete: Restrict)
+  assignment     DeliveryAssignment @relation(fields: [assignmentId, parcelId, courierId], references: [id, parcelId, courierId], onDelete: Restrict)
+  courier        User               @relation("ProofCouriers", fields: [courierId], references: [id], onDelete: Restrict)
+  statusEvent    ParcelStatusEvent?
+  deliveredParcel Parcel?            @relation("ParcelDeliveredProof")
 
   @@unique([id, parcelId])
   @@index([parcelId, uploadedAt])
@@ -208,7 +176,7 @@ model MerchantProfile {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("merchant_profiles")
 }
@@ -222,23 +190,23 @@ model CourierProfile {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
-  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("courier_profiles")
 }
 
 model MerchantOrder {
-  id                      String              @id @default(uuid()) @db.Uuid
-  merchantUserId          String              @db.Uuid
-  reference               String
-  trackingNumber          String              @unique
-  recipientName           String
+  id                     String              @id @default(uuid()) @db.Uuid
+  merchantUserId         String              @db.Uuid
+  reference              String
+  trackingNumber         String              @unique
+  recipientName          String
   destination             String
-  status                  MerchantOrderStatus @default(AWAITING_PICKUP)
-  failedDeliveryAttempts  Int                 @default(0)
-  deliveredAt             DateTime?
-  createdAt               DateTime            @default(now())
-  updatedAt               DateTime            @updatedAt
+  status                 MerchantOrderStatus @default(AWAITING_PICKUP)
+  failedDeliveryAttempts Int                 @default(0)
+  deliveredAt            DateTime?
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
 
   merchant User @relation(fields: [merchantUserId], references: [id], onDelete: Cascade)
 
@@ -249,27 +217,37 @@ model MerchantOrder {
 }
 
 model Parcel {
-  id                     String         @id @default(uuid()) @db.Uuid
-  trackingNumber         String         @unique
-  customerId             String         @db.Uuid
-  senderName             String
-  senderAddress          String
-  recipientName          String
-  recipientAddress       String
-  recipientPhone         String
-  packageSize            PackageSize    @default(MEDIUM)
-  weightKg               Decimal        @db.Decimal(5, 2)
-  costLkr                Decimal        @db.Decimal(10, 2)
-  status                 ParcelStatus   @default(PENDING)
-  failureReason          String?
-  failedDeliveryAttempts Int            @default(0)
-  deliveredAt            DateTime?
-  createdAt              DateTime       @default(now())
-  updatedAt              DateTime       @updatedAt
+  id                    String      @id @default(uuid()) @db.Uuid
+  trackingNumber        String      @unique
+  customerId            String      @db.Uuid
+  senderName            String
+  senderAddress         String
+  recipientName         String
+  recipientAddress      String
+  recipientPhone        String
+  deliveryInstructions  String?     @db.Text
+  contentsDescription   String?     @db.VarChar(500)
+  packageSize           PackageSize @default(MEDIUM)
+  weightKg              Decimal     @db.Decimal(5, 2)
+  weightGrams           Int?
+  costLkr               Decimal     @db.Decimal(10, 2)
+  status                ParcelStatus @default(PENDING)
+  failureReason         String?
+  failedDeliveryAttempts Int        @default(0)
+  deliveredAt           DateTime?
+  deliveredProofId      String?     @unique @db.Uuid
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
 
-  customer      User                  @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  statusHistory ParcelStatusHistory[]
+  customer       User                  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  assignments    DeliveryAssignment[]
+  statusEvents   ParcelStatusEvent[]
+  proofs         DeliveryProof[]
+  statusHistory  ParcelStatusHistory[]
+  deliveredProof DeliveryProof?        @relation("ParcelDeliveredProof", fields: [deliveredProofId, id], references: [id, parcelId], onDelete: Restrict)
 
+  @@unique([deliveredProofId, id])
+  @@index([status, updatedAt])
   @@index([customerId, status])
   @@index([trackingNumber])
   @@map("parcels")
@@ -288,4 +266,3 @@ model ParcelStatusHistory {
   @@index([parcelId, createdAt])
   @@map("parcel_status_history")
 }
-
