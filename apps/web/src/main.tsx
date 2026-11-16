@@ -18,12 +18,12 @@ import { AddressBookPage } from './features/customer/pages/AddressBookPage.tsx'
 import { RequireRole } from './app/auth/RequireRole.tsx'
 import { CourierLayout } from './features/courier/components/CourierLayout.tsx'
 import { CourierDashboardPage } from './features/courier/pages/CourierDashboardPage.tsx'
-import { MyDeliveriesPage } from './features/courier/pages/MyDeliveriesPage.tsx'
+import { MyDeliveriesPage as CourierMyDeliveriesPage } from './features/courier/pages/MyDeliveriesPage.tsx'
 import { DeliveryDetailsPage } from './features/courier/pages/DeliveryDetailsPage.tsx'
 import { HelpSupportPage } from './features/customer/pages/HelpSupportPage.tsx'
 import { NotificationsPage } from './features/customer/pages/NotificationsPage.tsx'
 import CustomerDashboard from './features/customer/pages/CustomerDashboard.tsx'
-import MyDeliveriesPage from './features/customer/pages/MyDeliveriesPage.tsx'
+import CustomerMyDeliveriesPage from './features/customer/pages/MyDeliveriesPage.tsx'
 import { AdminLayout } from './components/layout/AdminLayout.tsx'
 import { AdminPlaceholderPage } from './features/admin/pages/AdminPlaceholderPage.tsx'
 import { AdminSettingsPage } from './features/admin/pages/AdminSettingsPage.tsx'
@@ -88,7 +88,7 @@ createRoot(document.getElementById('root')!).render(
             >
               <Route index element={<Navigate to="/courier/dashboard" replace />} />
               <Route path="dashboard" element={<CourierDashboardPage />} />
-              <Route path="deliveries" element={<MyDeliveriesPage />} />
+              <Route path="deliveries" element={<CourierMyDeliveriesPage />} />
               <Route path="deliveries/:parcelId" element={<DeliveryDetailsPage />} />
               <Route path="*" element={<Navigate to="/courier/dashboard" replace />} />
             </Route>
@@ -149,7 +149,7 @@ createRoot(document.getElementById('root')!).render(
               path="/customer/deliveries"
               element={
                 <CustomerLayout>
-                  <MyDeliveriesPage />
+                  <CustomerMyDeliveriesPage />
                 </CustomerLayout>
               }
             />
@@ -157,7 +157,7 @@ createRoot(document.getElementById('root')!).render(
               path="/deliveries"
               element={
                 <CustomerLayout>
-                  <MyDeliveriesPage />
+                  <CustomerMyDeliveriesPage />
                 </CustomerLayout>
               }
             />
