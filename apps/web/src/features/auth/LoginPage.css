@@ -490,3 +490,8 @@ body:has(.login-page) {
     font-size: 23px;
   }
 }
+
+.login-portal-link {
+  margin: 0 0 10px;
+  text-decoration: none;
+}

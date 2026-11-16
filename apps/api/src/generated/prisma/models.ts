@@ -9,6 +9,9 @@
  * 🟢 You can import this file directly.
  */
 export type * from './models/User.js'
+export type * from './models/DeliveryAssignment.js'
+export type * from './models/ParcelStatusEvent.js'
+export type * from './models/DeliveryProof.js'
 export type * from './models/MerchantProfile.js'
 export type * from './models/CourierProfile.js'
 export type * from './models/MerchantOrder.js'

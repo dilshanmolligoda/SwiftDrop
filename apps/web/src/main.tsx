@@ -15,10 +15,15 @@ import { CustomerDeliveryProvider } from './features/customer/context/CustomerDe
 import { CustomerLayout } from './features/customer/components/CustomerLayout.tsx'
 import { SettingsPage } from './features/customer/pages/SettingsPage.tsx'
 import { AddressBookPage } from './features/customer/pages/AddressBookPage.tsx'
+import { RequireRole } from './app/auth/RequireRole.tsx'
+import { CourierLayout } from './features/courier/components/CourierLayout.tsx'
+import { CourierDashboardPage } from './features/courier/pages/CourierDashboardPage.tsx'
+import { MyDeliveriesPage as CourierMyDeliveriesPage } from './features/courier/pages/MyDeliveriesPage.tsx'
+import { DeliveryDetailsPage } from './features/courier/pages/DeliveryDetailsPage.tsx'
 import { HelpSupportPage } from './features/customer/pages/HelpSupportPage.tsx'
 import { NotificationsPage } from './features/customer/pages/NotificationsPage.tsx'
 import CustomerDashboard from './features/customer/pages/CustomerDashboard.tsx'
-import MyDeliveriesPage from './features/customer/pages/MyDeliveriesPage.tsx'
+import CustomerMyDeliveriesPage from './features/customer/pages/MyDeliveriesPage.tsx'
 import { AdminLayout } from './components/layout/AdminLayout.tsx'
 import { AdminPlaceholderPage } from './features/admin/pages/AdminPlaceholderPage.tsx'
 import { AdminSettingsPage } from './features/admin/pages/AdminSettingsPage.tsx'
@@ -26,7 +31,6 @@ import { AdminDashboardPage } from './features/admin/pages/AdminDashboardPage.ts
 import MerchantDashboard from './features/merchant/pages/MerchantDashboard';
 import MerchantOrdersPage from './features/merchant/pages/MerchantOrdersPage';
 import { MerchantLayout } from './features/merchant/components/MerchantLayout';
-import CourierDashboard from './features/courier/pages/CourierDashboard';
 import AdminLandingPage from './features/admin/pages/AdminLandingPage';
 
 createRoot(document.getElementById('root')!).render(
@@ -74,6 +78,20 @@ createRoot(document.getElementById('root')!).render(
                 </CustomerLayout>
               }
             />
+            <Route
+              path="/courier"
+              element={
+                <RequireRole roles={['COURIER']}>
+                  <CourierLayout />
+                </RequireRole>
+              }
+            >
+              <Route index element={<Navigate to="/courier/dashboard" replace />} />
+              <Route path="dashboard" element={<CourierDashboardPage />} />
+              <Route path="deliveries" element={<CourierMyDeliveriesPage />} />
+              <Route path="deliveries/:parcelId" element={<DeliveryDetailsPage />} />
+              <Route path="*" element={<Navigate to="/courier/dashboard" replace />} />
+            </Route>
             <Route
               path="/customer/support"
               element={
@@ -131,7 +149,7 @@ createRoot(document.getElementById('root')!).render(
               path="/customer/deliveries"
               element={
                 <CustomerLayout>
-                  <MyDeliveriesPage />
+                  <CustomerMyDeliveriesPage />
                 </CustomerLayout>
               }
             />
@@ -139,7 +157,7 @@ createRoot(document.getElementById('root')!).render(
               path="/deliveries"
               element={
                 <CustomerLayout>
-                  <MyDeliveriesPage />
+                  <CustomerMyDeliveriesPage />
                 </CustomerLayout>
               }
             />
@@ -152,7 +170,7 @@ createRoot(document.getElementById('root')!).render(
               <Route index element={<Navigate to="orders" replace />} />
               <Route path="orders" element={<MerchantOrdersPage />} />
             </Route>
-            <Route path="/courier/dashboard" element={<CourierDashboard />} />
+            {/* /courier/* is served by the Courier Portal routes above. */}
             <Route path="/admin-landing" element={<AdminLandingPage />} />
 
             {/* Member 7 Admin & Dispatcher Routes */}

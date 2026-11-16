@@ -29,6 +29,32 @@ export const ApprovalStatus = {
 export type ApprovalStatus = (typeof ApprovalStatus)[keyof typeof ApprovalStatus]
 
 
+export const ParcelStatus = {
+  CREATED: 'CREATED',
+  ASSIGNED: 'ASSIGNED',
+  PENDING: 'PENDING',
+  PICKED_UP: 'PICKED_UP',
+  IN_TRANSIT: 'IN_TRANSIT',
+  OUT_FOR_DELIVERY: 'OUT_FOR_DELIVERY',
+  DELIVERED: 'DELIVERED',
+  FAILED: 'FAILED',
+  RETURNED: 'RETURNED'
+} as const
+
+export type ParcelStatus = (typeof ParcelStatus)[keyof typeof ParcelStatus]
+
+
+export const DeliveryFailureReason = {
+  RECIPIENT_UNAVAILABLE: 'RECIPIENT_UNAVAILABLE',
+  INCORRECT_ADDRESS: 'INCORRECT_ADDRESS',
+  RECIPIENT_REJECTED: 'RECIPIENT_REJECTED',
+  UNABLE_TO_CONTACT: 'UNABLE_TO_CONTACT',
+  OTHER: 'OTHER'
+} as const
+
+export type DeliveryFailureReason = (typeof DeliveryFailureReason)[keyof typeof DeliveryFailureReason]
+
+
 export const VehicleType = {
   BICYCLE: 'BICYCLE',
   MOTORCYCLE: 'MOTORCYCLE',
@@ -49,19 +75,6 @@ export const MerchantOrderStatus = {
 } as const
 
 export type MerchantOrderStatus = (typeof MerchantOrderStatus)[keyof typeof MerchantOrderStatus]
-
-
-export const ParcelStatus = {
-  PENDING: 'PENDING',
-  PICKED_UP: 'PICKED_UP',
-  IN_TRANSIT: 'IN_TRANSIT',
-  OUT_FOR_DELIVERY: 'OUT_FOR_DELIVERY',
-  DELIVERED: 'DELIVERED',
-  FAILED: 'FAILED',
-  RETURNED: 'RETURNED'
-} as const
-
-export type ParcelStatus = (typeof ParcelStatus)[keyof typeof ParcelStatus]
 
 
 export const PackageSize = {
