@@ -464,6 +464,36 @@ export type DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput = 
   deleteMany?: Prisma.DeliveryAssignmentScalarWhereInput | Prisma.DeliveryAssignmentScalarWhereInput[]
 }
 
+export type DeliveryAssignmentCreateNestedOneWithoutStatusEventsInput = {
+  create?: Prisma.XOR<Prisma.DeliveryAssignmentCreateWithoutStatusEventsInput, Prisma.DeliveryAssignmentUncheckedCreateWithoutStatusEventsInput>
+  connectOrCreate?: Prisma.DeliveryAssignmentCreateOrConnectWithoutStatusEventsInput
+  connect?: Prisma.DeliveryAssignmentWhereUniqueInput
+}
+
+export type DeliveryAssignmentUpdateOneWithoutStatusEventsNestedInput = {
+  create?: Prisma.XOR<Prisma.DeliveryAssignmentCreateWithoutStatusEventsInput, Prisma.DeliveryAssignmentUncheckedCreateWithoutStatusEventsInput>
+  connectOrCreate?: Prisma.DeliveryAssignmentCreateOrConnectWithoutStatusEventsInput
+  upsert?: Prisma.DeliveryAssignmentUpsertWithoutStatusEventsInput
+  disconnect?: Prisma.DeliveryAssignmentWhereInput | boolean
+  delete?: Prisma.DeliveryAssignmentWhereInput | boolean
+  connect?: Prisma.DeliveryAssignmentWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.DeliveryAssignmentUpdateToOneWithWhereWithoutStatusEventsInput, Prisma.DeliveryAssignmentUpdateWithoutStatusEventsInput>, Prisma.DeliveryAssignmentUncheckedUpdateWithoutStatusEventsInput>
+}
+
+export type DeliveryAssignmentCreateNestedOneWithoutProofsInput = {
+  create?: Prisma.XOR<Prisma.DeliveryAssignmentCreateWithoutProofsInput, Prisma.DeliveryAssignmentUncheckedCreateWithoutProofsInput>
+  connectOrCreate?: Prisma.DeliveryAssignmentCreateOrConnectWithoutProofsInput
+  connect?: Prisma.DeliveryAssignmentWhereUniqueInput
+}
+
+export type DeliveryAssignmentUpdateOneRequiredWithoutProofsNestedInput = {
+  create?: Prisma.XOR<Prisma.DeliveryAssignmentCreateWithoutProofsInput, Prisma.DeliveryAssignmentUncheckedCreateWithoutProofsInput>
+  connectOrCreate?: Prisma.DeliveryAssignmentCreateOrConnectWithoutProofsInput
+  upsert?: Prisma.DeliveryAssignmentUpsertWithoutProofsInput
+  connect?: Prisma.DeliveryAssignmentWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.DeliveryAssignmentUpdateToOneWithWhereWithoutProofsInput, Prisma.DeliveryAssignmentUpdateWithoutProofsInput>, Prisma.DeliveryAssignmentUncheckedUpdateWithoutProofsInput>
+}
+
 export type DeliveryAssignmentCreateNestedManyWithoutParcelInput = {
   create?: Prisma.XOR<Prisma.DeliveryAssignmentCreateWithoutParcelInput, Prisma.DeliveryAssignmentUncheckedCreateWithoutParcelInput> | Prisma.DeliveryAssignmentCreateWithoutParcelInput[] | Prisma.DeliveryAssignmentUncheckedCreateWithoutParcelInput[]
   connectOrCreate?: Prisma.DeliveryAssignmentCreateOrConnectWithoutParcelInput | Prisma.DeliveryAssignmentCreateOrConnectWithoutParcelInput[]
@@ -504,36 +534,6 @@ export type DeliveryAssignmentUncheckedUpdateManyWithoutParcelNestedInput = {
   update?: Prisma.DeliveryAssignmentUpdateWithWhereUniqueWithoutParcelInput | Prisma.DeliveryAssignmentUpdateWithWhereUniqueWithoutParcelInput[]
   updateMany?: Prisma.DeliveryAssignmentUpdateManyWithWhereWithoutParcelInput | Prisma.DeliveryAssignmentUpdateManyWithWhereWithoutParcelInput[]
   deleteMany?: Prisma.DeliveryAssignmentScalarWhereInput | Prisma.DeliveryAssignmentScalarWhereInput[]
-}
-
-export type DeliveryAssignmentCreateNestedOneWithoutStatusEventsInput = {
-  create?: Prisma.XOR<Prisma.DeliveryAssignmentCreateWithoutStatusEventsInput, Prisma.DeliveryAssignmentUncheckedCreateWithoutStatusEventsInput>
-  connectOrCreate?: Prisma.DeliveryAssignmentCreateOrConnectWithoutStatusEventsInput
-  connect?: Prisma.DeliveryAssignmentWhereUniqueInput
-}
-
-export type DeliveryAssignmentUpdateOneWithoutStatusEventsNestedInput = {
-  create?: Prisma.XOR<Prisma.DeliveryAssignmentCreateWithoutStatusEventsInput, Prisma.DeliveryAssignmentUncheckedCreateWithoutStatusEventsInput>
-  connectOrCreate?: Prisma.DeliveryAssignmentCreateOrConnectWithoutStatusEventsInput
-  upsert?: Prisma.DeliveryAssignmentUpsertWithoutStatusEventsInput
-  disconnect?: Prisma.DeliveryAssignmentWhereInput | boolean
-  delete?: Prisma.DeliveryAssignmentWhereInput | boolean
-  connect?: Prisma.DeliveryAssignmentWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.DeliveryAssignmentUpdateToOneWithWhereWithoutStatusEventsInput, Prisma.DeliveryAssignmentUpdateWithoutStatusEventsInput>, Prisma.DeliveryAssignmentUncheckedUpdateWithoutStatusEventsInput>
-}
-
-export type DeliveryAssignmentCreateNestedOneWithoutProofsInput = {
-  create?: Prisma.XOR<Prisma.DeliveryAssignmentCreateWithoutProofsInput, Prisma.DeliveryAssignmentUncheckedCreateWithoutProofsInput>
-  connectOrCreate?: Prisma.DeliveryAssignmentCreateOrConnectWithoutProofsInput
-  connect?: Prisma.DeliveryAssignmentWhereUniqueInput
-}
-
-export type DeliveryAssignmentUpdateOneRequiredWithoutProofsNestedInput = {
-  create?: Prisma.XOR<Prisma.DeliveryAssignmentCreateWithoutProofsInput, Prisma.DeliveryAssignmentUncheckedCreateWithoutProofsInput>
-  connectOrCreate?: Prisma.DeliveryAssignmentCreateOrConnectWithoutProofsInput
-  upsert?: Prisma.DeliveryAssignmentUpsertWithoutProofsInput
-  connect?: Prisma.DeliveryAssignmentWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.DeliveryAssignmentUpdateToOneWithWhereWithoutProofsInput, Prisma.DeliveryAssignmentUpdateWithoutProofsInput>, Prisma.DeliveryAssignmentUncheckedUpdateWithoutProofsInput>
 }
 
 export type DeliveryAssignmentCreateWithoutCourierInput = {
@@ -638,52 +638,6 @@ export type DeliveryAssignmentUpdateWithWhereUniqueWithoutAssignedByInput = {
 export type DeliveryAssignmentUpdateManyWithWhereWithoutAssignedByInput = {
   where: Prisma.DeliveryAssignmentScalarWhereInput
   data: Prisma.XOR<Prisma.DeliveryAssignmentUpdateManyMutationInput, Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByInput>
-}
-
-export type DeliveryAssignmentCreateWithoutParcelInput = {
-  id?: string
-  assignedAt?: Date | string
-  endedAt?: Date | string | null
-  courier: Prisma.UserCreateNestedOneWithoutCourierAssignmentsInput
-  assignedBy: Prisma.UserCreateNestedOneWithoutCreatedAssignmentsInput
-  statusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutAssignmentInput
-  proofs?: Prisma.DeliveryProofCreateNestedManyWithoutAssignmentInput
-}
-
-export type DeliveryAssignmentUncheckedCreateWithoutParcelInput = {
-  id?: string
-  courierId: string
-  assignedById: string
-  assignedAt?: Date | string
-  endedAt?: Date | string | null
-  statusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutAssignmentInput
-  proofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutAssignmentInput
-}
-
-export type DeliveryAssignmentCreateOrConnectWithoutParcelInput = {
-  where: Prisma.DeliveryAssignmentWhereUniqueInput
-  create: Prisma.XOR<Prisma.DeliveryAssignmentCreateWithoutParcelInput, Prisma.DeliveryAssignmentUncheckedCreateWithoutParcelInput>
-}
-
-export type DeliveryAssignmentCreateManyParcelInputEnvelope = {
-  data: Prisma.DeliveryAssignmentCreateManyParcelInput | Prisma.DeliveryAssignmentCreateManyParcelInput[]
-  skipDuplicates?: boolean
-}
-
-export type DeliveryAssignmentUpsertWithWhereUniqueWithoutParcelInput = {
-  where: Prisma.DeliveryAssignmentWhereUniqueInput
-  update: Prisma.XOR<Prisma.DeliveryAssignmentUpdateWithoutParcelInput, Prisma.DeliveryAssignmentUncheckedUpdateWithoutParcelInput>
-  create: Prisma.XOR<Prisma.DeliveryAssignmentCreateWithoutParcelInput, Prisma.DeliveryAssignmentUncheckedCreateWithoutParcelInput>
-}
-
-export type DeliveryAssignmentUpdateWithWhereUniqueWithoutParcelInput = {
-  where: Prisma.DeliveryAssignmentWhereUniqueInput
-  data: Prisma.XOR<Prisma.DeliveryAssignmentUpdateWithoutParcelInput, Prisma.DeliveryAssignmentUncheckedUpdateWithoutParcelInput>
-}
-
-export type DeliveryAssignmentUpdateManyWithWhereWithoutParcelInput = {
-  where: Prisma.DeliveryAssignmentScalarWhereInput
-  data: Prisma.XOR<Prisma.DeliveryAssignmentUpdateManyMutationInput, Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutParcelInput>
 }
 
 export type DeliveryAssignmentCreateWithoutStatusEventsInput = {
@@ -796,6 +750,52 @@ export type DeliveryAssignmentUncheckedUpdateWithoutProofsInput = {
   assignedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   statusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutAssignmentNestedInput
+}
+
+export type DeliveryAssignmentCreateWithoutParcelInput = {
+  id?: string
+  assignedAt?: Date | string
+  endedAt?: Date | string | null
+  courier: Prisma.UserCreateNestedOneWithoutCourierAssignmentsInput
+  assignedBy: Prisma.UserCreateNestedOneWithoutCreatedAssignmentsInput
+  statusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutAssignmentInput
+  proofs?: Prisma.DeliveryProofCreateNestedManyWithoutAssignmentInput
+}
+
+export type DeliveryAssignmentUncheckedCreateWithoutParcelInput = {
+  id?: string
+  courierId: string
+  assignedById: string
+  assignedAt?: Date | string
+  endedAt?: Date | string | null
+  statusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutAssignmentInput
+  proofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutAssignmentInput
+}
+
+export type DeliveryAssignmentCreateOrConnectWithoutParcelInput = {
+  where: Prisma.DeliveryAssignmentWhereUniqueInput
+  create: Prisma.XOR<Prisma.DeliveryAssignmentCreateWithoutParcelInput, Prisma.DeliveryAssignmentUncheckedCreateWithoutParcelInput>
+}
+
+export type DeliveryAssignmentCreateManyParcelInputEnvelope = {
+  data: Prisma.DeliveryAssignmentCreateManyParcelInput | Prisma.DeliveryAssignmentCreateManyParcelInput[]
+  skipDuplicates?: boolean
+}
+
+export type DeliveryAssignmentUpsertWithWhereUniqueWithoutParcelInput = {
+  where: Prisma.DeliveryAssignmentWhereUniqueInput
+  update: Prisma.XOR<Prisma.DeliveryAssignmentUpdateWithoutParcelInput, Prisma.DeliveryAssignmentUncheckedUpdateWithoutParcelInput>
+  create: Prisma.XOR<Prisma.DeliveryAssignmentCreateWithoutParcelInput, Prisma.DeliveryAssignmentUncheckedCreateWithoutParcelInput>
+}
+
+export type DeliveryAssignmentUpdateWithWhereUniqueWithoutParcelInput = {
+  where: Prisma.DeliveryAssignmentWhereUniqueInput
+  data: Prisma.XOR<Prisma.DeliveryAssignmentUpdateWithoutParcelInput, Prisma.DeliveryAssignmentUncheckedUpdateWithoutParcelInput>
+}
+
+export type DeliveryAssignmentUpdateManyWithWhereWithoutParcelInput = {
+  where: Prisma.DeliveryAssignmentScalarWhereInput
+  data: Prisma.XOR<Prisma.DeliveryAssignmentUpdateManyMutationInput, Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutParcelInput>
 }
 
 export type DeliveryAssignmentCreateManyCourierInput = {

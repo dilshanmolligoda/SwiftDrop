@@ -564,64 +564,6 @@ export type DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput = {
   deleteMany?: Prisma.DeliveryProofScalarWhereInput | Prisma.DeliveryProofScalarWhereInput[]
 }
 
-export type DeliveryProofCreateNestedManyWithoutParcelInput = {
-  create?: Prisma.XOR<Prisma.DeliveryProofCreateWithoutParcelInput, Prisma.DeliveryProofUncheckedCreateWithoutParcelInput> | Prisma.DeliveryProofCreateWithoutParcelInput[] | Prisma.DeliveryProofUncheckedCreateWithoutParcelInput[]
-  connectOrCreate?: Prisma.DeliveryProofCreateOrConnectWithoutParcelInput | Prisma.DeliveryProofCreateOrConnectWithoutParcelInput[]
-  createMany?: Prisma.DeliveryProofCreateManyParcelInputEnvelope
-  connect?: Prisma.DeliveryProofWhereUniqueInput | Prisma.DeliveryProofWhereUniqueInput[]
-}
-
-export type DeliveryProofCreateNestedOneWithoutDeliveredParcelInput = {
-  create?: Prisma.XOR<Prisma.DeliveryProofCreateWithoutDeliveredParcelInput, Prisma.DeliveryProofUncheckedCreateWithoutDeliveredParcelInput>
-  connectOrCreate?: Prisma.DeliveryProofCreateOrConnectWithoutDeliveredParcelInput
-  connect?: Prisma.DeliveryProofWhereUniqueInput
-}
-
-export type DeliveryProofUncheckedCreateNestedManyWithoutParcelInput = {
-  create?: Prisma.XOR<Prisma.DeliveryProofCreateWithoutParcelInput, Prisma.DeliveryProofUncheckedCreateWithoutParcelInput> | Prisma.DeliveryProofCreateWithoutParcelInput[] | Prisma.DeliveryProofUncheckedCreateWithoutParcelInput[]
-  connectOrCreate?: Prisma.DeliveryProofCreateOrConnectWithoutParcelInput | Prisma.DeliveryProofCreateOrConnectWithoutParcelInput[]
-  createMany?: Prisma.DeliveryProofCreateManyParcelInputEnvelope
-  connect?: Prisma.DeliveryProofWhereUniqueInput | Prisma.DeliveryProofWhereUniqueInput[]
-}
-
-export type DeliveryProofUpdateManyWithoutParcelNestedInput = {
-  create?: Prisma.XOR<Prisma.DeliveryProofCreateWithoutParcelInput, Prisma.DeliveryProofUncheckedCreateWithoutParcelInput> | Prisma.DeliveryProofCreateWithoutParcelInput[] | Prisma.DeliveryProofUncheckedCreateWithoutParcelInput[]
-  connectOrCreate?: Prisma.DeliveryProofCreateOrConnectWithoutParcelInput | Prisma.DeliveryProofCreateOrConnectWithoutParcelInput[]
-  upsert?: Prisma.DeliveryProofUpsertWithWhereUniqueWithoutParcelInput | Prisma.DeliveryProofUpsertWithWhereUniqueWithoutParcelInput[]
-  createMany?: Prisma.DeliveryProofCreateManyParcelInputEnvelope
-  set?: Prisma.DeliveryProofWhereUniqueInput | Prisma.DeliveryProofWhereUniqueInput[]
-  disconnect?: Prisma.DeliveryProofWhereUniqueInput | Prisma.DeliveryProofWhereUniqueInput[]
-  delete?: Prisma.DeliveryProofWhereUniqueInput | Prisma.DeliveryProofWhereUniqueInput[]
-  connect?: Prisma.DeliveryProofWhereUniqueInput | Prisma.DeliveryProofWhereUniqueInput[]
-  update?: Prisma.DeliveryProofUpdateWithWhereUniqueWithoutParcelInput | Prisma.DeliveryProofUpdateWithWhereUniqueWithoutParcelInput[]
-  updateMany?: Prisma.DeliveryProofUpdateManyWithWhereWithoutParcelInput | Prisma.DeliveryProofUpdateManyWithWhereWithoutParcelInput[]
-  deleteMany?: Prisma.DeliveryProofScalarWhereInput | Prisma.DeliveryProofScalarWhereInput[]
-}
-
-export type DeliveryProofUpdateOneWithoutDeliveredParcelNestedInput = {
-  create?: Prisma.XOR<Prisma.DeliveryProofCreateWithoutDeliveredParcelInput, Prisma.DeliveryProofUncheckedCreateWithoutDeliveredParcelInput>
-  connectOrCreate?: Prisma.DeliveryProofCreateOrConnectWithoutDeliveredParcelInput
-  upsert?: Prisma.DeliveryProofUpsertWithoutDeliveredParcelInput
-  disconnect?: Prisma.DeliveryProofWhereInput | boolean
-  delete?: Prisma.DeliveryProofWhereInput | boolean
-  connect?: Prisma.DeliveryProofWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.DeliveryProofUpdateToOneWithWhereWithoutDeliveredParcelInput, Prisma.DeliveryProofUpdateWithoutDeliveredParcelInput>, Prisma.DeliveryProofUncheckedUpdateWithoutDeliveredParcelInput>
-}
-
-export type DeliveryProofUncheckedUpdateManyWithoutParcelNestedInput = {
-  create?: Prisma.XOR<Prisma.DeliveryProofCreateWithoutParcelInput, Prisma.DeliveryProofUncheckedCreateWithoutParcelInput> | Prisma.DeliveryProofCreateWithoutParcelInput[] | Prisma.DeliveryProofUncheckedCreateWithoutParcelInput[]
-  connectOrCreate?: Prisma.DeliveryProofCreateOrConnectWithoutParcelInput | Prisma.DeliveryProofCreateOrConnectWithoutParcelInput[]
-  upsert?: Prisma.DeliveryProofUpsertWithWhereUniqueWithoutParcelInput | Prisma.DeliveryProofUpsertWithWhereUniqueWithoutParcelInput[]
-  createMany?: Prisma.DeliveryProofCreateManyParcelInputEnvelope
-  set?: Prisma.DeliveryProofWhereUniqueInput | Prisma.DeliveryProofWhereUniqueInput[]
-  disconnect?: Prisma.DeliveryProofWhereUniqueInput | Prisma.DeliveryProofWhereUniqueInput[]
-  delete?: Prisma.DeliveryProofWhereUniqueInput | Prisma.DeliveryProofWhereUniqueInput[]
-  connect?: Prisma.DeliveryProofWhereUniqueInput | Prisma.DeliveryProofWhereUniqueInput[]
-  update?: Prisma.DeliveryProofUpdateWithWhereUniqueWithoutParcelInput | Prisma.DeliveryProofUpdateWithWhereUniqueWithoutParcelInput[]
-  updateMany?: Prisma.DeliveryProofUpdateManyWithWhereWithoutParcelInput | Prisma.DeliveryProofUpdateManyWithWhereWithoutParcelInput[]
-  deleteMany?: Prisma.DeliveryProofScalarWhereInput | Prisma.DeliveryProofScalarWhereInput[]
-}
-
 export type DeliveryProofCreateNestedManyWithoutAssignmentInput = {
   create?: Prisma.XOR<Prisma.DeliveryProofCreateWithoutAssignmentInput, Prisma.DeliveryProofUncheckedCreateWithoutAssignmentInput> | Prisma.DeliveryProofCreateWithoutAssignmentInput[] | Prisma.DeliveryProofUncheckedCreateWithoutAssignmentInput[]
   connectOrCreate?: Prisma.DeliveryProofCreateOrConnectWithoutAssignmentInput | Prisma.DeliveryProofCreateOrConnectWithoutAssignmentInput[]
@@ -686,6 +628,64 @@ export type IntFieldUpdateOperationsInput = {
   decrement?: number
   multiply?: number
   divide?: number
+}
+
+export type DeliveryProofCreateNestedManyWithoutParcelInput = {
+  create?: Prisma.XOR<Prisma.DeliveryProofCreateWithoutParcelInput, Prisma.DeliveryProofUncheckedCreateWithoutParcelInput> | Prisma.DeliveryProofCreateWithoutParcelInput[] | Prisma.DeliveryProofUncheckedCreateWithoutParcelInput[]
+  connectOrCreate?: Prisma.DeliveryProofCreateOrConnectWithoutParcelInput | Prisma.DeliveryProofCreateOrConnectWithoutParcelInput[]
+  createMany?: Prisma.DeliveryProofCreateManyParcelInputEnvelope
+  connect?: Prisma.DeliveryProofWhereUniqueInput | Prisma.DeliveryProofWhereUniqueInput[]
+}
+
+export type DeliveryProofCreateNestedOneWithoutDeliveredParcelInput = {
+  create?: Prisma.XOR<Prisma.DeliveryProofCreateWithoutDeliveredParcelInput, Prisma.DeliveryProofUncheckedCreateWithoutDeliveredParcelInput>
+  connectOrCreate?: Prisma.DeliveryProofCreateOrConnectWithoutDeliveredParcelInput
+  connect?: Prisma.DeliveryProofWhereUniqueInput
+}
+
+export type DeliveryProofUncheckedCreateNestedManyWithoutParcelInput = {
+  create?: Prisma.XOR<Prisma.DeliveryProofCreateWithoutParcelInput, Prisma.DeliveryProofUncheckedCreateWithoutParcelInput> | Prisma.DeliveryProofCreateWithoutParcelInput[] | Prisma.DeliveryProofUncheckedCreateWithoutParcelInput[]
+  connectOrCreate?: Prisma.DeliveryProofCreateOrConnectWithoutParcelInput | Prisma.DeliveryProofCreateOrConnectWithoutParcelInput[]
+  createMany?: Prisma.DeliveryProofCreateManyParcelInputEnvelope
+  connect?: Prisma.DeliveryProofWhereUniqueInput | Prisma.DeliveryProofWhereUniqueInput[]
+}
+
+export type DeliveryProofUpdateManyWithoutParcelNestedInput = {
+  create?: Prisma.XOR<Prisma.DeliveryProofCreateWithoutParcelInput, Prisma.DeliveryProofUncheckedCreateWithoutParcelInput> | Prisma.DeliveryProofCreateWithoutParcelInput[] | Prisma.DeliveryProofUncheckedCreateWithoutParcelInput[]
+  connectOrCreate?: Prisma.DeliveryProofCreateOrConnectWithoutParcelInput | Prisma.DeliveryProofCreateOrConnectWithoutParcelInput[]
+  upsert?: Prisma.DeliveryProofUpsertWithWhereUniqueWithoutParcelInput | Prisma.DeliveryProofUpsertWithWhereUniqueWithoutParcelInput[]
+  createMany?: Prisma.DeliveryProofCreateManyParcelInputEnvelope
+  set?: Prisma.DeliveryProofWhereUniqueInput | Prisma.DeliveryProofWhereUniqueInput[]
+  disconnect?: Prisma.DeliveryProofWhereUniqueInput | Prisma.DeliveryProofWhereUniqueInput[]
+  delete?: Prisma.DeliveryProofWhereUniqueInput | Prisma.DeliveryProofWhereUniqueInput[]
+  connect?: Prisma.DeliveryProofWhereUniqueInput | Prisma.DeliveryProofWhereUniqueInput[]
+  update?: Prisma.DeliveryProofUpdateWithWhereUniqueWithoutParcelInput | Prisma.DeliveryProofUpdateWithWhereUniqueWithoutParcelInput[]
+  updateMany?: Prisma.DeliveryProofUpdateManyWithWhereWithoutParcelInput | Prisma.DeliveryProofUpdateManyWithWhereWithoutParcelInput[]
+  deleteMany?: Prisma.DeliveryProofScalarWhereInput | Prisma.DeliveryProofScalarWhereInput[]
+}
+
+export type DeliveryProofUpdateOneWithoutDeliveredParcelNestedInput = {
+  create?: Prisma.XOR<Prisma.DeliveryProofCreateWithoutDeliveredParcelInput, Prisma.DeliveryProofUncheckedCreateWithoutDeliveredParcelInput>
+  connectOrCreate?: Prisma.DeliveryProofCreateOrConnectWithoutDeliveredParcelInput
+  upsert?: Prisma.DeliveryProofUpsertWithoutDeliveredParcelInput
+  disconnect?: Prisma.DeliveryProofWhereInput | boolean
+  delete?: Prisma.DeliveryProofWhereInput | boolean
+  connect?: Prisma.DeliveryProofWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.DeliveryProofUpdateToOneWithWhereWithoutDeliveredParcelInput, Prisma.DeliveryProofUpdateWithoutDeliveredParcelInput>, Prisma.DeliveryProofUncheckedUpdateWithoutDeliveredParcelInput>
+}
+
+export type DeliveryProofUncheckedUpdateManyWithoutParcelNestedInput = {
+  create?: Prisma.XOR<Prisma.DeliveryProofCreateWithoutParcelInput, Prisma.DeliveryProofUncheckedCreateWithoutParcelInput> | Prisma.DeliveryProofCreateWithoutParcelInput[] | Prisma.DeliveryProofUncheckedCreateWithoutParcelInput[]
+  connectOrCreate?: Prisma.DeliveryProofCreateOrConnectWithoutParcelInput | Prisma.DeliveryProofCreateOrConnectWithoutParcelInput[]
+  upsert?: Prisma.DeliveryProofUpsertWithWhereUniqueWithoutParcelInput | Prisma.DeliveryProofUpsertWithWhereUniqueWithoutParcelInput[]
+  createMany?: Prisma.DeliveryProofCreateManyParcelInputEnvelope
+  set?: Prisma.DeliveryProofWhereUniqueInput | Prisma.DeliveryProofWhereUniqueInput[]
+  disconnect?: Prisma.DeliveryProofWhereUniqueInput | Prisma.DeliveryProofWhereUniqueInput[]
+  delete?: Prisma.DeliveryProofWhereUniqueInput | Prisma.DeliveryProofWhereUniqueInput[]
+  connect?: Prisma.DeliveryProofWhereUniqueInput | Prisma.DeliveryProofWhereUniqueInput[]
+  update?: Prisma.DeliveryProofUpdateWithWhereUniqueWithoutParcelInput | Prisma.DeliveryProofUpdateWithWhereUniqueWithoutParcelInput[]
+  updateMany?: Prisma.DeliveryProofUpdateManyWithWhereWithoutParcelInput | Prisma.DeliveryProofUpdateManyWithWhereWithoutParcelInput[]
+  deleteMany?: Prisma.DeliveryProofScalarWhereInput | Prisma.DeliveryProofScalarWhereInput[]
 }
 
 export type DeliveryProofCreateWithoutCourierInput = {
@@ -759,6 +759,136 @@ export type DeliveryProofScalarWhereInput = {
   sizeBytes?: Prisma.IntFilter<"DeliveryProof"> | number
   checksumSha256?: Prisma.StringNullableFilter<"DeliveryProof"> | string | null
   uploadedAt?: Prisma.DateTimeFilter<"DeliveryProof"> | Date | string
+}
+
+export type DeliveryProofCreateWithoutAssignmentInput = {
+  id?: string
+  storageProvider?: string
+  storageKey: string
+  originalFilename: string
+  contentType: string
+  sizeBytes: number
+  checksumSha256?: string | null
+  uploadedAt?: Date | string
+  parcel: Prisma.ParcelCreateNestedOneWithoutProofsInput
+  courier: Prisma.UserCreateNestedOneWithoutDeliveryProofsInput
+  statusEvent?: Prisma.ParcelStatusEventCreateNestedOneWithoutProofInput
+  deliveredParcel?: Prisma.ParcelCreateNestedOneWithoutDeliveredProofInput
+}
+
+export type DeliveryProofUncheckedCreateWithoutAssignmentInput = {
+  id?: string
+  storageProvider?: string
+  storageKey: string
+  originalFilename: string
+  contentType: string
+  sizeBytes: number
+  checksumSha256?: string | null
+  uploadedAt?: Date | string
+  statusEvent?: Prisma.ParcelStatusEventUncheckedCreateNestedOneWithoutProofInput
+  deliveredParcel?: Prisma.ParcelUncheckedCreateNestedOneWithoutDeliveredProofInput
+}
+
+export type DeliveryProofCreateOrConnectWithoutAssignmentInput = {
+  where: Prisma.DeliveryProofWhereUniqueInput
+  create: Prisma.XOR<Prisma.DeliveryProofCreateWithoutAssignmentInput, Prisma.DeliveryProofUncheckedCreateWithoutAssignmentInput>
+}
+
+export type DeliveryProofCreateManyAssignmentInputEnvelope = {
+  data: Prisma.DeliveryProofCreateManyAssignmentInput | Prisma.DeliveryProofCreateManyAssignmentInput[]
+  skipDuplicates?: boolean
+}
+
+export type DeliveryProofUpsertWithWhereUniqueWithoutAssignmentInput = {
+  where: Prisma.DeliveryProofWhereUniqueInput
+  update: Prisma.XOR<Prisma.DeliveryProofUpdateWithoutAssignmentInput, Prisma.DeliveryProofUncheckedUpdateWithoutAssignmentInput>
+  create: Prisma.XOR<Prisma.DeliveryProofCreateWithoutAssignmentInput, Prisma.DeliveryProofUncheckedCreateWithoutAssignmentInput>
+}
+
+export type DeliveryProofUpdateWithWhereUniqueWithoutAssignmentInput = {
+  where: Prisma.DeliveryProofWhereUniqueInput
+  data: Prisma.XOR<Prisma.DeliveryProofUpdateWithoutAssignmentInput, Prisma.DeliveryProofUncheckedUpdateWithoutAssignmentInput>
+}
+
+export type DeliveryProofUpdateManyWithWhereWithoutAssignmentInput = {
+  where: Prisma.DeliveryProofScalarWhereInput
+  data: Prisma.XOR<Prisma.DeliveryProofUpdateManyMutationInput, Prisma.DeliveryProofUncheckedUpdateManyWithoutAssignmentInput>
+}
+
+export type DeliveryProofCreateWithoutStatusEventInput = {
+  id?: string
+  storageProvider?: string
+  storageKey: string
+  originalFilename: string
+  contentType: string
+  sizeBytes: number
+  checksumSha256?: string | null
+  uploadedAt?: Date | string
+  parcel: Prisma.ParcelCreateNestedOneWithoutProofsInput
+  assignment: Prisma.DeliveryAssignmentCreateNestedOneWithoutProofsInput
+  courier: Prisma.UserCreateNestedOneWithoutDeliveryProofsInput
+  deliveredParcel?: Prisma.ParcelCreateNestedOneWithoutDeliveredProofInput
+}
+
+export type DeliveryProofUncheckedCreateWithoutStatusEventInput = {
+  id?: string
+  parcelId: string
+  assignmentId: string
+  courierId: string
+  storageProvider?: string
+  storageKey: string
+  originalFilename: string
+  contentType: string
+  sizeBytes: number
+  checksumSha256?: string | null
+  uploadedAt?: Date | string
+  deliveredParcel?: Prisma.ParcelUncheckedCreateNestedOneWithoutDeliveredProofInput
+}
+
+export type DeliveryProofCreateOrConnectWithoutStatusEventInput = {
+  where: Prisma.DeliveryProofWhereUniqueInput
+  create: Prisma.XOR<Prisma.DeliveryProofCreateWithoutStatusEventInput, Prisma.DeliveryProofUncheckedCreateWithoutStatusEventInput>
+}
+
+export type DeliveryProofUpsertWithoutStatusEventInput = {
+  update: Prisma.XOR<Prisma.DeliveryProofUpdateWithoutStatusEventInput, Prisma.DeliveryProofUncheckedUpdateWithoutStatusEventInput>
+  create: Prisma.XOR<Prisma.DeliveryProofCreateWithoutStatusEventInput, Prisma.DeliveryProofUncheckedCreateWithoutStatusEventInput>
+  where?: Prisma.DeliveryProofWhereInput
+}
+
+export type DeliveryProofUpdateToOneWithWhereWithoutStatusEventInput = {
+  where?: Prisma.DeliveryProofWhereInput
+  data: Prisma.XOR<Prisma.DeliveryProofUpdateWithoutStatusEventInput, Prisma.DeliveryProofUncheckedUpdateWithoutStatusEventInput>
+}
+
+export type DeliveryProofUpdateWithoutStatusEventInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  storageProvider?: Prisma.StringFieldUpdateOperationsInput | string
+  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
+  originalFilename?: Prisma.StringFieldUpdateOperationsInput | string
+  contentType?: Prisma.StringFieldUpdateOperationsInput | string
+  sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
+  checksumSha256?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  parcel?: Prisma.ParcelUpdateOneRequiredWithoutProofsNestedInput
+  assignment?: Prisma.DeliveryAssignmentUpdateOneRequiredWithoutProofsNestedInput
+  courier?: Prisma.UserUpdateOneRequiredWithoutDeliveryProofsNestedInput
+  deliveredParcel?: Prisma.ParcelUpdateOneWithoutDeliveredProofNestedInput
+}
+
+export type DeliveryProofUncheckedUpdateWithoutStatusEventInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  parcelId?: Prisma.StringFieldUpdateOperationsInput | string
+  assignmentId?: Prisma.StringFieldUpdateOperationsInput | string
+  courierId?: Prisma.StringFieldUpdateOperationsInput | string
+  storageProvider?: Prisma.StringFieldUpdateOperationsInput | string
+  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
+  originalFilename?: Prisma.StringFieldUpdateOperationsInput | string
+  contentType?: Prisma.StringFieldUpdateOperationsInput | string
+  sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
+  checksumSha256?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deliveredParcel?: Prisma.ParcelUncheckedUpdateOneWithoutDeliveredProofNestedInput
 }
 
 export type DeliveryProofCreateWithoutParcelInput = {
@@ -893,136 +1023,6 @@ export type DeliveryProofUncheckedUpdateWithoutDeliveredParcelInput = {
   statusEvent?: Prisma.ParcelStatusEventUncheckedUpdateOneWithoutProofNestedInput
 }
 
-export type DeliveryProofCreateWithoutAssignmentInput = {
-  id?: string
-  storageProvider?: string
-  storageKey: string
-  originalFilename: string
-  contentType: string
-  sizeBytes: number
-  checksumSha256?: string | null
-  uploadedAt?: Date | string
-  parcel: Prisma.ParcelCreateNestedOneWithoutProofsInput
-  courier: Prisma.UserCreateNestedOneWithoutDeliveryProofsInput
-  statusEvent?: Prisma.ParcelStatusEventCreateNestedOneWithoutProofInput
-  deliveredParcel?: Prisma.ParcelCreateNestedOneWithoutDeliveredProofInput
-}
-
-export type DeliveryProofUncheckedCreateWithoutAssignmentInput = {
-  id?: string
-  storageProvider?: string
-  storageKey: string
-  originalFilename: string
-  contentType: string
-  sizeBytes: number
-  checksumSha256?: string | null
-  uploadedAt?: Date | string
-  statusEvent?: Prisma.ParcelStatusEventUncheckedCreateNestedOneWithoutProofInput
-  deliveredParcel?: Prisma.ParcelUncheckedCreateNestedOneWithoutDeliveredProofInput
-}
-
-export type DeliveryProofCreateOrConnectWithoutAssignmentInput = {
-  where: Prisma.DeliveryProofWhereUniqueInput
-  create: Prisma.XOR<Prisma.DeliveryProofCreateWithoutAssignmentInput, Prisma.DeliveryProofUncheckedCreateWithoutAssignmentInput>
-}
-
-export type DeliveryProofCreateManyAssignmentInputEnvelope = {
-  data: Prisma.DeliveryProofCreateManyAssignmentInput | Prisma.DeliveryProofCreateManyAssignmentInput[]
-  skipDuplicates?: boolean
-}
-
-export type DeliveryProofUpsertWithWhereUniqueWithoutAssignmentInput = {
-  where: Prisma.DeliveryProofWhereUniqueInput
-  update: Prisma.XOR<Prisma.DeliveryProofUpdateWithoutAssignmentInput, Prisma.DeliveryProofUncheckedUpdateWithoutAssignmentInput>
-  create: Prisma.XOR<Prisma.DeliveryProofCreateWithoutAssignmentInput, Prisma.DeliveryProofUncheckedCreateWithoutAssignmentInput>
-}
-
-export type DeliveryProofUpdateWithWhereUniqueWithoutAssignmentInput = {
-  where: Prisma.DeliveryProofWhereUniqueInput
-  data: Prisma.XOR<Prisma.DeliveryProofUpdateWithoutAssignmentInput, Prisma.DeliveryProofUncheckedUpdateWithoutAssignmentInput>
-}
-
-export type DeliveryProofUpdateManyWithWhereWithoutAssignmentInput = {
-  where: Prisma.DeliveryProofScalarWhereInput
-  data: Prisma.XOR<Prisma.DeliveryProofUpdateManyMutationInput, Prisma.DeliveryProofUncheckedUpdateManyWithoutAssignmentInput>
-}
-
-export type DeliveryProofCreateWithoutStatusEventInput = {
-  id?: string
-  storageProvider?: string
-  storageKey: string
-  originalFilename: string
-  contentType: string
-  sizeBytes: number
-  checksumSha256?: string | null
-  uploadedAt?: Date | string
-  parcel: Prisma.ParcelCreateNestedOneWithoutProofsInput
-  assignment: Prisma.DeliveryAssignmentCreateNestedOneWithoutProofsInput
-  courier: Prisma.UserCreateNestedOneWithoutDeliveryProofsInput
-  deliveredParcel?: Prisma.ParcelCreateNestedOneWithoutDeliveredProofInput
-}
-
-export type DeliveryProofUncheckedCreateWithoutStatusEventInput = {
-  id?: string
-  parcelId: string
-  assignmentId: string
-  courierId: string
-  storageProvider?: string
-  storageKey: string
-  originalFilename: string
-  contentType: string
-  sizeBytes: number
-  checksumSha256?: string | null
-  uploadedAt?: Date | string
-  deliveredParcel?: Prisma.ParcelUncheckedCreateNestedOneWithoutDeliveredProofInput
-}
-
-export type DeliveryProofCreateOrConnectWithoutStatusEventInput = {
-  where: Prisma.DeliveryProofWhereUniqueInput
-  create: Prisma.XOR<Prisma.DeliveryProofCreateWithoutStatusEventInput, Prisma.DeliveryProofUncheckedCreateWithoutStatusEventInput>
-}
-
-export type DeliveryProofUpsertWithoutStatusEventInput = {
-  update: Prisma.XOR<Prisma.DeliveryProofUpdateWithoutStatusEventInput, Prisma.DeliveryProofUncheckedUpdateWithoutStatusEventInput>
-  create: Prisma.XOR<Prisma.DeliveryProofCreateWithoutStatusEventInput, Prisma.DeliveryProofUncheckedCreateWithoutStatusEventInput>
-  where?: Prisma.DeliveryProofWhereInput
-}
-
-export type DeliveryProofUpdateToOneWithWhereWithoutStatusEventInput = {
-  where?: Prisma.DeliveryProofWhereInput
-  data: Prisma.XOR<Prisma.DeliveryProofUpdateWithoutStatusEventInput, Prisma.DeliveryProofUncheckedUpdateWithoutStatusEventInput>
-}
-
-export type DeliveryProofUpdateWithoutStatusEventInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  storageProvider?: Prisma.StringFieldUpdateOperationsInput | string
-  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
-  originalFilename?: Prisma.StringFieldUpdateOperationsInput | string
-  contentType?: Prisma.StringFieldUpdateOperationsInput | string
-  sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
-  checksumSha256?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  parcel?: Prisma.ParcelUpdateOneRequiredWithoutProofsNestedInput
-  assignment?: Prisma.DeliveryAssignmentUpdateOneRequiredWithoutProofsNestedInput
-  courier?: Prisma.UserUpdateOneRequiredWithoutDeliveryProofsNestedInput
-  deliveredParcel?: Prisma.ParcelUpdateOneWithoutDeliveredProofNestedInput
-}
-
-export type DeliveryProofUncheckedUpdateWithoutStatusEventInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  parcelId?: Prisma.StringFieldUpdateOperationsInput | string
-  assignmentId?: Prisma.StringFieldUpdateOperationsInput | string
-  courierId?: Prisma.StringFieldUpdateOperationsInput | string
-  storageProvider?: Prisma.StringFieldUpdateOperationsInput | string
-  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
-  originalFilename?: Prisma.StringFieldUpdateOperationsInput | string
-  contentType?: Prisma.StringFieldUpdateOperationsInput | string
-  sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
-  checksumSha256?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  deliveredParcel?: Prisma.ParcelUncheckedUpdateOneWithoutDeliveredProofNestedInput
-}
-
 export type DeliveryProofCreateManyCourierInput = {
   id?: string
   parcelId: string
@@ -1079,6 +1079,56 @@ export type DeliveryProofUncheckedUpdateManyWithoutCourierInput = {
   uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
+export type DeliveryProofCreateManyAssignmentInput = {
+  id?: string
+  storageProvider?: string
+  storageKey: string
+  originalFilename: string
+  contentType: string
+  sizeBytes: number
+  checksumSha256?: string | null
+  uploadedAt?: Date | string
+}
+
+export type DeliveryProofUpdateWithoutAssignmentInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  storageProvider?: Prisma.StringFieldUpdateOperationsInput | string
+  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
+  originalFilename?: Prisma.StringFieldUpdateOperationsInput | string
+  contentType?: Prisma.StringFieldUpdateOperationsInput | string
+  sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
+  checksumSha256?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  parcel?: Prisma.ParcelUpdateOneRequiredWithoutProofsNestedInput
+  courier?: Prisma.UserUpdateOneRequiredWithoutDeliveryProofsNestedInput
+  statusEvent?: Prisma.ParcelStatusEventUpdateOneWithoutProofNestedInput
+  deliveredParcel?: Prisma.ParcelUpdateOneWithoutDeliveredProofNestedInput
+}
+
+export type DeliveryProofUncheckedUpdateWithoutAssignmentInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  storageProvider?: Prisma.StringFieldUpdateOperationsInput | string
+  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
+  originalFilename?: Prisma.StringFieldUpdateOperationsInput | string
+  contentType?: Prisma.StringFieldUpdateOperationsInput | string
+  sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
+  checksumSha256?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  statusEvent?: Prisma.ParcelStatusEventUncheckedUpdateOneWithoutProofNestedInput
+  deliveredParcel?: Prisma.ParcelUncheckedUpdateOneWithoutDeliveredProofNestedInput
+}
+
+export type DeliveryProofUncheckedUpdateManyWithoutAssignmentInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  storageProvider?: Prisma.StringFieldUpdateOperationsInput | string
+  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
+  originalFilename?: Prisma.StringFieldUpdateOperationsInput | string
+  contentType?: Prisma.StringFieldUpdateOperationsInput | string
+  sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
+  checksumSha256?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
 export type DeliveryProofCreateManyParcelInput = {
   id?: string
   assignmentId: string
@@ -1126,56 +1176,6 @@ export type DeliveryProofUncheckedUpdateManyWithoutParcelInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   assignmentId?: Prisma.StringFieldUpdateOperationsInput | string
   courierId?: Prisma.StringFieldUpdateOperationsInput | string
-  storageProvider?: Prisma.StringFieldUpdateOperationsInput | string
-  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
-  originalFilename?: Prisma.StringFieldUpdateOperationsInput | string
-  contentType?: Prisma.StringFieldUpdateOperationsInput | string
-  sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
-  checksumSha256?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-}
-
-export type DeliveryProofCreateManyAssignmentInput = {
-  id?: string
-  storageProvider?: string
-  storageKey: string
-  originalFilename: string
-  contentType: string
-  sizeBytes: number
-  checksumSha256?: string | null
-  uploadedAt?: Date | string
-}
-
-export type DeliveryProofUpdateWithoutAssignmentInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  storageProvider?: Prisma.StringFieldUpdateOperationsInput | string
-  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
-  originalFilename?: Prisma.StringFieldUpdateOperationsInput | string
-  contentType?: Prisma.StringFieldUpdateOperationsInput | string
-  sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
-  checksumSha256?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  parcel?: Prisma.ParcelUpdateOneRequiredWithoutProofsNestedInput
-  courier?: Prisma.UserUpdateOneRequiredWithoutDeliveryProofsNestedInput
-  statusEvent?: Prisma.ParcelStatusEventUpdateOneWithoutProofNestedInput
-  deliveredParcel?: Prisma.ParcelUpdateOneWithoutDeliveredProofNestedInput
-}
-
-export type DeliveryProofUncheckedUpdateWithoutAssignmentInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  storageProvider?: Prisma.StringFieldUpdateOperationsInput | string
-  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
-  originalFilename?: Prisma.StringFieldUpdateOperationsInput | string
-  contentType?: Prisma.StringFieldUpdateOperationsInput | string
-  sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
-  checksumSha256?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  uploadedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  statusEvent?: Prisma.ParcelStatusEventUncheckedUpdateOneWithoutProofNestedInput
-  deliveredParcel?: Prisma.ParcelUncheckedUpdateOneWithoutDeliveredProofNestedInput
-}
-
-export type DeliveryProofUncheckedUpdateManyWithoutAssignmentInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
   storageProvider?: Prisma.StringFieldUpdateOperationsInput | string
   storageKey?: Prisma.StringFieldUpdateOperationsInput | string
   originalFilename?: Prisma.StringFieldUpdateOperationsInput | string

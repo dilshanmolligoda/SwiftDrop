@@ -398,7 +398,6 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 export const ModelName = {
   User: 'User',
-  Parcel: 'Parcel',
   DeliveryAssignment: 'DeliveryAssignment',
   ParcelStatusEvent: 'ParcelStatusEvent',
   DeliveryProof: 'DeliveryProof',
@@ -422,7 +421,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "parcel" | "deliveryAssignment" | "parcelStatusEvent" | "deliveryProof" | "merchantProfile" | "courierProfile" | "merchantOrder" | "parcel" | "parcelStatusHistory"
+    modelProps: "user" | "deliveryAssignment" | "parcelStatusEvent" | "deliveryProof" | "merchantProfile" | "courierProfile" | "merchantOrder" | "parcel" | "parcelStatusHistory"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -497,80 +496,6 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.UserCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.UserCountAggregateOutputType> | number
-        }
-      }
-    }
-    Parcel: {
-      payload: Prisma.$ParcelPayload<ExtArgs>
-      fields: Prisma.ParcelFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.ParcelFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelPayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.ParcelFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelPayload>
-        }
-        findFirst: {
-          args: Prisma.ParcelFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelPayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.ParcelFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelPayload>
-        }
-        findMany: {
-          args: Prisma.ParcelFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelPayload>[]
-        }
-        create: {
-          args: Prisma.ParcelCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelPayload>
-        }
-        createMany: {
-          args: Prisma.ParcelCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.ParcelCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelPayload>[]
-        }
-        delete: {
-          args: Prisma.ParcelDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelPayload>
-        }
-        update: {
-          args: Prisma.ParcelUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelPayload>
-        }
-        deleteMany: {
-          args: Prisma.ParcelDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.ParcelUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.ParcelUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelPayload>[]
-        }
-        upsert: {
-          args: Prisma.ParcelUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$ParcelPayload>
-        }
-        aggregate: {
-          args: Prisma.ParcelAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateParcel>
-        }
-        groupBy: {
-          args: Prisma.ParcelGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.ParcelGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.ParcelCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.ParcelCountAggregateOutputType> | number
         }
       }
     }
@@ -1225,24 +1150,6 @@ export const UserScalarFieldEnum = {
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
 
 
-export const ParcelScalarFieldEnum = {
-  id: 'id',
-  trackingNumber: 'trackingNumber',
-  recipientName: 'recipientName',
-  recipientPhone: 'recipientPhone',
-  recipientAddress: 'recipientAddress',
-  deliveryInstructions: 'deliveryInstructions',
-  contentsDescription: 'contentsDescription',
-  weightGrams: 'weightGrams',
-  status: 'status',
-  deliveredProofId: 'deliveredProofId',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type ParcelScalarFieldEnum = (typeof ParcelScalarFieldEnum)[keyof typeof ParcelScalarFieldEnum]
-
-
 export const DeliveryAssignmentScalarFieldEnum = {
   id: 'id',
   parcelId: 'parcelId',
@@ -1339,13 +1246,17 @@ export const ParcelScalarFieldEnum = {
   recipientName: 'recipientName',
   recipientAddress: 'recipientAddress',
   recipientPhone: 'recipientPhone',
+  deliveryInstructions: 'deliveryInstructions',
+  contentsDescription: 'contentsDescription',
   packageSize: 'packageSize',
   weightKg: 'weightKg',
+  weightGrams: 'weightGrams',
   costLkr: 'costLkr',
   status: 'status',
   failureReason: 'failureReason',
   failedDeliveryAttempts: 'failedDeliveryAttempts',
   deliveredAt: 'deliveredAt',
+  deliveredProofId: 'deliveredProofId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -1459,20 +1370,6 @@ export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaM
 
 
 /**
- * Reference to a field of type 'Int'
- */
-export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
-    
-
-
-/**
- * Reference to a field of type 'Int[]'
- */
-export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
-    
-
-
-/**
  * Reference to a field of type 'ParcelStatus'
  */
 export type EnumParcelStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ParcelStatus'>
@@ -1497,6 +1394,20 @@ export type EnumDeliveryFailureReasonFieldRefInput<$PrismaModel> = FieldRefInput
  * Reference to a field of type 'DeliveryFailureReason[]'
  */
 export type ListEnumDeliveryFailureReasonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DeliveryFailureReason[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Int'
+ */
+export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
+    
+
+
+/**
+ * Reference to a field of type 'Int[]'
+ */
+export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
     
 
 
@@ -1529,34 +1440,6 @@ export type ListEnumMerchantOrderStatusFieldRefInput<$PrismaModel> = FieldRefInp
 
 
 /**
- * Reference to a field of type 'Int'
- */
-export type EnumMerchantOrderStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MerchantOrderStatus'>
-    
-
-
-/**
- * Reference to a field of type 'MerchantOrderStatus[]'
- */
-export type ListEnumMerchantOrderStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MerchantOrderStatus[]'>
-    
-
-
-/**
- * Reference to a field of type 'Float'
- */
-export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
-    
-
-
-/**
- * Reference to a field of type 'Float[]'
- */
-export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
-    
-
-
-/**
  * Reference to a field of type 'PackageSize'
  */
 export type EnumPackageSizeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PackageSize'>
@@ -1581,20 +1464,6 @@ export type DecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel,
  * Reference to a field of type 'Decimal[]'
  */
 export type ListDecimalFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Decimal[]'>
-    
-
-
-/**
- * Reference to a field of type 'ParcelStatus'
- */
-export type EnumParcelStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ParcelStatus'>
-    
-
-
-/**
- * Reference to a field of type 'ParcelStatus[]'
- */
-export type ListEnumParcelStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ParcelStatus[]'>
     
 
 
@@ -1763,7 +1632,6 @@ export interface PrismaClientOptionsWithAdapter extends PrismaClientBaseOptions 
 export type PrismaClientOptions = PrismaClientOptionsWithAccelerateUrl | PrismaClientOptionsWithAdapter
 export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
-  parcel?: Prisma.ParcelOmit
   deliveryAssignment?: Prisma.DeliveryAssignmentOmit
   parcelStatusEvent?: Prisma.ParcelStatusEventOmit
   deliveryProof?: Prisma.DeliveryProofOmit

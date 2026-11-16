@@ -22,6 +22,12 @@ const COLOMBO_OFFSET_MS = (5 * 60 + 30) * 60_000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const MINUTE_MS = 60_000;
 export const DEMO_TRACKING_PREFIX = 'SD-DEMO-';
+/* Demo parcels are registered by the demo merchant (see the CREATED event). */
+const DEMO_SENDER_NAME = 'SwiftDrop Demo Merchant';
+const DEMO_SENDER_ADDRESS = '120 Union Place, Colombo 02';
+/** Used when a demo parcel has no recorded weight. */
+const DEMO_DEFAULT_WEIGHT_KG = 1;
+const DEMO_COST_LKR = 450;
 
 export interface DemoUserIds {
   readonly dispatcherId: string;
@@ -416,12 +422,17 @@ export interface PlannedParcel {
   readonly parcel: {
     readonly id: string;
     readonly trackingNumber: string;
+    readonly customerId: string;
+    readonly senderName: string;
+    readonly senderAddress: string;
     readonly recipientName: string;
     readonly recipientPhone: string;
     readonly recipientAddress: string;
     readonly deliveryInstructions: string | null;
     readonly contentsDescription: string | null;
+    readonly weightKg: number;
     readonly weightGrams: number | null;
+    readonly costLkr: number;
     readonly status: ParcelStatus;
     readonly createdAt: Date;
   };
@@ -603,12 +614,20 @@ export function buildDemoDeliveryPlan(
       parcel: {
         id: parcelId,
         trackingNumber,
+        customerId: users.merchantId,
+        senderName: DEMO_SENDER_NAME,
+        senderAddress: DEMO_SENDER_ADDRESS,
         recipientName: definition.recipientName,
         recipientPhone: definition.recipientPhone,
         recipientAddress: definition.recipientAddress,
         deliveryInstructions: definition.deliveryInstructions,
         contentsDescription: definition.contentsDescription,
+        weightKg:
+          definition.weightGrams === null
+            ? DEMO_DEFAULT_WEIGHT_KG
+            : Math.round(definition.weightGrams / 10) / 100,
         weightGrams: definition.weightGrams,
+        costLkr: DEMO_COST_LKR,
         status: definition.status,
         createdAt,
       },

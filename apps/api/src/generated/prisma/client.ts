@@ -45,11 +45,6 @@ export { Prisma }
  */
 export type User = Prisma.UserModel
 /**
- * Model Parcel
- * 
- */
-export type Parcel = Prisma.ParcelModel
-/**
  * Model DeliveryAssignment
  * 
  */

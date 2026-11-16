@@ -52,7 +52,6 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   User: 'User',
-  Parcel: 'Parcel',
   DeliveryAssignment: 'DeliveryAssignment',
   ParcelStatusEvent: 'ParcelStatusEvent',
   DeliveryProof: 'DeliveryProof',
@@ -97,24 +96,6 @@ export const UserScalarFieldEnum = {
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
-
-
-export const ParcelScalarFieldEnum = {
-  id: 'id',
-  trackingNumber: 'trackingNumber',
-  recipientName: 'recipientName',
-  recipientPhone: 'recipientPhone',
-  recipientAddress: 'recipientAddress',
-  deliveryInstructions: 'deliveryInstructions',
-  contentsDescription: 'contentsDescription',
-  weightGrams: 'weightGrams',
-  status: 'status',
-  deliveredProofId: 'deliveredProofId',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-} as const
-
-export type ParcelScalarFieldEnum = (typeof ParcelScalarFieldEnum)[keyof typeof ParcelScalarFieldEnum]
 
 
 export const DeliveryAssignmentScalarFieldEnum = {
@@ -213,13 +194,17 @@ export const ParcelScalarFieldEnum = {
   recipientName: 'recipientName',
   recipientAddress: 'recipientAddress',
   recipientPhone: 'recipientPhone',
+  deliveryInstructions: 'deliveryInstructions',
+  contentsDescription: 'contentsDescription',
   packageSize: 'packageSize',
   weightKg: 'weightKg',
+  weightGrams: 'weightGrams',
   costLkr: 'costLkr',
   status: 'status',
   failureReason: 'failureReason',
   failedDeliveryAttempts: 'failedDeliveryAttempts',
   deliveredAt: 'deliveredAt',
+  deliveredProofId: 'deliveredProofId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

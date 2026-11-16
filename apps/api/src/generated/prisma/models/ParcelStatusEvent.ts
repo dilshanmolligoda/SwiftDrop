@@ -464,48 +464,6 @@ export type ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput = {
   deleteMany?: Prisma.ParcelStatusEventScalarWhereInput | Prisma.ParcelStatusEventScalarWhereInput[]
 }
 
-export type ParcelStatusEventCreateNestedManyWithoutParcelInput = {
-  create?: Prisma.XOR<Prisma.ParcelStatusEventCreateWithoutParcelInput, Prisma.ParcelStatusEventUncheckedCreateWithoutParcelInput> | Prisma.ParcelStatusEventCreateWithoutParcelInput[] | Prisma.ParcelStatusEventUncheckedCreateWithoutParcelInput[]
-  connectOrCreate?: Prisma.ParcelStatusEventCreateOrConnectWithoutParcelInput | Prisma.ParcelStatusEventCreateOrConnectWithoutParcelInput[]
-  createMany?: Prisma.ParcelStatusEventCreateManyParcelInputEnvelope
-  connect?: Prisma.ParcelStatusEventWhereUniqueInput | Prisma.ParcelStatusEventWhereUniqueInput[]
-}
-
-export type ParcelStatusEventUncheckedCreateNestedManyWithoutParcelInput = {
-  create?: Prisma.XOR<Prisma.ParcelStatusEventCreateWithoutParcelInput, Prisma.ParcelStatusEventUncheckedCreateWithoutParcelInput> | Prisma.ParcelStatusEventCreateWithoutParcelInput[] | Prisma.ParcelStatusEventUncheckedCreateWithoutParcelInput[]
-  connectOrCreate?: Prisma.ParcelStatusEventCreateOrConnectWithoutParcelInput | Prisma.ParcelStatusEventCreateOrConnectWithoutParcelInput[]
-  createMany?: Prisma.ParcelStatusEventCreateManyParcelInputEnvelope
-  connect?: Prisma.ParcelStatusEventWhereUniqueInput | Prisma.ParcelStatusEventWhereUniqueInput[]
-}
-
-export type ParcelStatusEventUpdateManyWithoutParcelNestedInput = {
-  create?: Prisma.XOR<Prisma.ParcelStatusEventCreateWithoutParcelInput, Prisma.ParcelStatusEventUncheckedCreateWithoutParcelInput> | Prisma.ParcelStatusEventCreateWithoutParcelInput[] | Prisma.ParcelStatusEventUncheckedCreateWithoutParcelInput[]
-  connectOrCreate?: Prisma.ParcelStatusEventCreateOrConnectWithoutParcelInput | Prisma.ParcelStatusEventCreateOrConnectWithoutParcelInput[]
-  upsert?: Prisma.ParcelStatusEventUpsertWithWhereUniqueWithoutParcelInput | Prisma.ParcelStatusEventUpsertWithWhereUniqueWithoutParcelInput[]
-  createMany?: Prisma.ParcelStatusEventCreateManyParcelInputEnvelope
-  set?: Prisma.ParcelStatusEventWhereUniqueInput | Prisma.ParcelStatusEventWhereUniqueInput[]
-  disconnect?: Prisma.ParcelStatusEventWhereUniqueInput | Prisma.ParcelStatusEventWhereUniqueInput[]
-  delete?: Prisma.ParcelStatusEventWhereUniqueInput | Prisma.ParcelStatusEventWhereUniqueInput[]
-  connect?: Prisma.ParcelStatusEventWhereUniqueInput | Prisma.ParcelStatusEventWhereUniqueInput[]
-  update?: Prisma.ParcelStatusEventUpdateWithWhereUniqueWithoutParcelInput | Prisma.ParcelStatusEventUpdateWithWhereUniqueWithoutParcelInput[]
-  updateMany?: Prisma.ParcelStatusEventUpdateManyWithWhereWithoutParcelInput | Prisma.ParcelStatusEventUpdateManyWithWhereWithoutParcelInput[]
-  deleteMany?: Prisma.ParcelStatusEventScalarWhereInput | Prisma.ParcelStatusEventScalarWhereInput[]
-}
-
-export type ParcelStatusEventUncheckedUpdateManyWithoutParcelNestedInput = {
-  create?: Prisma.XOR<Prisma.ParcelStatusEventCreateWithoutParcelInput, Prisma.ParcelStatusEventUncheckedCreateWithoutParcelInput> | Prisma.ParcelStatusEventCreateWithoutParcelInput[] | Prisma.ParcelStatusEventUncheckedCreateWithoutParcelInput[]
-  connectOrCreate?: Prisma.ParcelStatusEventCreateOrConnectWithoutParcelInput | Prisma.ParcelStatusEventCreateOrConnectWithoutParcelInput[]
-  upsert?: Prisma.ParcelStatusEventUpsertWithWhereUniqueWithoutParcelInput | Prisma.ParcelStatusEventUpsertWithWhereUniqueWithoutParcelInput[]
-  createMany?: Prisma.ParcelStatusEventCreateManyParcelInputEnvelope
-  set?: Prisma.ParcelStatusEventWhereUniqueInput | Prisma.ParcelStatusEventWhereUniqueInput[]
-  disconnect?: Prisma.ParcelStatusEventWhereUniqueInput | Prisma.ParcelStatusEventWhereUniqueInput[]
-  delete?: Prisma.ParcelStatusEventWhereUniqueInput | Prisma.ParcelStatusEventWhereUniqueInput[]
-  connect?: Prisma.ParcelStatusEventWhereUniqueInput | Prisma.ParcelStatusEventWhereUniqueInput[]
-  update?: Prisma.ParcelStatusEventUpdateWithWhereUniqueWithoutParcelInput | Prisma.ParcelStatusEventUpdateWithWhereUniqueWithoutParcelInput[]
-  updateMany?: Prisma.ParcelStatusEventUpdateManyWithWhereWithoutParcelInput | Prisma.ParcelStatusEventUpdateManyWithWhereWithoutParcelInput[]
-  deleteMany?: Prisma.ParcelStatusEventScalarWhereInput | Prisma.ParcelStatusEventScalarWhereInput[]
-}
-
 export type ParcelStatusEventCreateNestedManyWithoutAssignmentInput = {
   create?: Prisma.XOR<Prisma.ParcelStatusEventCreateWithoutAssignmentInput, Prisma.ParcelStatusEventUncheckedCreateWithoutAssignmentInput> | Prisma.ParcelStatusEventCreateWithoutAssignmentInput[] | Prisma.ParcelStatusEventUncheckedCreateWithoutAssignmentInput[]
   connectOrCreate?: Prisma.ParcelStatusEventCreateOrConnectWithoutAssignmentInput | Prisma.ParcelStatusEventCreateOrConnectWithoutAssignmentInput[]
@@ -548,6 +506,10 @@ export type ParcelStatusEventUncheckedUpdateManyWithoutAssignmentNestedInput = {
   deleteMany?: Prisma.ParcelStatusEventScalarWhereInput | Prisma.ParcelStatusEventScalarWhereInput[]
 }
 
+export type EnumParcelStatusFieldUpdateOperationsInput = {
+  set?: $Enums.ParcelStatus
+}
+
 export type NullableEnumDeliveryFailureReasonFieldUpdateOperationsInput = {
   set?: $Enums.DeliveryFailureReason | null
 }
@@ -582,6 +544,48 @@ export type ParcelStatusEventUncheckedUpdateOneWithoutProofNestedInput = {
   delete?: Prisma.ParcelStatusEventWhereInput | boolean
   connect?: Prisma.ParcelStatusEventWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.ParcelStatusEventUpdateToOneWithWhereWithoutProofInput, Prisma.ParcelStatusEventUpdateWithoutProofInput>, Prisma.ParcelStatusEventUncheckedUpdateWithoutProofInput>
+}
+
+export type ParcelStatusEventCreateNestedManyWithoutParcelInput = {
+  create?: Prisma.XOR<Prisma.ParcelStatusEventCreateWithoutParcelInput, Prisma.ParcelStatusEventUncheckedCreateWithoutParcelInput> | Prisma.ParcelStatusEventCreateWithoutParcelInput[] | Prisma.ParcelStatusEventUncheckedCreateWithoutParcelInput[]
+  connectOrCreate?: Prisma.ParcelStatusEventCreateOrConnectWithoutParcelInput | Prisma.ParcelStatusEventCreateOrConnectWithoutParcelInput[]
+  createMany?: Prisma.ParcelStatusEventCreateManyParcelInputEnvelope
+  connect?: Prisma.ParcelStatusEventWhereUniqueInput | Prisma.ParcelStatusEventWhereUniqueInput[]
+}
+
+export type ParcelStatusEventUncheckedCreateNestedManyWithoutParcelInput = {
+  create?: Prisma.XOR<Prisma.ParcelStatusEventCreateWithoutParcelInput, Prisma.ParcelStatusEventUncheckedCreateWithoutParcelInput> | Prisma.ParcelStatusEventCreateWithoutParcelInput[] | Prisma.ParcelStatusEventUncheckedCreateWithoutParcelInput[]
+  connectOrCreate?: Prisma.ParcelStatusEventCreateOrConnectWithoutParcelInput | Prisma.ParcelStatusEventCreateOrConnectWithoutParcelInput[]
+  createMany?: Prisma.ParcelStatusEventCreateManyParcelInputEnvelope
+  connect?: Prisma.ParcelStatusEventWhereUniqueInput | Prisma.ParcelStatusEventWhereUniqueInput[]
+}
+
+export type ParcelStatusEventUpdateManyWithoutParcelNestedInput = {
+  create?: Prisma.XOR<Prisma.ParcelStatusEventCreateWithoutParcelInput, Prisma.ParcelStatusEventUncheckedCreateWithoutParcelInput> | Prisma.ParcelStatusEventCreateWithoutParcelInput[] | Prisma.ParcelStatusEventUncheckedCreateWithoutParcelInput[]
+  connectOrCreate?: Prisma.ParcelStatusEventCreateOrConnectWithoutParcelInput | Prisma.ParcelStatusEventCreateOrConnectWithoutParcelInput[]
+  upsert?: Prisma.ParcelStatusEventUpsertWithWhereUniqueWithoutParcelInput | Prisma.ParcelStatusEventUpsertWithWhereUniqueWithoutParcelInput[]
+  createMany?: Prisma.ParcelStatusEventCreateManyParcelInputEnvelope
+  set?: Prisma.ParcelStatusEventWhereUniqueInput | Prisma.ParcelStatusEventWhereUniqueInput[]
+  disconnect?: Prisma.ParcelStatusEventWhereUniqueInput | Prisma.ParcelStatusEventWhereUniqueInput[]
+  delete?: Prisma.ParcelStatusEventWhereUniqueInput | Prisma.ParcelStatusEventWhereUniqueInput[]
+  connect?: Prisma.ParcelStatusEventWhereUniqueInput | Prisma.ParcelStatusEventWhereUniqueInput[]
+  update?: Prisma.ParcelStatusEventUpdateWithWhereUniqueWithoutParcelInput | Prisma.ParcelStatusEventUpdateWithWhereUniqueWithoutParcelInput[]
+  updateMany?: Prisma.ParcelStatusEventUpdateManyWithWhereWithoutParcelInput | Prisma.ParcelStatusEventUpdateManyWithWhereWithoutParcelInput[]
+  deleteMany?: Prisma.ParcelStatusEventScalarWhereInput | Prisma.ParcelStatusEventScalarWhereInput[]
+}
+
+export type ParcelStatusEventUncheckedUpdateManyWithoutParcelNestedInput = {
+  create?: Prisma.XOR<Prisma.ParcelStatusEventCreateWithoutParcelInput, Prisma.ParcelStatusEventUncheckedCreateWithoutParcelInput> | Prisma.ParcelStatusEventCreateWithoutParcelInput[] | Prisma.ParcelStatusEventUncheckedCreateWithoutParcelInput[]
+  connectOrCreate?: Prisma.ParcelStatusEventCreateOrConnectWithoutParcelInput | Prisma.ParcelStatusEventCreateOrConnectWithoutParcelInput[]
+  upsert?: Prisma.ParcelStatusEventUpsertWithWhereUniqueWithoutParcelInput | Prisma.ParcelStatusEventUpsertWithWhereUniqueWithoutParcelInput[]
+  createMany?: Prisma.ParcelStatusEventCreateManyParcelInputEnvelope
+  set?: Prisma.ParcelStatusEventWhereUniqueInput | Prisma.ParcelStatusEventWhereUniqueInput[]
+  disconnect?: Prisma.ParcelStatusEventWhereUniqueInput | Prisma.ParcelStatusEventWhereUniqueInput[]
+  delete?: Prisma.ParcelStatusEventWhereUniqueInput | Prisma.ParcelStatusEventWhereUniqueInput[]
+  connect?: Prisma.ParcelStatusEventWhereUniqueInput | Prisma.ParcelStatusEventWhereUniqueInput[]
+  update?: Prisma.ParcelStatusEventUpdateWithWhereUniqueWithoutParcelInput | Prisma.ParcelStatusEventUpdateWithWhereUniqueWithoutParcelInput[]
+  updateMany?: Prisma.ParcelStatusEventUpdateManyWithWhereWithoutParcelInput | Prisma.ParcelStatusEventUpdateManyWithWhereWithoutParcelInput[]
+  deleteMany?: Prisma.ParcelStatusEventScalarWhereInput | Prisma.ParcelStatusEventScalarWhereInput[]
 }
 
 export type ParcelStatusEventCreateWithoutActorInput = {
@@ -645,54 +649,6 @@ export type ParcelStatusEventScalarWhereInput = {
   note?: Prisma.StringNullableFilter<"ParcelStatusEvent"> | string | null
   failureReason?: Prisma.EnumDeliveryFailureReasonNullableFilter<"ParcelStatusEvent"> | $Enums.DeliveryFailureReason | null
   createdAt?: Prisma.DateTimeFilter<"ParcelStatusEvent"> | Date | string
-}
-
-export type ParcelStatusEventCreateWithoutParcelInput = {
-  id?: string
-  status: $Enums.ParcelStatus
-  note?: string | null
-  failureReason?: $Enums.DeliveryFailureReason | null
-  createdAt?: Date | string
-  assignment?: Prisma.DeliveryAssignmentCreateNestedOneWithoutStatusEventsInput
-  actor?: Prisma.UserCreateNestedOneWithoutParcelStatusEventsInput
-  proof?: Prisma.DeliveryProofCreateNestedOneWithoutStatusEventInput
-}
-
-export type ParcelStatusEventUncheckedCreateWithoutParcelInput = {
-  id?: string
-  assignmentId?: string | null
-  actorId?: string | null
-  proofId?: string | null
-  status: $Enums.ParcelStatus
-  note?: string | null
-  failureReason?: $Enums.DeliveryFailureReason | null
-  createdAt?: Date | string
-}
-
-export type ParcelStatusEventCreateOrConnectWithoutParcelInput = {
-  where: Prisma.ParcelStatusEventWhereUniqueInput
-  create: Prisma.XOR<Prisma.ParcelStatusEventCreateWithoutParcelInput, Prisma.ParcelStatusEventUncheckedCreateWithoutParcelInput>
-}
-
-export type ParcelStatusEventCreateManyParcelInputEnvelope = {
-  data: Prisma.ParcelStatusEventCreateManyParcelInput | Prisma.ParcelStatusEventCreateManyParcelInput[]
-  skipDuplicates?: boolean
-}
-
-export type ParcelStatusEventUpsertWithWhereUniqueWithoutParcelInput = {
-  where: Prisma.ParcelStatusEventWhereUniqueInput
-  update: Prisma.XOR<Prisma.ParcelStatusEventUpdateWithoutParcelInput, Prisma.ParcelStatusEventUncheckedUpdateWithoutParcelInput>
-  create: Prisma.XOR<Prisma.ParcelStatusEventCreateWithoutParcelInput, Prisma.ParcelStatusEventUncheckedCreateWithoutParcelInput>
-}
-
-export type ParcelStatusEventUpdateWithWhereUniqueWithoutParcelInput = {
-  where: Prisma.ParcelStatusEventWhereUniqueInput
-  data: Prisma.XOR<Prisma.ParcelStatusEventUpdateWithoutParcelInput, Prisma.ParcelStatusEventUncheckedUpdateWithoutParcelInput>
-}
-
-export type ParcelStatusEventUpdateManyWithWhereWithoutParcelInput = {
-  where: Prisma.ParcelStatusEventScalarWhereInput
-  data: Prisma.XOR<Prisma.ParcelStatusEventUpdateManyMutationInput, Prisma.ParcelStatusEventUncheckedUpdateManyWithoutParcelInput>
 }
 
 export type ParcelStatusEventCreateWithoutAssignmentInput = {
@@ -800,6 +756,54 @@ export type ParcelStatusEventUncheckedUpdateWithoutProofInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
+export type ParcelStatusEventCreateWithoutParcelInput = {
+  id?: string
+  status: $Enums.ParcelStatus
+  note?: string | null
+  failureReason?: $Enums.DeliveryFailureReason | null
+  createdAt?: Date | string
+  assignment?: Prisma.DeliveryAssignmentCreateNestedOneWithoutStatusEventsInput
+  actor?: Prisma.UserCreateNestedOneWithoutParcelStatusEventsInput
+  proof?: Prisma.DeliveryProofCreateNestedOneWithoutStatusEventInput
+}
+
+export type ParcelStatusEventUncheckedCreateWithoutParcelInput = {
+  id?: string
+  assignmentId?: string | null
+  actorId?: string | null
+  proofId?: string | null
+  status: $Enums.ParcelStatus
+  note?: string | null
+  failureReason?: $Enums.DeliveryFailureReason | null
+  createdAt?: Date | string
+}
+
+export type ParcelStatusEventCreateOrConnectWithoutParcelInput = {
+  where: Prisma.ParcelStatusEventWhereUniqueInput
+  create: Prisma.XOR<Prisma.ParcelStatusEventCreateWithoutParcelInput, Prisma.ParcelStatusEventUncheckedCreateWithoutParcelInput>
+}
+
+export type ParcelStatusEventCreateManyParcelInputEnvelope = {
+  data: Prisma.ParcelStatusEventCreateManyParcelInput | Prisma.ParcelStatusEventCreateManyParcelInput[]
+  skipDuplicates?: boolean
+}
+
+export type ParcelStatusEventUpsertWithWhereUniqueWithoutParcelInput = {
+  where: Prisma.ParcelStatusEventWhereUniqueInput
+  update: Prisma.XOR<Prisma.ParcelStatusEventUpdateWithoutParcelInput, Prisma.ParcelStatusEventUncheckedUpdateWithoutParcelInput>
+  create: Prisma.XOR<Prisma.ParcelStatusEventCreateWithoutParcelInput, Prisma.ParcelStatusEventUncheckedCreateWithoutParcelInput>
+}
+
+export type ParcelStatusEventUpdateWithWhereUniqueWithoutParcelInput = {
+  where: Prisma.ParcelStatusEventWhereUniqueInput
+  data: Prisma.XOR<Prisma.ParcelStatusEventUpdateWithoutParcelInput, Prisma.ParcelStatusEventUncheckedUpdateWithoutParcelInput>
+}
+
+export type ParcelStatusEventUpdateManyWithWhereWithoutParcelInput = {
+  where: Prisma.ParcelStatusEventScalarWhereInput
+  data: Prisma.XOR<Prisma.ParcelStatusEventUpdateManyMutationInput, Prisma.ParcelStatusEventUncheckedUpdateManyWithoutParcelInput>
+}
+
 export type ParcelStatusEventCreateManyActorInput = {
   id?: string
   parcelId: string
@@ -844,6 +848,47 @@ export type ParcelStatusEventUncheckedUpdateManyWithoutActorInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
+export type ParcelStatusEventCreateManyAssignmentInput = {
+  id?: string
+  actorId?: string | null
+  proofId?: string | null
+  status: $Enums.ParcelStatus
+  note?: string | null
+  failureReason?: $Enums.DeliveryFailureReason | null
+  createdAt?: Date | string
+}
+
+export type ParcelStatusEventUpdateWithoutAssignmentInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumParcelStatusFieldUpdateOperationsInput | $Enums.ParcelStatus
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  failureReason?: Prisma.NullableEnumDeliveryFailureReasonFieldUpdateOperationsInput | $Enums.DeliveryFailureReason | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  parcel?: Prisma.ParcelUpdateOneRequiredWithoutStatusEventsNestedInput
+  actor?: Prisma.UserUpdateOneWithoutParcelStatusEventsNestedInput
+  proof?: Prisma.DeliveryProofUpdateOneWithoutStatusEventNestedInput
+}
+
+export type ParcelStatusEventUncheckedUpdateWithoutAssignmentInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  actorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  proofId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumParcelStatusFieldUpdateOperationsInput | $Enums.ParcelStatus
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  failureReason?: Prisma.NullableEnumDeliveryFailureReasonFieldUpdateOperationsInput | $Enums.DeliveryFailureReason | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type ParcelStatusEventUncheckedUpdateManyWithoutAssignmentInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  actorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  proofId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  status?: Prisma.EnumParcelStatusFieldUpdateOperationsInput | $Enums.ParcelStatus
+  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  failureReason?: Prisma.NullableEnumDeliveryFailureReasonFieldUpdateOperationsInput | $Enums.DeliveryFailureReason | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
 export type ParcelStatusEventCreateManyParcelInput = {
   id?: string
   assignmentId?: string | null
@@ -880,47 +925,6 @@ export type ParcelStatusEventUncheckedUpdateWithoutParcelInput = {
 export type ParcelStatusEventUncheckedUpdateManyWithoutParcelInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   assignmentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  actorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  proofId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  status?: Prisma.EnumParcelStatusFieldUpdateOperationsInput | $Enums.ParcelStatus
-  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  failureReason?: Prisma.NullableEnumDeliveryFailureReasonFieldUpdateOperationsInput | $Enums.DeliveryFailureReason | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-}
-
-export type ParcelStatusEventCreateManyAssignmentInput = {
-  id?: string
-  actorId?: string | null
-  proofId?: string | null
-  status: $Enums.ParcelStatus
-  note?: string | null
-  failureReason?: $Enums.DeliveryFailureReason | null
-  createdAt?: Date | string
-}
-
-export type ParcelStatusEventUpdateWithoutAssignmentInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  status?: Prisma.EnumParcelStatusFieldUpdateOperationsInput | $Enums.ParcelStatus
-  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  failureReason?: Prisma.NullableEnumDeliveryFailureReasonFieldUpdateOperationsInput | $Enums.DeliveryFailureReason | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  parcel?: Prisma.ParcelUpdateOneRequiredWithoutStatusEventsNestedInput
-  actor?: Prisma.UserUpdateOneWithoutParcelStatusEventsNestedInput
-  proof?: Prisma.DeliveryProofUpdateOneWithoutStatusEventNestedInput
-}
-
-export type ParcelStatusEventUncheckedUpdateWithoutAssignmentInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  actorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  proofId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  status?: Prisma.EnumParcelStatusFieldUpdateOperationsInput | $Enums.ParcelStatus
-  note?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  failureReason?: Prisma.NullableEnumDeliveryFailureReasonFieldUpdateOperationsInput | $Enums.DeliveryFailureReason | null
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-}
-
-export type ParcelStatusEventUncheckedUpdateManyWithoutAssignmentInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
   actorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   proofId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumParcelStatusFieldUpdateOperationsInput | $Enums.ParcelStatus
