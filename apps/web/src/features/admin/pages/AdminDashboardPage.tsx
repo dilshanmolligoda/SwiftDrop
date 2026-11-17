@@ -8,13 +8,14 @@ import {
   CheckCircle2,
   AlertTriangle,
   ArrowRight,
-  X,
   UserCheck,
 } from 'lucide-react'
 import type {
   CourierWorkload,
   UnassignedParcel,
 } from '../types/admin-dashboard.types'
+import type { DeliveryItem, DeliveryStatus } from '../types/admin-deliveries.types'
+import { AssignCourierDrawer } from '../components/AssignCourierDrawer'
 import {
   DEFAULT_DASHBOARD_METRICS,
   INITIAL_COURIERS,
@@ -54,6 +55,28 @@ export const AdminDashboardPage: React.FC = () => {
     setTimeout(() => setAssignSuccessMessage(null), 4000)
     setSelectedParcel(null)
   }
+
+  const selectedDeliveryItem = React.useMemo<DeliveryItem | null>(() => {
+    if (!selectedParcel) return null
+    return {
+      id: selectedParcel.id,
+      trackingNo: selectedParcel.trackingNo,
+      recipient: 'Nimal Perera',
+      pickup: selectedParcel.pickup,
+      dropoff: selectedParcel.dropoff,
+      pickupAddress: `Green Leaf Store, 24 Galle Road, ${selectedParcel.pickup}`,
+      dropoffAddress: `Nimal Perera, 18 Temple Road, ${selectedParcel.dropoff}`,
+      weightKg: parseFloat(selectedParcel.weight) || 2.5,
+      size: (selectedParcel.size as 'Small' | 'Medium' | 'Large') || 'Small',
+      dimensions: '30 × 20 × 15 cm',
+      status: selectedParcel.status as DeliveryStatus,
+      courierName: null,
+      courierId: null,
+      waitingTime: selectedParcel.waitingTime,
+      zone: 'Colombo Central & South',
+      createdAt: '2026-10-27T08:00:00.000Z',
+    }
+  }, [selectedParcel])
 
   return (
     <div className={styles.pageContainer}>
@@ -356,77 +379,13 @@ export const AdminDashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Assign Courier Drawer / Modal */}
-      {isAssignModalOpen && selectedParcel && (
-        <div
-          className={styles.modalOverlay}
-          onClick={() => setIsAssignModalOpen(false)}
-          role="presentation"
-        >
-          <div
-            className={styles.modalContent}
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="assign-modal-title"
-          >
-            <div className={styles.modalHeader}>
-              <h3 id="assign-modal-title" className={styles.modalTitle}>
-                Assign Courier
-              </h3>
-              <button
-                type="button"
-                className={styles.modalCloseButton}
-                onClick={() => setIsAssignModalOpen(false)}
-                aria-label="Close modal"
-              >
-                <X size={18} aria-hidden="true" />
-              </button>
-            </div>
-
-            <div className={styles.modalBody}>
-              <div className={styles.modalParcelPreview}>
-                <strong>{selectedParcel.trackingNo}</strong> &bull; {selectedParcel.pickup} →{' '}
-                {selectedParcel.dropoff} ({selectedParcel.weight}, {selectedParcel.size})
-              </div>
-
-              <p className={styles.modalCourierTitle}>Select an active courier:</p>
-
-              <div>
-                {couriers.map((courier) => (
-                  <button
-                    key={courier.id}
-                    type="button"
-                    className={styles.modalCourierOption}
-                    onClick={() => handleAssignToCourier(courier.id)}
-                  >
-                    <div className={styles.modalCourierLeft}>
-                      <div className={styles.courierAvatar}>{courier.initials}</div>
-                      <div>
-                        <div className={styles.modalCourierName}>{courier.name}</div>
-                        <div className={styles.modalCourierSub}>{courier.zone}</div>
-                      </div>
-                    </div>
-                    <span className={styles.modalCourierAction}>
-                      {courier.activeCount} active &rarr;
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className={styles.modalFooter}>
-              <button
-                type="button"
-                className={styles.cancelButton}
-                onClick={() => setIsAssignModalOpen(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Slide-over Assign Courier Drawer (matching Figma Aside - AssignCourierDrawer) */}
+      <AssignCourierDrawer
+        isOpen={isAssignModalOpen}
+        delivery={selectedDeliveryItem}
+        onClose={() => setIsAssignModalOpen(false)}
+        onAssign={(_delId, courierId) => handleAssignToCourier(courierId)}
+      />
     </div>
   )
 }

@@ -25,9 +25,14 @@ import { NotificationsPage } from './features/customer/pages/NotificationsPage.t
 import CustomerDashboard from './features/customer/pages/CustomerDashboard.tsx'
 import CustomerMyDeliveriesPage from './features/customer/pages/MyDeliveriesPage.tsx'
 import { AdminLayout } from './components/layout/AdminLayout.tsx'
-import { AdminPlaceholderPage } from './features/admin/pages/AdminPlaceholderPage.tsx'
 import { AdminSettingsPage } from './features/admin/pages/AdminSettingsPage.tsx'
 import { AdminDashboardPage } from './features/admin/pages/AdminDashboardPage.tsx'
+import { AdminDeliveriesPage } from './features/admin/pages/AdminDeliveriesPage.tsx'
+import { AdminCouriersPage } from './features/admin/pages/AdminCouriersPage.tsx'
+import { AdminUsersApprovalsPage } from './features/admin/pages/AdminUsersApprovalsPage.tsx'
+import { AdminReviewApplicationPage } from './features/admin/pages/AdminReviewApplicationPage.tsx'
+import { AdminPricingPage } from './features/admin/pages/AdminPricingPage.tsx'
+import { AdminReportsPage } from './features/admin/pages/AdminReportsPage.tsx'
 import MerchantDashboard from './features/merchant/pages/MerchantDashboard';
 import MerchantOrdersPage from './features/merchant/pages/MerchantOrdersPage';
 import { MerchantLayout } from './features/merchant/components/MerchantLayout';
@@ -177,11 +182,13 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Navigate to="dashboard" replace />} />
               <Route path="dashboard" element={<AdminDashboardPage />} />
-              <Route path="deliveries" element={<AdminPlaceholderPage title="Deliveries" description="Unassigned parcels, real-time status updates, and courier assignment." />} />
-              <Route path="couriers" element={<AdminPlaceholderPage title="Couriers" description="Active courier list, current workloads, and assignment capacity." />} />
-              <Route path="users" element={<AdminPlaceholderPage title="Users & Approvals" description="Manage system users and review pending merchant registrations." />} />
-              <Route path="pricing" element={<AdminPlaceholderPage title="Zones & Pricing" description="Configure delivery zones and set per-zone pricing rules." />} />
-              <Route path="reports" element={<AdminPlaceholderPage title="Reports" description="Daily delivery summaries, success rates, and failure analysis." />} />
+              <Route path="deliveries" element={<AdminDeliveriesPage />} />
+              <Route path="couriers" element={<AdminCouriersPage />} />
+              <Route path="users" element={<AdminUsersApprovalsPage />} />
+              <Route path="users/review/:id" element={<AdminReviewApplicationPage />} />
+              <Route path="users/review" element={<AdminReviewApplicationPage />} />
+              <Route path="pricing" element={<AdminPricingPage />} />
+              <Route path="reports" element={<AdminReportsPage />} />
               <Route path="settings" element={<AdminSettingsPage />} />
             </Route>
           </Routes>
