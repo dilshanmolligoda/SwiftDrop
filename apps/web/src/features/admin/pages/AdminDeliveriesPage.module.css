@@ -1,0 +1,435 @@
+/* Deliveries Page CSS Module */
+.pageContainer {
+  max-width: 1200px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* Header & Breadcrumb */
+.pageHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8125rem;
+  color: #64748b;
+  margin-bottom: 2px;
+}
+
+.breadcrumbCurrent {
+  color: #0f172a;
+  font-weight: 500;
+}
+
+.pageTitle {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.pageSubtitle {
+  font-size: 0.925rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* 3 Stat Cards */
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.metricCard {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 20px 22px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.metricIconWrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.iconOrange {
+  background-color: #ffedd5;
+  color: #ea580c;
+}
+
+.iconGreen {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.metricInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.metricLabel {
+  font-size: 0.8125rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.metricValue {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.metricSubtext {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+/* Card Container */
+.contentCard {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Filter Tabs */
+.tabsRow {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 0 24px;
+  border-bottom: 1px solid #f1f5f9;
+  overflow-x: auto;
+}
+
+.tabButton {
+  background: none;
+  border: none;
+  padding: 16px 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.tabButton:hover {
+  color: #0f172a;
+}
+
+.tabButtonActive {
+  color: #16a34a;
+  font-weight: 600;
+  border-bottom-color: #16a34a;
+}
+
+/* Search & Filter Toolbar */
+.filterBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 18px 24px;
+  flex-wrap: wrap;
+}
+
+.searchInputWrapper {
+  flex: 1;
+  min-width: 260px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 9px 12px 9px 36px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #0f172a;
+  outline: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.searchInput:focus {
+  background-color: #ffffff;
+  border-color: #16a34a;
+}
+
+.dropdownGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filterSelect {
+  padding: 9px 12px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #334155;
+  outline: none;
+  cursor: pointer;
+}
+
+/* Table Area */
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.deliveriesTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.deliveriesTable th {
+  padding: 12px 24px;
+  font-size: 0.775rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background-color: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.deliveriesTable td {
+  padding: 16px 24px;
+  font-size: 0.85rem;
+  color: #1e293b;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.trackingCell {
+  display: flex;
+  flex-direction: column;
+}
+
+.trackingNo {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.recipientText {
+  font-size: 0.775rem;
+  color: #64748b;
+}
+
+.routeText {
+  font-size: 0.85rem;
+  color: #334155;
+}
+
+.routeArrow {
+  margin: 0 6px;
+  color: #94a3b8;
+}
+
+.parcelSpecs {
+  font-size: 0.825rem;
+  color: #475569;
+}
+
+/* Status Badges */
+.statusBadge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.statusFailed {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.statusNew {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
+.statusOutForDelivery {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.statusInTransit {
+  background-color: #ede9fe;
+  color: #7c3aed;
+}
+
+.statusDelivered {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.courierText {
+  font-size: 0.85rem;
+  color: #0f172a;
+}
+
+.unassignedText {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.waitingTime {
+  font-size: 0.825rem;
+  color: #ea580c;
+  font-weight: 500;
+}
+
+/* Action Buttons */
+.assignButton {
+  padding: 6px 14px;
+  background-color: #ffffff;
+  border: 1px solid #16a34a;
+  border-radius: 6px;
+  color: #16a34a;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.assignButton:hover {
+  background-color: #16a34a;
+  color: #ffffff;
+}
+
+.viewDetailsLink {
+  background: none;
+  border: none;
+  color: #475569;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.viewDetailsLink:hover {
+  color: #0f172a;
+  text-decoration: underline;
+}
+
+/* Table Footer & Pagination */
+.tableFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-top: 1px solid #f1f5f9;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.footerNote {
+  font-size: 0.775rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.paginationText {
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+
+.pageSelect {
+  padding: 4px 8px;
+  font-size: 0.8125rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background-color: #ffffff;
+  color: #334155;
+  outline: none;
+}
+
+.pagesList {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pageBtn {
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  color: #475569;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pageBtnActive {
+  background-color: #16a34a;
+  border-color: #16a34a;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.pageBtn:hover:not(.pageBtnActive) {
+  background-color: #f8fafc;
+}
+
+@media (max-width: 900px) {
+  .metricsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
