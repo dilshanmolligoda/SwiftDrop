@@ -17,6 +17,7 @@ import { UsersModule } from './modules/users/users.module.js';
 import { MerchantDashboardModule } from './modules/merchant-dashboard/merchant-dashboard.module.js';
 import { PricingModule } from './modules/pricing/pricing.module.js';
 import { ParcelsModule } from './modules/parcels/parcels.module.js';
+import { AdminModule } from './modules/admin/admin.module.js';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ParcelsModule } from './modules/parcels/parcels.module.js';
       envFilePath: ['.env', '../../.env'],
       validate: validateEnv,
     }),
+    AdminModule,
     AuthModule,
     CourierModule,
     HealthModule,
