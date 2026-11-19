@@ -13,10 +13,9 @@ import {
   Search,
   X,
 } from 'lucide-react'
+import { apiRequest } from '../../../api/client'
 import { env } from '../../../lib/env'
 import { MerchantSidebar } from '../components/MerchantSidebar'
-import { MERCHANT_DASHBOARD_ORDERS } from '../config/merchant-dashboard.mock'
-import type { MerchantOrder, OrderStatus } from '../config/merchant-dashboard.mock'
 import styles from './MerchantDashboard.module.css'
 
 interface AuthenticatedUser {
@@ -27,15 +26,60 @@ interface AuthenticatedUser {
   approvalStatus: 'PENDING' | 'APPROVED' | 'REJECTED'
 }
 
-type StatusFilter = 'ALL' | OrderStatus
+type MerchantOrderStatus =
+  | 'AWAITING_PICKUP'
+  | 'OUT_FOR_DELIVERY'
+  | 'IN_TRANSIT'
+  | 'PICKED_UP'
+  | 'DELIVERY_FAILED'
+  | 'DELIVERED'
 
-const statusLabels: Record<OrderStatus, string> = {
-  'Awaiting pickup': 'Awaiting pickup',
-  'Out for delivery': 'Out for delivery',
-  'In transit': 'In transit',
-  'Picked up': 'Picked up',
-  'Delivery failed': 'Delivery failed',
-  Delivered: 'Delivered',
+interface MerchantOrder {
+  id: string
+  reference: string
+  trackingNumber: string
+  recipient: string
+  destination: string
+  status: MerchantOrderStatus
+  failedDeliveryAttempts: number
+  updatedAt: string
+}
+
+interface MerchantDashboardResponse {
+  reportingPeriod: { month: number; year: number }
+  metrics: {
+    activeDeliveries: number
+    deliveredThisMonth: number
+    needsAttention: number
+  }
+  recentOrders: MerchantOrder[]
+}
+
+interface MerchantOrdersPage {
+  data: MerchantOrder[]
+  page: number
+  pageSize: number
+  total: number
+}
+
+type StatusFilter = 'ALL' | MerchantOrderStatus
+
+const statusLabels: Record<MerchantOrderStatus, string> = {
+  AWAITING_PICKUP: 'Awaiting pickup',
+  OUT_FOR_DELIVERY: 'Out for delivery',
+  IN_TRANSIT: 'In transit',
+  PICKED_UP: 'Picked up',
+  DELIVERY_FAILED: 'Delivery failed',
+  DELIVERED: 'Delivered',
+}
+
+const statusClasses: Record<MerchantOrderStatus, string> = {
+  AWAITING_PICKUP: 'statusAwaiting',
+  OUT_FOR_DELIVERY: 'statusOutForDelivery',
+  IN_TRANSIT: 'statusInTransit',
+  PICKED_UP: 'statusPickedUp',
+  DELIVERY_FAILED: 'statusFailed',
+  DELIVERED: 'statusDelivered',
 }
 
 function getInitials(name: string) {
@@ -51,15 +95,27 @@ function formatMonth() {
   return new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(new Date())
 }
 
+function formatUpdatedAt(value: string) {
+  const updatedAt = new Date(value)
+  const elapsedMinutes = Math.floor((Date.now() - updatedAt.getTime()) / 60000)
+
+  if (elapsedMinutes < 1) return 'Just now'
+  if (elapsedMinutes < 60) return `${elapsedMinutes} min ago`
+  if (elapsedMinutes < 24 * 60) return `${Math.floor(elapsedMinutes / 60)} hour${Math.floor(elapsedMinutes / 60) === 1 ? '' : 's'} ago`
+  if (elapsedMinutes < 48 * 60) return 'Yesterday'
+  return new Intl.DateTimeFormat('en', { dateStyle: 'medium' }).format(updatedAt)
+}
+
 export default function MerchantDashboard() {
   const navigate = useNavigate()
   const [user, setUser] = useState<AuthenticatedUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [retryCount, setRetryCount] = useState(0)
+  const [dashboardData, setDashboardData] = useState<MerchantDashboardResponse | null>(null)
+  const [orders, setOrders] = useState<MerchantOrder[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL')
-  const [showAllOrders, setShowAllOrders] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<MerchantOrder | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
@@ -119,22 +175,54 @@ export default function MerchantDashboard() {
     }
   }, [navigate, retryCount])
 
-  const filteredOrders = useMemo(() => {
-    const orders = showAllOrders
-      ? MERCHANT_DASHBOARD_ORDERS
-      : MERCHANT_DASHBOARD_ORDERS.slice(0, 6)
-    const query = searchQuery.trim().toLowerCase()
+  useEffect(() => {
+    if (!user) return
 
-    return orders.filter((order) => {
-      const matchesStatus = statusFilter === 'ALL' || order.status === statusFilter
-      const matchesQuery =
-        !query ||
-        [order.reference, order.trackingNumber, order.recipient, order.destination]
-          .some((value) => value.toLowerCase().includes(query))
+    const controller = new AbortController()
+    const loadDashboard = async () => {
+      try {
+        const dashboard = await apiRequest<MerchantDashboardResponse>('/merchant/dashboard', {
+          signal: controller.signal,
+        })
+        if (controller.signal.aborted) return
 
-      return matchesStatus && matchesQuery
-    })
-  }, [searchQuery, showAllOrders, statusFilter])
+        setDashboardData(dashboard)
+        const hasFilters = searchQuery.trim().length > 0 || statusFilter !== 'ALL'
+        if (!hasFilters) {
+          setOrders(dashboard.recentOrders)
+          return
+        }
+
+        const filtered = await apiRequest<MerchantOrdersPage>('/merchant/orders', {
+          query: {
+            search: searchQuery.trim() || undefined,
+            status: statusFilter === 'ALL' ? undefined : statusFilter,
+            page: 1,
+            pageSize: 6,
+          },
+          signal: controller.signal,
+        })
+        if (!controller.signal.aborted) setOrders(filtered.data)
+      } catch (error: unknown) {
+        if (controller.signal.aborted) return
+        setLoadError(error instanceof Error ? error.message : 'Unable to load your merchant dashboard.')
+      }
+    }
+
+    void loadDashboard()
+    return () => controller.abort()
+  }, [searchQuery, statusFilter, user])
+
+  const filteredOrders = useMemo(
+    () =>
+      orders.map((order) => ({
+        ...order,
+        statusLabel: statusLabels[order.status],
+        statusClass: statusClasses[order.status],
+        updated: formatUpdatedAt(order.updatedAt),
+      })),
+    [orders],
+  )
 
   const merchantName = user?.fullName || 'Merchant account'
   const initials = getInitials(merchantName) || 'M'
@@ -159,7 +247,6 @@ export default function MerchantDashboard() {
     }
 
     if (action === 'dashboard') {
-      setShowAllOrders(false)
       window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
@@ -267,7 +354,7 @@ export default function MerchantDashboard() {
               </span>
               <div>
                 <p>Active deliveries</p>
-                <strong>24</strong>
+                <strong>{dashboardData?.metrics.activeDeliveries ?? 0}</strong>
                 <span>All active orders</span>
               </div>
             </article>
@@ -277,8 +364,8 @@ export default function MerchantDashboard() {
               </span>
               <div>
                 <p>Delivered this month</p>
-                <strong>128</strong>
-                <span>{formatMonth()}</span>
+                <strong>{dashboardData?.metrics.deliveredThisMonth ?? 0}</strong>
+                  <span>{dashboardData ? `${new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(new Date(dashboardData.reportingPeriod.year, dashboardData.reportingPeriod.month - 1))}` : formatMonth()}</span>
               </div>
             </article>
             <article className={styles.metricCard}>
@@ -287,7 +374,7 @@ export default function MerchantDashboard() {
               </span>
               <div>
                 <p>Needs attention</p>
-                <strong>3</strong>
+                <strong>{dashboardData?.metrics.needsAttention ?? 0}</strong>
                 <span>Failed delivery attempts</span>
               </div>
             </article>
@@ -295,9 +382,9 @@ export default function MerchantDashboard() {
 
           <section className={styles.ordersCard} id="recent-orders" aria-labelledby="orders-heading">
             <div className={styles.ordersHeader}>
-              <h2 id="orders-heading">{showAllOrders ? 'All orders' : 'Recent orders'}</h2>
+              <h2 id="orders-heading">Recent orders</h2>
               <button type="button" className={styles.viewAllButton} onClick={handleViewAllOrders}>
-                {showAllOrders ? 'Show recent orders' : 'View all orders'}
+                View all orders
                 <ChevronRight size={15} aria-hidden="true" />
               </button>
             </div>
@@ -333,7 +420,7 @@ export default function MerchantDashboard() {
                   <option value="ALL">Status</option>
                   {Object.keys(statusLabels).map((status) => (
                     <option key={status} value={status}>
-                      {statusLabels[status as OrderStatus]}
+                      {statusLabels[status as MerchantOrderStatus]}
                     </option>
                   ))}
                 </select>
@@ -370,7 +457,7 @@ export default function MerchantDashboard() {
                       </td>
                       <td>
                         <span className={`${styles.statusBadge} ${styles[order.statusClass]}`}>
-                          {order.status}
+                          {order.statusLabel}
                         </span>
                       </td>
                       <td className={styles.updatedCell}>{order.updated}</td>
@@ -408,14 +495,14 @@ export default function MerchantDashboard() {
               </div>
             ) : (
               <p className={styles.tableFootnote}>
-                Showing {filteredOrders.length} {showAllOrders ? 'orders' : 'recent orders'}.
+                Showing {filteredOrders.length} recent orders.
               </p>
             )}
           </section>
 
           <p className={styles.demoNote}>
             <PackageCheck size={14} aria-hidden="true" />
-            Order figures and delivery records are sample data until the merchant orders API is available.
+            Recent orders and delivery metrics are loaded from the merchant dashboard API.
           </p>
         </div>
       </main>
@@ -457,8 +544,8 @@ export default function MerchantDashboard() {
                 <X size={18} aria-hidden="true" />
               </button>
             </div>
-            <span className={`${styles.statusBadge} ${styles[selectedOrder.statusClass]}`}>
-              {selectedOrder.status}
+            <span className={`${styles.statusBadge} ${styles[statusClasses[selectedOrder.status]]}`}>
+              {statusLabels[selectedOrder.status]}
             </span>
             <dl className={styles.orderDetails}>
               <div>
@@ -475,11 +562,11 @@ export default function MerchantDashboard() {
               </div>
               <div>
                 <dt>Last updated</dt>
-                <dd>{selectedOrder.updated}</dd>
+                <dd>{formatUpdatedAt(selectedOrder.updatedAt)}</dd>
               </div>
               <div>
                 <dt>Delivery state</dt>
-                <dd>{selectedOrder.status}</dd>
+                <dd>{statusLabels[selectedOrder.status]}</dd>
               </div>
               <div>
                 <dt>Delivery reference</dt>
