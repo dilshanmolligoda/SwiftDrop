@@ -89,11 +89,10 @@ export class MerchantDashboardService {
     merchantUserId: string,
     trackingNumber: string,
   ): Promise<MerchantOrderDetail> {
-    const order =
-      await this.merchantDashboardRepository.findByTrackingNumber(
-        merchantUserId,
-        trackingNumber,
-      );
+    const order = await this.merchantDashboardRepository.findByTrackingNumber(
+      merchantUserId,
+      trackingNumber,
+    );
     if (!order) {
       throw new NotFoundException('Merchant parcel not found');
     }
