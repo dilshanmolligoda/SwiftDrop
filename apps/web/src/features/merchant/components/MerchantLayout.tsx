@@ -79,7 +79,13 @@ export const MerchantLayout: React.FC = () => {
 
   const displayName = user?.fullName ?? 'GreenLeaf Store'
   const initials = displayName.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()
-  const pageTitle = location.pathname.includes('orders') ? 'Orders' : 'Dashboard'
+  const pageTitle = location.pathname.includes('orders')
+    ? 'Orders'
+    : location.pathname.includes('track')
+      ? 'Track a parcel'
+      : location.pathname.includes('pricing')
+        ? 'Pricing'
+        : 'Dashboard'
 
   return (
     <div className="merchant-layout">
