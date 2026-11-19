@@ -5,7 +5,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { SwiftDropLogo } from '../../auth/components/SwiftDropLogo'
 import styles from '../pages/MerchantDashboard.module.css'
 
-type MerchantSidebarAction = 'dashboard' | 'orders' | 'track' | 'coming-soon'
+type MerchantSidebarAction = 'dashboard' | 'orders' | 'track' | 'pricing' | 'coming-soon'
 
 interface MerchantSidebarProps {
   readonly merchantName: string
@@ -23,7 +23,7 @@ const navigationItems: readonly {
   { label: 'Dashboard', path: '/merchant/dashboard', icon: Home, action: 'dashboard' },
   { label: 'Orders', path: '/merchant/orders', icon: Box, action: 'orders' },
   { label: 'Track a parcel', path: '/merchant/track', icon: LinkIcon, action: 'track' },
-  { label: 'Pricing', path: '/merchant/pricing', icon: FileText, action: 'coming-soon' },
+  { label: 'Pricing', path: '/merchant/pricing', icon: FileText, action: 'pricing' },
   { label: 'Store connections', path: '/merchant/connections', icon: LinkIcon, action: 'coming-soon' },
   { label: 'Settings', path: '/merchant/settings', icon: Settings, action: 'coming-soon' },
 ]
@@ -74,7 +74,8 @@ export function MerchantSidebar({
           const isActive =
             location.pathname === item.path ||
             (item.action === 'orders' && location.pathname.startsWith('/merchant/orders')) ||
-            (item.label === 'Track a parcel' && location.pathname.startsWith('/merchant/track'))
+            (item.label === 'Track a parcel' && location.pathname.startsWith('/merchant/track')) ||
+            (item.label === 'Pricing' && location.pathname.startsWith('/merchant/pricing'))
           return (
             <button
               type="button"

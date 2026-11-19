@@ -239,13 +239,17 @@ export default function MerchantDashboard() {
     }
   }
 
-  const handleNavigation = (action: 'dashboard' | 'orders' | 'track' | 'coming-soon', label: string) => {
+  const handleNavigation = (action: 'dashboard' | 'orders' | 'track' | 'pricing' | 'coming-soon', label: string) => {
     if (action === 'orders') {
       navigate('/merchant/orders')
       return
     }
     if (action === 'track') {
       navigate('/merchant/track')
+      return
+    }
+    if (action === 'pricing') {
+      navigate('/merchant/pricing')
       return
     }
 
