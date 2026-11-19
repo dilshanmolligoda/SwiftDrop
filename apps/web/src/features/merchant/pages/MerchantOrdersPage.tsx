@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { CalendarDays, Check, ChevronDown, Download, ImageOff, Package, Search, TriangleAlert, X } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { CalendarDays, ChevronDown, Download, Package, Search, TriangleAlert } from 'lucide-react'
 import { apiRequest } from '../../../api/client'
 import { env as appEnv } from '../../../lib/env'
 import styles from './MerchantOrdersPage.module.css'
@@ -42,23 +43,6 @@ interface MerchantOrdersPageResponse {
   total: number
 }
 
-interface MerchantOrderDetail extends MerchantOrder {
-  timeline: Array<{
-    status: string
-    note: string | null
-    failureReason: string | null
-    createdAt: string
-  }>
-  failureReason: string | null
-  proof: {
-    id: string
-    originalFilename: string
-    contentType: string
-    sizeBytes: number
-    uploadedAt: string
-  } | null
-}
-
 const statusLabels: Record<OrderStatus, string> = {
   AWAITING_PICKUP: 'Created',
   OUT_FOR_DELIVERY: 'Out for Delivery',
@@ -98,21 +82,8 @@ function getLocalToday() {
   return `${year}-${month}-${day}`
 }
 
-function formatTimelineStatus(status: string) {
-  const labels: Record<string, string> = {
-    CREATED: 'Created',
-    PENDING: 'Created',
-    ASSIGNED: 'Created',
-    PICKED_UP: 'Picked Up',
-    IN_TRANSIT: 'In Transit',
-    OUT_FOR_DELIVERY: 'Out for Delivery',
-    DELIVERED: 'Delivered',
-    FAILED: 'Failed',
-  }
-  return labels[status] ?? status
-}
-
 export const MerchantOrdersPage: React.FC = () => {
+  const navigate = useNavigate()
   const [search, setSearch] = useState('')
   const [selectedStatus, setSelectedStatus] = useState('All statuses')
   const [page, setPage] = useState(1)
@@ -121,7 +92,6 @@ export const MerchantOrdersPage: React.FC = () => {
   const [total, setTotal] = useState(0)
   const [metrics, setMetrics] = useState<MerchantDashboardResponse['metrics'] | null>(null)
   const [reportingPeriod, setReportingPeriod] = useState<{ month: number; year: number } | null>(null)
-  const [selectedOrder, setSelectedOrder] = useState<MerchantOrderDetail | null>(null)
   const [createdFrom, setCreatedFrom] = useState('')
   const [createdTo, setCreatedTo] = useState('')
   const [isDateRangeOpen, setIsDateRangeOpen] = useState(false)
@@ -180,19 +150,6 @@ export const MerchantOrdersPage: React.FC = () => {
     return () => controller.abort()
   }, [search, selectedStatus, page, pageSize, createdFrom, createdTo])
 
-  const openOrder = async (order: MerchantOrder) => {
-    try {
-      const detail = await apiRequest<MerchantOrderDetail>(`/merchant/orders/${order.id}`)
-      setSelectedOrder(detail)
-    } catch {
-      setSelectedOrder({
-        ...order,
-        timeline: [],
-        failureReason: null,
-        proof: null,
-      })
-    }
-  }
 
   const exportCsv = async () => {
     const status =
@@ -297,24 +254,12 @@ export const MerchantOrdersPage: React.FC = () => {
         </div>
         <div className={styles.tableWrapper}>
           <table><thead><tr><th>TRACKING<br />NO.</th><th>ORDER<br />REF</th><th>RECIPIENT</th><th>DROP-OFF<br />ADDRESS</th><th>SIZE /<br />WEIGHT</th><th>FEE</th><th>STATUS</th><th>CREATED</th><th>SOURCE</th></tr></thead>
-            <tbody>{orders.map((order) => <tr key={order.id} className={styles.orderRow} onClick={() => void openOrder(order)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') void openOrder(order) }} tabIndex={0}><td className={styles.strong}>{order.trackingNumber}</td><td>{order.reference}</td><td className={styles.recipient}>{order.recipient}</td><td>{order.destination}</td><td>{formatSizeWeight(order)}</td><td className={styles.strong}>{order.feeLkr == null ? '-' : `LKR ${order.feeLkr}`}</td><td><span className={`${styles.status} ${statusClass[order.status]}`}>{statusLabels[order.status]}</span></td><td>{formatDate(order.createdAt)}</td><td>{order.source}</td></tr>)}</tbody>
+            <tbody>{orders.map((order) => <tr key={order.id} className={styles.orderRow} onClick={() => navigate(`/merchant/track/${order.trackingNumber}`)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') navigate(`/merchant/track/${order.trackingNumber}`) }} tabIndex={0}><td className={styles.strong}>{order.trackingNumber}</td><td>{order.reference}</td><td className={styles.recipient}>{order.recipient}</td><td>{order.destination}</td><td>{formatSizeWeight(order)}</td><td className={styles.strong}>{order.feeLkr == null ? '-' : `LKR ${order.feeLkr}`}</td><td><span className={`${styles.status} ${statusClass[order.status]}`}>{statusLabels[order.status]}</span></td><td>{formatDate(order.createdAt)}</td><td>{order.source}</td></tr>)}</tbody>
           </table>
         </div>
         {loadError && <p role="alert">{loadError}</p>}
         <footer className={styles.pagination}><span>Showing <strong>{start}–{end}</strong> of <strong>{total}</strong> orders</span><div><span>Rows per page</span><select value={pageSize} onChange={(event) => { setPage(1); setPageSize(Number(event.target.value)) }}><option value={6}>6</option><option value={12}>12</option><option value={20}>20</option></select><button type="button" disabled={page <= 1} onClick={() => setPage((value) => value - 1)}>Previous</button>{Array.from({ length: Math.min(totalPages, 5) }, (_, index) => index + 1).map((pageNumber) => <button type="button" key={pageNumber} className={pageNumber === page ? styles.current : ''} onClick={() => setPage(pageNumber)}>{pageNumber}</button>)}<button type="button" disabled={page >= totalPages} onClick={() => setPage((value) => value + 1)}>Next</button></div></footer>
       </section>
-      {selectedOrder && <div className={styles.drawerLayer} role="presentation"><button type="button" className={styles.drawerBackdrop} onClick={() => setSelectedOrder(null)} aria-label="Close order details" /><aside className={styles.drawer} role="dialog" aria-modal="true" aria-labelledby="order-details-title">
-        <div className={styles.drawerHeader}><h2 id="order-details-title">Order details</h2><button type="button" onClick={() => setSelectedOrder(null)} aria-label="Close order details"><X size={18} /></button></div>
-        <div className={styles.drawerContent}><span className={styles.detailLabel}>Tracking number</span><div className={styles.trackingHeader}><strong>{selectedOrder.trackingNumber}</strong><span className={`${styles.status} ${statusClass[selectedOrder.status]}`}>{statusLabels[selectedOrder.status]}</span></div><p className={styles.detailMeta}>Order ref {selectedOrder.reference} &nbsp;·&nbsp; Source {selectedOrder.source}</p>
-          <div className={styles.detailGrid}><div><span className={styles.detailLabel}>Recipient</span><strong>{selectedOrder.recipient}</strong></div><div><span className={styles.detailLabel}>Drop-off address</span><strong>{selectedOrder.destination}</strong></div><div><span className={styles.detailLabel}>Parcel</span><strong>{formatSizeWeight(selectedOrder)}</strong></div><div><span className={styles.detailLabel}>Fee</span><strong>{selectedOrder.feeLkr == null ? '-' : `LKR ${selectedOrder.feeLkr}`}</strong></div></div>
-          <section className={styles.timelineSection}><div className={styles.sectionHeading}><h3>Delivery timeline</h3><span>All times Sri Lanka time</span></div><ol className={styles.timeline}>{selectedOrder.timeline.map((event) => {
-            const isFailed = event.status === 'FAILED'
-            return <li key={`${event.status}-${event.createdAt}`} className={isFailed ? styles.timelineFailed : ''}><span className={styles.timelineIcon}>{isFailed ? <X size={11} /> : <Check size={11} />}</span><div><strong>{formatTimelineStatus(event.status)}</strong><span>{new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Colombo' }).format(new Date(event.createdAt))}</span></div></li>
-          })}</ol></section>
-          {selectedOrder.status === 'DELIVERY_FAILED' && <div className={styles.failureReason}><strong>Failure reason</strong><span>{selectedOrder.failureReason ?? 'Failure reason not available.'}</span></div>}
-          <section className={styles.proofSection}><h3>Proof of delivery</h3>{selectedOrder.proof ? <div className={styles.proofPlaceholder}><span>{selectedOrder.proof.originalFilename}</span></div> : <div className={styles.proofPlaceholder}><ImageOff size={18} /><span>Not available — delivery proof was not provided.</span></div>}</section>
-        </div>
-      </aside></div>}
     </div>
   )
 }

@@ -589,11 +589,14 @@
   padding-left: 52px;
 }
 
-.ordersTable th:last-child,
-.ordersTable td:last-child {
-  width: 31px;
-  padding-right: 4px;
-  padding-left: 0;
+.orderRow {
+  cursor: pointer;
+}
+
+.orderRow:hover,
+.orderRow:focus-visible {
+  background: #f8fbfd;
+  outline: none;
 }
 
 .recipientCell {

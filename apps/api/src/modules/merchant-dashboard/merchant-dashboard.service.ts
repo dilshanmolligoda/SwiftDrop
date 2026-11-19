@@ -85,6 +85,21 @@ export class MerchantDashboardService {
     return order;
   }
 
+  async getByTrackingNumber(
+    merchantUserId: string,
+    trackingNumber: string,
+  ): Promise<MerchantOrderDetail> {
+    const order =
+      await this.merchantDashboardRepository.findByTrackingNumber(
+        merchantUserId,
+        trackingNumber,
+      );
+    if (!order) {
+      throw new NotFoundException('Merchant parcel not found');
+    }
+    return order;
+  }
+
   listAllOrders(
     merchantUserId: string,
     query: ListMerchantOrdersDto,

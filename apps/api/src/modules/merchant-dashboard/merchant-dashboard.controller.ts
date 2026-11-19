@@ -107,4 +107,15 @@ export class MerchantDashboardController {
   ): Promise<MerchantOrderDetail> {
     return this.merchantDashboardService.getOrder(user.id, orderId);
   }
+
+  @Get('track/:trackingNumber')
+  getByTrackingNumber(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('trackingNumber') trackingNumber: string,
+  ): Promise<MerchantOrderDetail> {
+    return this.merchantDashboardService.getByTrackingNumber(
+      user.id,
+      trackingNumber.trim().toUpperCase(),
+    );
+  }
 }

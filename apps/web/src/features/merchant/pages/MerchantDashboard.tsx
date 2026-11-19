@@ -116,7 +116,6 @@ export default function MerchantDashboard() {
   const [orders, setOrders] = useState<MerchantOrder[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL')
-  const [selectedOrder, setSelectedOrder] = useState<MerchantOrder | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false)
@@ -240,9 +239,13 @@ export default function MerchantDashboard() {
     }
   }
 
-  const handleNavigation = (action: 'dashboard' | 'orders' | 'coming-soon', label: string) => {
+  const handleNavigation = (action: 'dashboard' | 'orders' | 'track' | 'coming-soon', label: string) => {
     if (action === 'orders') {
       navigate('/merchant/orders')
+      return
+    }
+    if (action === 'track') {
+      navigate('/merchant/track')
       return
     }
 
@@ -438,14 +441,21 @@ export default function MerchantDashboard() {
                     <th scope="col">Destination</th>
                     <th scope="col">Status</th>
                     <th scope="col">Updated</th>
-                    <th scope="col">
-                      <span className={styles.visuallyHidden}>Order details</span>
-                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredOrders.map((order) => (
-                    <tr key={order.reference}>
+                    <tr
+                      key={order.reference}
+                      className={styles.orderRow}
+                      tabIndex={0}
+                      onClick={() => navigate(`/merchant/track/${order.trackingNumber}`)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          navigate(`/merchant/track/${order.trackingNumber}`)
+                        }
+                      }}
+                    >
                       <td>{order.reference}</td>
                       <td>{order.trackingNumber}</td>
                       <td className={styles.recipientCell}>{order.recipient}</td>
@@ -461,16 +471,6 @@ export default function MerchantDashboard() {
                         </span>
                       </td>
                       <td className={styles.updatedCell}>{order.updated}</td>
-                      <td className={styles.detailsCell}>
-                        <button
-                          type="button"
-                          className={styles.detailsButton}
-                          aria-label={`View order ${order.reference}`}
-                          onClick={() => setSelectedOrder(order)}
-                        >
-                          <ChevronRight size={17} aria-hidden="true" />
-                        </button>
-                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -516,69 +516,6 @@ export default function MerchantDashboard() {
         </div>
       )}
 
-      {selectedOrder && (
-        <div
-          className={styles.modalBackdrop}
-          role="presentation"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setSelectedOrder(null)
-          }}
-        >
-          <section
-            className={styles.orderDialog}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="order-dialog-title"
-          >
-            <div className={styles.dialogHeader}>
-              <div>
-                <span className={styles.dialogEyebrow}>Order details</span>
-                <h2 id="order-dialog-title">{selectedOrder.reference}</h2>
-              </div>
-              <button
-                type="button"
-                className={styles.iconButton}
-                aria-label="Close order details"
-                onClick={() => setSelectedOrder(null)}
-              >
-                <X size={18} aria-hidden="true" />
-              </button>
-            </div>
-            <span className={`${styles.statusBadge} ${styles[statusClasses[selectedOrder.status]]}`}>
-              {statusLabels[selectedOrder.status]}
-            </span>
-            <dl className={styles.orderDetails}>
-              <div>
-                <dt>Tracking number</dt>
-                <dd>{selectedOrder.trackingNumber}</dd>
-              </div>
-              <div>
-                <dt>Recipient</dt>
-                <dd>{selectedOrder.recipient}</dd>
-              </div>
-              <div>
-                <dt>Destination</dt>
-                <dd>{selectedOrder.destination}</dd>
-              </div>
-              <div>
-                <dt>Last updated</dt>
-                <dd>{formatUpdatedAt(selectedOrder.updatedAt)}</dd>
-              </div>
-              <div>
-                <dt>Delivery state</dt>
-                <dd>{statusLabels[selectedOrder.status]}</dd>
-              </div>
-              <div>
-                <dt>Delivery reference</dt>
-                <dd>{selectedOrder.reference}</dd>
-              </div>
-            </dl>
-            <button type="button" className={styles.dialogCloseButton} onClick={() => setSelectedOrder(null)}>
-              Close
-            </button>
-          </section>
-        </div>
-      )}
     </div>
   )
 }
