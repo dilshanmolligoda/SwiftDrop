@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   FileText,
@@ -6,86 +6,134 @@ import {
   Search,
   Home,
   ChevronRight,
+  ChevronLeft,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react'
 import type { ApplicationItem, ApplicationType } from '../types/admin-users.types'
-import { DEFAULT_USER_SUMMARY, MOCK_APPLICATIONS } from '../config/admin-users.mock'
-import { ApplicationReviewModal } from '../components/ApplicationReviewModal'
+import { adminApi, type AdminApplicationItem, type AdminDashboardKpis } from '../api/admin-api'
 import styles from './AdminUsersApprovalsPage.module.css'
 
 type TabOption = 'pending' | 'customers' | 'merchants' | 'couriers'
 
+function mapAdminAppToItem(app: AdminApplicationItem): ApplicationItem {
+  const initials = app.fullName
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+
+  let status: 'Pending review' | 'Approved' | 'Rejected' = 'Pending review'
+  if (app.approvalStatus === 'APPROVED') status = 'Approved'
+  else if (app.approvalStatus === 'REJECTED') status = 'Rejected'
+
+  return {
+    id: app.id,
+    applicantName: app.fullName,
+    businessName: app.merchantProfile?.businessName || (app.role === 'COURIER' ? `${app.fullName} (Courier)` : undefined),
+    ownerName: app.role === 'MERCHANT' ? app.fullName : undefined,
+    email: app.email,
+    phone: app.phoneNumber || 'Not provided',
+    initials: initials || 'AP',
+    type: app.role === 'MERCHANT' ? 'Merchant' : 'Courier',
+    submittedDate: new Date(app.createdAt).toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    }),
+    submittedTimeAgo: 'Recently',
+    status,
+    documents: [
+      {
+        title: app.role === 'MERCHANT' ? 'Business Registration' : 'Driving License',
+        fileType: 'PDF',
+        verified: app.approvalStatus === 'APPROVED',
+      },
+    ],
+    notes: app.rejectionReason || undefined,
+  }
+}
+
 export const AdminUsersApprovalsPage: React.FC = () => {
   const navigate = useNavigate()
-  const [applications, setApplications] = useState<ApplicationItem[]>(() => [...MOCK_APPLICATIONS])
+  const [applications, setApplications] = useState<ApplicationItem[]>([])
+  const [kpis, setKpis] = useState<AdminDashboardKpis | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+
   const [activeTab, setActiveTab] = useState<TabOption>('pending')
   const [searchQuery, setSearchQuery] = useState('')
-  const [typeFilter, setTypeFilter] = useState<'all' | 'Merchant' | 'Courier'>('all')
-  const [sortOrder, setSortOrder] = useState<'oldest' | 'newest'>('oldest')
-  const [selectedApplication, setSelectedApplication] = useState<ApplicationItem | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [typeFilter, setTypeFilter] = useState<'all' | ApplicationType>('all')
 
-  const pendingCount = useMemo(
-    () => applications.filter((a) => a.status === 'Pending review').length,
-    [applications],
-  )
+  useEffect(() => {
+    let isMounted = true
+    const controller = new AbortController()
+
+    async function fetchApps() {
+      try {
+        let statusParam: string | undefined = undefined
+        let roleParam: string | undefined = undefined
+
+        if (activeTab === 'pending') {
+          statusParam = 'PENDING'
+        } else if (activeTab === 'merchants') {
+          roleParam = 'MERCHANT'
+        } else if (activeTab === 'couriers') {
+          roleParam = 'COURIER'
+        }
+
+        const [appsRes, dashboardRes] = await Promise.all([
+          adminApi.getApplications({
+            page,
+            limit,
+            search: searchQuery.trim() || undefined,
+            status: statusParam,
+            role: roleParam,
+          }),
+          adminApi.getDashboard(controller.signal),
+        ])
+
+        if (!isMounted) return
+        const mapped = (appsRes.data || []).map(mapAdminAppToItem)
+        setApplications(mapped)
+        setTotalPages(appsRes.pagination?.totalPages || 1)
+        setTotalCount(appsRes.pagination?.total || 0)
+        setKpis(dashboardRes.kpis)
+      } catch (err: unknown) {
+        if (!isMounted) return
+        if (err instanceof DOMException && err.name === 'AbortError') return
+        console.error('Failed to load applications:', err)
+        setError('Could not load user applications from backend.')
+        setApplications([])
+      } finally {
+        if (isMounted) setIsLoading(false)
+      }
+    }
+
+    void fetchApps()
+
+    return () => {
+      isMounted = false
+      controller.abort()
+    }
+  }, [activeTab, page, limit, searchQuery])
+
+  const pendingCount = kpis?.pendingApprovalsCount ?? 0
 
   const filteredApplications = useMemo(() => {
-    return applications
-      .filter((app) => {
-        // Tab filter
-        if (activeTab === 'pending' && app.status !== 'Pending review') return false
-        if (activeTab === 'merchants' && app.type !== 'Merchant') return false
-        if (activeTab === 'couriers' && app.type !== 'Courier') return false
-        // For customers tab, there are no applications, but let's handle gracefully
-        if (activeTab === 'customers') return false
-
-        // Type filter dropdown
-        if (typeFilter !== 'all' && app.type !== typeFilter) return false
-
-        // Search query
-        if (searchQuery.trim()) {
-          const query = searchQuery.toLowerCase()
-          const matchesName = app.applicantName.toLowerCase().includes(query)
-          const matchesBusiness = app.businessName?.toLowerCase().includes(query) ?? false
-          const matchesOwner = app.ownerName?.toLowerCase().includes(query) ?? false
-          const matchesEmail = app.email.toLowerCase().includes(query)
-          if (!matchesName && !matchesBusiness && !matchesOwner && !matchesEmail) {
-            return false
-          }
-        }
-
-        return true
-      })
-      .sort((a, b) => {
-        if (sortOrder === 'newest') {
-          return b.id.localeCompare(a.id)
-        }
-        return a.id.localeCompare(b.id)
-      })
-  }, [applications, activeTab, typeFilter, searchQuery, sortOrder])
+    return applications.filter((app) => {
+      if (typeFilter !== 'all' && app.type !== typeFilter) return false
+      return true
+    })
+  }, [applications, typeFilter])
 
   const handleOpenReview = (app: ApplicationItem) => {
     navigate(`/admin/users/review/${app.id}`)
-  }
-
-  const handleApprove = (id: string) => {
-    setApplications((prev) =>
-      prev.map((app) =>
-        app.id === id ? { ...app, status: 'Approved' } : app,
-      ),
-    )
-    setIsModalOpen(false)
-    setSelectedApplication(null)
-  }
-
-  const handleReject = (id: string, reason: string) => {
-    setApplications((prev) =>
-      prev.map((app) =>
-        app.id === id ? { ...app, status: 'Rejected', notes: `Rejected: ${reason}` } : app,
-      ),
-    )
-    setIsModalOpen(false)
-    setSelectedApplication(null)
   }
 
   return (
@@ -103,6 +151,13 @@ export const AdminUsersApprovalsPage: React.FC = () => {
         </p>
       </div>
 
+      {error && (
+        <div style={{ backgroundColor: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca', borderRadius: '8px', padding: '12px 16px', marginBottom: '20px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <AlertCircle size={16} />
+          <span>{error}</span>
+        </div>
+      )}
+
       {/* 2 Metric KPI Cards */}
       <div className={styles.metricsGrid}>
         <div className={styles.metricCard}>
@@ -112,7 +167,7 @@ export const AdminUsersApprovalsPage: React.FC = () => {
           <div className={styles.metricInfo}>
             <span className={styles.metricLabel}>Awaiting review</span>
             <span className={styles.metricValue}>{pendingCount}</span>
-            <span className={styles.metricSubtext}>2 merchants • 2 couriers</span>
+            <span className={styles.metricSubtext}>Pending admin approval</span>
           </div>
         </div>
 
@@ -121,12 +176,9 @@ export const AdminUsersApprovalsPage: React.FC = () => {
             <Users size={24} aria-hidden="true" />
           </div>
           <div className={styles.metricInfo}>
-            <span className={styles.metricLabel}>Active accounts</span>
-            <span className={styles.metricValue}>{DEFAULT_USER_SUMMARY.totalActive}</span>
-            <span className={styles.metricSubtext}>
-              {DEFAULT_USER_SUMMARY.totalCustomers} customers • {DEFAULT_USER_SUMMARY.totalMerchants}{' '}
-              merchants • {DEFAULT_USER_SUMMARY.totalCouriers} couriers
-            </span>
+            <span className={styles.metricLabel}>Active couriers</span>
+            <span className={styles.metricValue}>{kpis?.activeCouriersCount ?? 0}</span>
+            <span className={styles.metricSubtext}>Approved and operational</span>
           </div>
         </div>
       </div>
@@ -140,7 +192,10 @@ export const AdminUsersApprovalsPage: React.FC = () => {
             role="tab"
             aria-selected={activeTab === 'pending'}
             className={`${styles.tabButton} ${activeTab === 'pending' ? styles.tabButtonActive : ''}`}
-            onClick={() => setActiveTab('pending')}
+            onClick={() => {
+              setActiveTab('pending')
+              setPage(1)
+            }}
           >
             Pending approvals ({pendingCount})
           </button>
@@ -149,7 +204,10 @@ export const AdminUsersApprovalsPage: React.FC = () => {
             role="tab"
             aria-selected={activeTab === 'customers'}
             className={`${styles.tabButton} ${activeTab === 'customers' ? styles.tabButtonActive : ''}`}
-            onClick={() => setActiveTab('customers')}
+            onClick={() => {
+              setActiveTab('customers')
+              setPage(1)
+            }}
           >
             Customers
           </button>
@@ -158,7 +216,10 @@ export const AdminUsersApprovalsPage: React.FC = () => {
             role="tab"
             aria-selected={activeTab === 'merchants'}
             className={`${styles.tabButton} ${activeTab === 'merchants' ? styles.tabButtonActive : ''}`}
-            onClick={() => setActiveTab('merchants')}
+            onClick={() => {
+              setActiveTab('merchants')
+              setPage(1)
+            }}
           >
             Merchants
           </button>
@@ -167,7 +228,10 @@ export const AdminUsersApprovalsPage: React.FC = () => {
             role="tab"
             aria-selected={activeTab === 'couriers'}
             className={`${styles.tabButton} ${activeTab === 'couriers' ? styles.tabButtonActive : ''}`}
-            onClick={() => setActiveTab('couriers')}
+            onClick={() => {
+              setActiveTab('couriers')
+              setPage(1)
+            }}
           >
             Couriers
           </button>
@@ -182,7 +246,10 @@ export const AdminUsersApprovalsPage: React.FC = () => {
               className={styles.searchInput}
               placeholder="Search name, business or email"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
+                setPage(1)
+              }}
               aria-label="Search name, business or email"
             />
           </div>
@@ -197,16 +264,6 @@ export const AdminUsersApprovalsPage: React.FC = () => {
               <option value="all">All application types</option>
               <option value="Merchant">Merchant</option>
               <option value="Courier">Courier</option>
-            </select>
-
-            <select
-              className={styles.filterSelect}
-              value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value as 'oldest' | 'newest')}
-              aria-label="Sort order"
-            >
-              <option value="oldest">Oldest first</option>
-              <option value="newest">Newest first</option>
             </select>
           </div>
         </div>
@@ -224,12 +281,25 @@ export const AdminUsersApprovalsPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredApplications.length === 0 ? (
+              {isLoading ? (
                 <tr>
                   <td colSpan={5} style={{ textAlign: 'center', padding: '36px', color: '#64748b' }}>
-                    {activeTab === 'customers'
-                      ? 'Customer accounts are automatically verified upon registration.'
-                      : 'No applications found matching your criteria.'}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
+                      <span>Loading applications...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : activeTab === 'customers' ? (
+                <tr>
+                  <td colSpan={5} style={{ textAlign: 'center', padding: '36px', color: '#64748b' }}>
+                    Customer accounts are automatically verified upon registration.
+                  </td>
+                </tr>
+              ) : filteredApplications.length === 0 ? (
+                <tr>
+                  <td colSpan={5} style={{ textAlign: 'center', padding: '36px', color: '#64748b' }}>
+                    No applications found in the database.
                   </td>
                 </tr>
               ) : (
@@ -259,10 +329,7 @@ export const AdminUsersApprovalsPage: React.FC = () => {
                       </span>
                     </td>
                     <td>
-                      <div className={styles.submittedCell}>
-                        <span className={styles.submittedDate}>{app.submittedDate}</span>
-                        <span className={styles.submittedTimeAgo}>{app.submittedTimeAgo}</span>
-                      </div>
+                      <span className={styles.submittedDate}>{app.submittedDate}</span>
                     </td>
                     <td>
                       <span
@@ -270,8 +337,8 @@ export const AdminUsersApprovalsPage: React.FC = () => {
                           app.status === 'Approved'
                             ? styles.statusApproved
                             : app.status === 'Rejected'
-                            ? styles.statusRejected
-                            : ''
+                              ? styles.statusRejected
+                              : styles.statusPending
                         }`}
                       >
                         {app.status}
@@ -283,7 +350,7 @@ export const AdminUsersApprovalsPage: React.FC = () => {
                         className={styles.reviewButton}
                         onClick={() => handleOpenReview(app)}
                       >
-                        Review application
+                        Review
                       </button>
                     </td>
                   </tr>
@@ -293,26 +360,56 @@ export const AdminUsersApprovalsPage: React.FC = () => {
           </table>
         </div>
 
-        {/* Table Footer */}
+        {/* Footer & Pagination */}
         <div className={styles.tableFooter}>
-          <span className={styles.footerCount}>
-            Showing all {filteredApplications.length} applications
-          </span>
           <span className={styles.footerNote}>
-            Review business or vehicle documents before approving an application.
+            All merchant and courier signups require administrative verification.
           </span>
+
+          <div className={styles.paginationControls}>
+            <span className={styles.paginationText}>
+              Showing {filteredApplications.length} of {totalCount} applications
+            </span>
+            <select
+              className={styles.pageSelect}
+              aria-label="Rows per page"
+              value={limit}
+              onChange={(e) => {
+                setLimit(Number(e.target.value))
+                setPage(1)
+              }}
+            >
+              <option value="5">5 per page</option>
+              <option value="10">10 per page</option>
+              <option value="20">20 per page</option>
+            </select>
+
+            <div className={styles.pagesList}>
+              <button
+                type="button"
+                className={styles.pageBtn}
+                aria-label="Previous page"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
+                <ChevronLeft size={14} aria-hidden="true" />
+              </button>
+              <span style={{ padding: '0 8px', fontSize: '13px', color: '#475569' }}>
+                Page {page} of {Math.max(1, totalPages)}
+              </span>
+              <button
+                type="button"
+                className={styles.pageBtn}
+                aria-label="Next page"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              >
+                <ChevronRight size={14} aria-hidden="true" />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Review Modal */}
-      <ApplicationReviewModal
-        isOpen={isModalOpen}
-        application={selectedApplication}
-        onClose={() => setIsModalOpen(false)}
-        onApprove={handleApprove}
-        onReject={handleReject}
-      />
     </div>
   )
 }
-

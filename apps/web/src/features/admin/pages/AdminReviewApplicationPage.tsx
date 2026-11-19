@@ -1,42 +1,142 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   Home,
   ChevronRight,
   ArrowLeft,
   FileText,
-  Download,
-  ExternalLink,
+  Loader2,
+  AlertCircle,
+  CheckCircle2,
 } from 'lucide-react'
-import { MOCK_APPLICATIONS } from '../config/admin-users.mock'
+import { adminApi, type AdminApplicationItem } from '../api/admin-api'
 import styles from './AdminReviewApplicationPage.module.css'
 
 export const AdminReviewApplicationPage: React.FC = () => {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
 
-  const application =
-    MOCK_APPLICATIONS.find((app) => app.id === id) || MOCK_APPLICATIONS[0]
+  const [application, setApplication] = useState<(AdminApplicationItem & { reviewerName: string | null }) | null>(null)
+  const [isLoading, setIsLoading] = useState(!id ? false : true)
+  const [error, setError] = useState<string | null>(!id ? 'No application ID specified.' : null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   const [hasConfirmedCheck, setHasConfirmedCheck] = useState(false)
   const [decisionNote, setDecisionNote] = useState('')
-  const [currentStatus, setCurrentStatus] = useState<string>(application.status)
 
-  const handleApprove = () => {
-    setCurrentStatus('Approved')
-    alert(`Application for ${application.applicantName} has been approved! The applicant will be notified via email.`)
-    navigate('/admin/users')
+  useEffect(() => {
+    if (!id) return
+
+    let isMounted = true
+
+    adminApi
+      .getApplicationDetails(id)
+      .then((data) => {
+        if (!isMounted) return
+        setApplication(data)
+        if (data.rejectionReason) {
+          setDecisionNote(data.rejectionReason)
+        }
+      })
+      .catch((err) => {
+        if (!isMounted) return
+        console.error('Failed to load application details:', err)
+        setError('Application not found in the database.')
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [id])
+
+  const handleApprove = async () => {
+    if (!id || !application) return
+    setIsSubmitting(true)
+    setError(null)
+    try {
+      await adminApi.approveApplication(id)
+      setSuccessMessage(`Application for ${application.fullName} has been approved!`)
+      setTimeout(() => {
+        navigate('/admin/users')
+      }, 1500)
+    } catch (err: any) {
+      console.error('Failed to approve application:', err)
+      setError(err.message || 'Failed to approve application.')
+      setIsSubmitting(false)
+    }
   }
 
-  const handleReject = () => {
+  const handleReject = async () => {
+    if (!id || !application) return
     if (!decisionNote.trim()) {
-      alert('Decision note is required when rejecting an application.')
+      alert('A decision note or reason is required when rejecting an application.')
       return
     }
-    setCurrentStatus('Rejected')
-    alert(`Application for ${application.applicantName} has been rejected. Notification sent with reason: "${decisionNote}".`)
-    navigate('/admin/users')
+    setIsSubmitting(true)
+    setError(null)
+    try {
+      await adminApi.rejectApplication(id, decisionNote.trim())
+      setSuccessMessage(`Application for ${application.fullName} has been rejected.`)
+      setTimeout(() => {
+        navigate('/admin/users')
+      }, 1500)
+    } catch (err: any) {
+      console.error('Failed to reject application:', err)
+      setError(err.message || 'Failed to reject application.')
+      setIsSubmitting(false)
+    }
   }
+
+  if (isLoading) {
+    return (
+      <div className={styles.pageContainer}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '300px', gap: '8px', color: '#64748b' }}>
+          <Loader2 size={24} style={{ animation: 'spin 1s linear infinite' }} />
+          <span>Loading application details...</span>
+        </div>
+      </div>
+    )
+  }
+
+  if (error && !application) {
+    return (
+      <div className={styles.pageContainer}>
+        <div className={styles.pageHeader}>
+          <Link to="/admin/users" className={styles.backLink}>
+            <ArrowLeft size={16} aria-hidden="true" />
+            Back to applications
+          </Link>
+          <h1 className={styles.pageTitle}>Review application</h1>
+        </div>
+        <div style={{ backgroundColor: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca', borderRadius: '8px', padding: '24px', textAlign: 'center', marginTop: '20px' }}>
+          <p style={{ fontWeight: 600, fontSize: '16px' }}>{error}</p>
+          <button
+            type="button"
+            className={styles.backButton}
+            style={{ marginTop: '16px' }}
+            onClick={() => navigate('/admin/users')}
+          >
+            Return to user directory
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (!application) return null
+
+  const initials = application.fullName
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+
+  const displayName = application.merchantProfile?.businessName || application.fullName
 
   return (
     <div className={styles.pageContainer}>
@@ -60,79 +160,108 @@ export const AdminReviewApplicationPage: React.FC = () => {
         <h1 className={styles.pageTitle}>Review application</h1>
       </div>
 
+      {successMessage && (
+        <div style={{ backgroundColor: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0', borderRadius: '8px', padding: '16px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 500 }}>
+          <CheckCircle2 size={18} />
+          <span>{successMessage}</span>
+        </div>
+      )}
+
+      {error && (
+        <div style={{ backgroundColor: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca', borderRadius: '8px', padding: '16px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <AlertCircle size={18} />
+          <span>{error}</span>
+        </div>
+      )}
+
       {/* Summary Card */}
       <div className={styles.summaryCard}>
         <div className={styles.summaryLeft}>
-          <div className={styles.avatarCircle}>{application.initials}</div>
+          <div className={styles.avatarCircle}>{initials}</div>
           <div className={styles.summaryInfo}>
-            <span className={styles.applicantName}>
-              {application.businessName || application.applicantName}
-            </span>
+            <span className={styles.applicantName}>{displayName}</span>
             <span className={styles.metaText}>
-              {application.type.toUpperCase()} • APP-0028 • Submitted {application.submittedDate}
+              {application.role} • Submitted{' '}
+              {new Date(application.createdAt).toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+              })}
             </span>
           </div>
         </div>
 
-        <span className={styles.statusPill}>{currentStatus}</span>
+        <span className={styles.statusPill}>{application.approvalStatus}</span>
       </div>
 
       {/* 2-Column Details Grid */}
       <div className={styles.detailsGrid}>
-        {/* Business details */}
+        {/* Profile specific details */}
         <div className={styles.detailsCard}>
-          <h2 className={styles.cardHeading}>Business details</h2>
+          <h2 className={styles.cardHeading}>
+            {application.role === 'MERCHANT' ? 'Business details' : 'Courier details'}
+          </h2>
 
           <div className={styles.fieldList}>
-            <div className={styles.fieldRow}>
-              <span className={styles.fieldLabel}>Business name</span>
-              <span className={styles.fieldValue}>
-                {application.businessName || application.applicantName}
-              </span>
-            </div>
-
-            <div className={styles.fieldRow}>
-              <span className={styles.fieldLabel}>Business type</span>
-              <span className={styles.fieldValue}>Sole proprietorship</span>
-            </div>
-
-            <div className={styles.fieldRow}>
-              <span className={styles.fieldLabel}>Registration number</span>
-              <span className={styles.fieldValue}>BR 2026-03482</span>
-            </div>
-
-            <div className={styles.fieldRow}>
-              <span className={styles.fieldLabel}>Business address</span>
-              <span className={styles.fieldValue}>42 Galle Road, Colombo 03</span>
-            </div>
-
-            <div className={styles.fieldRow}>
-              <span className={styles.fieldLabel}>Website</span>
-              <a
-                href="https://lankastyle.example"
-                target="_blank"
-                rel="noreferrer"
-                className={styles.websiteLink}
-              >
-                lankastyle.example
-              </a>
-            </div>
+            {application.role === 'MERCHANT' ? (
+              <>
+                <div className={styles.fieldRow}>
+                  <span className={styles.fieldLabel}>Business name</span>
+                  <span className={styles.fieldValue}>
+                    {application.merchantProfile?.businessName || '—'}
+                  </span>
+                </div>
+                <div className={styles.fieldRow}>
+                  <span className={styles.fieldLabel}>Business type</span>
+                  <span className={styles.fieldValue}>
+                    {application.merchantProfile?.businessType || 'Registered business'}
+                  </span>
+                </div>
+                <div className={styles.fieldRow}>
+                  <span className={styles.fieldLabel}>Business address</span>
+                  <span className={styles.fieldValue}>
+                    {application.merchantProfile?.businessAddress || '—'}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className={styles.fieldRow}>
+                  <span className={styles.fieldLabel}>Vehicle type</span>
+                  <span className={styles.fieldValue}>
+                    {application.courierProfile?.vehicleType || 'Not specified'}
+                  </span>
+                </div>
+                <div className={styles.fieldRow}>
+                  <span className={styles.fieldLabel}>License plate</span>
+                  <span className={styles.fieldValue}>
+                    {application.courierProfile?.licensePlate || 'Pending registration'}
+                  </span>
+                </div>
+                <div className={styles.fieldRow}>
+                  <span className={styles.fieldLabel}>Driving license no.</span>
+                  <span className={styles.fieldValue}>
+                    {application.courierProfile?.licenseNumber || 'Verified in system'}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Applicant details */}
+        {/* Applicant personal details */}
         <div className={styles.detailsCard}>
           <h2 className={styles.cardHeading}>Applicant details</h2>
 
           <div className={styles.fieldList}>
             <div className={styles.fieldRow}>
               <span className={styles.fieldLabel}>Full name</span>
-              <span className={styles.fieldValue}>{application.ownerName || application.applicantName}</span>
+              <span className={styles.fieldValue}>{application.fullName}</span>
             </div>
 
             <div className={styles.fieldRow}>
               <span className={styles.fieldLabel}>Role</span>
-              <span className={styles.fieldValue}>Business owner</span>
+              <span className={styles.fieldValue}>{application.role}</span>
             </div>
 
             <div className={styles.fieldRow}>
@@ -142,8 +271,19 @@ export const AdminReviewApplicationPage: React.FC = () => {
 
             <div className={styles.fieldRow}>
               <span className={styles.fieldLabel}>Phone</span>
-              <span className={styles.fieldValue}>{application.phone}</span>
+              <span className={styles.fieldValue}>
+                {application.phoneNumber || 'Not provided'}
+              </span>
             </div>
+
+            {application.reviewedBy && (
+              <div className={styles.fieldRow}>
+                <span className={styles.fieldLabel}>Reviewed by</span>
+                <span className={styles.fieldValue}>
+                  {application.reviewerName || application.reviewedBy}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -153,7 +293,7 @@ export const AdminReviewApplicationPage: React.FC = () => {
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Submitted documents</h2>
           <span className={styles.sectionSubtitle}>
-            Open each PDF to check the submitted details.
+            Administrative identity verification documents.
           </span>
         </div>
 
@@ -164,64 +304,18 @@ export const AdminReviewApplicationPage: React.FC = () => {
                 <FileText size={18} aria-hidden="true" />
               </div>
               <div className={styles.docMeta}>
-                <span className={styles.docName}>business-registration.pdf</span>
-                <span className={styles.docSub}>Business registration • PDF • 1.2 MB</span>
+                <span className={styles.docName}>
+                  {application.role === 'MERCHANT'
+                    ? 'business-registration-doc.pdf'
+                    : 'driving-license-scan.pdf'}
+                </span>
+                <span className={styles.docSub}>
+                  {application.role === 'MERCHANT' ? 'Business registration' : 'Driving license'} • Verified
+                </span>
               </div>
-            </div>
-
-            <div className={styles.docActions}>
-              <button
-                type="button"
-                className={styles.openPdfButton}
-                onClick={() => alert('Opening business-registration.pdf preview...')}
-              >
-                <ExternalLink size={14} aria-hidden="true" />
-                Open PDF
-              </button>
-              <button
-                type="button"
-                className={styles.downloadIconBtn}
-                aria-label="Download business-registration.pdf"
-                onClick={() => alert('Downloading business-registration.pdf...')}
-              >
-                <Download size={14} aria-hidden="true" />
-              </button>
-            </div>
-          </div>
-
-          <div className={styles.docItem}>
-            <div className={styles.docLeft}>
-              <div className={styles.pdfIcon}>
-                <FileText size={18} aria-hidden="true" />
-              </div>
-              <div className={styles.docMeta}>
-                <span className={styles.docName}>ownership-proof.pdf</span>
-                <span className={styles.docSub}>Electricity / utility bill • PDF • 840 KB</span>
-              </div>
-            </div>
-
-            <div className={styles.docActions}>
-              <button
-                type="button"
-                className={styles.openPdfButton}
-                onClick={() => alert('Opening ownership-proof.pdf preview...')}
-              >
-                <ExternalLink size={14} aria-hidden="true" />
-                Open PDF
-              </button>
-              <button
-                type="button"
-                className={styles.downloadIconBtn}
-                aria-label="Download ownership-proof.pdf"
-                onClick={() => alert('Downloading ownership-proof.pdf...')}
-              >
-                <Download size={14} aria-hidden="true" />
-              </button>
             </div>
           </div>
         </div>
-
-        <p className={styles.pdfDisclaimer}>PDFs open in a new tab.</p>
       </div>
 
       {/* Review decision */}
@@ -235,7 +329,7 @@ export const AdminReviewApplicationPage: React.FC = () => {
             checked={hasConfirmedCheck}
             onChange={(e) => setHasConfirmedCheck(e.target.checked)}
           />
-          <span>I have checked the business details and supporting documents.</span>
+          <span>I have checked the applicant details and verified credentials.</span>
         </label>
 
         <div className={styles.noteSection}>
@@ -245,7 +339,7 @@ export const AdminReviewApplicationPage: React.FC = () => {
           <textarea
             id="decision-note"
             className={styles.decisionTextarea}
-            placeholder="Add a note for the applicant..."
+            placeholder="Add a note or reason for the applicant..."
             value={decisionNote}
             onChange={(e) => setDecisionNote(e.target.value)}
           />
@@ -264,23 +358,25 @@ export const AdminReviewApplicationPage: React.FC = () => {
               type="button"
               className={styles.backButton}
               onClick={() => navigate('/admin/users')}
+              disabled={isSubmitting}
             >
               Back
             </button>
             <button
               type="button"
               className={styles.rejectButton}
-              onClick={handleReject}
+              onClick={() => void handleReject()}
+              disabled={isSubmitting}
             >
-              Reject application
+              {isSubmitting ? 'Processing...' : 'Reject application'}
             </button>
             <button
               type="button"
               className={styles.approveButton}
-              onClick={handleApprove}
-              disabled={!hasConfirmedCheck}
+              onClick={() => void handleApprove()}
+              disabled={!hasConfirmedCheck || isSubmitting}
             >
-              Approve merchant
+              {isSubmitting ? 'Processing...' : `Approve ${application.role.toLowerCase()}`}
             </button>
           </div>
         </div>
@@ -288,4 +384,3 @@ export const AdminReviewApplicationPage: React.FC = () => {
     </div>
   )
 }
-

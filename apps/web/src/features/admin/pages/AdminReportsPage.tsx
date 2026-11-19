@@ -1,63 +1,127 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import {
   Home,
   ChevronRight,
   Calendar,
-  ChevronDown,
-  User,
-  MapPin,
   Download,
   CheckCircle2,
   AlertCircle,
   Search,
   ChevronLeft,
+  Loader2,
 } from 'lucide-react'
-import type { DeliveryReportRecord, DeliveryOutcome } from '../types/admin-reports.types'
-import {
-  DEFAULT_REPORTS_METRICS,
-  MOCK_REPORT_RECORDS,
-} from '../config/admin-reports.mock'
+import type { DeliveryOutcome } from '../types/admin-reports.types'
+import { adminApi, type AdminReportsLogItem } from '../api/admin-api'
 import styles from './AdminReportsPage.module.css'
 
 type ReportTab = 'log' | 'summary' | 'reasons'
 
+function formatDateTime(isoString: string): string {
+  if (!isoString) return '—'
+  const d = new Date(isoString)
+  return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) + ', ' +
+    d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+}
+
 export const AdminReportsPage: React.FC = () => {
-  const [records] = useState<readonly DeliveryReportRecord[]>(MOCK_REPORT_RECORDS)
+  const [selectedDate, setSelectedDate] = useState<string>(() => {
+    const today = new Date()
+    return today.toISOString().split('T')[0]
+  })
+
+  const [logs, setLogs] = useState<AdminReportsLogItem[]>([])
+  const [metrics, setMetrics] = useState({
+    completedAttempts: 0,
+    delivered: 0,
+    failed: 0,
+    successRate: 0,
+    failureRate: 0,
+  })
+
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+
   const [activeTab, setActiveTab] = useState<ReportTab>('log')
   const [searchQuery, setSearchQuery] = useState('')
   const [outcomeFilter, setOutcomeFilter] = useState<'all' | DeliveryOutcome>('all')
 
-  const filteredRecords = useMemo(() => {
-    return records.filter((rec) => {
-      if (outcomeFilter !== 'all' && rec.outcome !== outcomeFilter) return false
+  useEffect(() => {
+    let isMounted = true
 
+    async function fetchReports() {
+      try {
+        const res = await adminApi.getReports({
+          page,
+          limit,
+          date: selectedDate,
+          status: outcomeFilter === 'Delivered' ? 'DELIVERED' : outcomeFilter === 'Failed' ? 'FAILED' : undefined,
+        })
+
+        if (!isMounted) return
+        setLogs(res.logs || [])
+        setMetrics(res.metrics || {
+          completedAttempts: 0,
+          delivered: 0,
+          failed: 0,
+          successRate: 0,
+          failureRate: 0,
+        })
+        setTotalPages(res.pagination?.totalPages || 1)
+        setTotalCount(res.pagination?.total || 0)
+      } catch (err: unknown) {
+        if (!isMounted) return
+        console.error('Failed to load reports:', err)
+        setError('Could not load reports from backend.')
+        setLogs([])
+      } finally {
+        if (isMounted) setIsLoading(false)
+      }
+    }
+
+    void fetchReports()
+
+    return () => {
+      isMounted = false
+    }
+  }, [selectedDate, outcomeFilter, page, limit])
+
+  const filteredLogs = useMemo(() => {
+    return logs.filter((rec) => {
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase()
-        const matchesTracking = rec.trackingNo.toLowerCase().includes(q)
-        const matchesRecipient = rec.recipient.toLowerCase().includes(q)
-        const matchesCourier = rec.courier.toLowerCase().includes(q)
+        const matchesTracking = rec.trackingNumber.toLowerCase().includes(q)
+        const matchesRecipient = rec.recipientName.toLowerCase().includes(q)
+        const matchesCourier = rec.courierName.toLowerCase().includes(q)
         if (!matchesTracking && !matchesRecipient && !matchesCourier) return false
       }
-
       return true
     })
-  }, [records, outcomeFilter, searchQuery])
+  }, [logs, searchQuery])
 
   const handleExportCsv = () => {
+    if (logs.length === 0) {
+      alert('No delivery logs to export for this date.')
+      return
+    }
+
     const csvContent =
       'data:text/csv;charset=utf-8,' +
-      'Tracking,Recipient,Courier,Zone,CompletedAt,Outcome,Reason\n' +
-      records
+      'Tracking Number,Recipient,Address,Courier,Outcome,Reason,Completed At\n' +
+      logs
         .map(
           (r) =>
-            `${r.trackingNo},"${r.recipient}","${r.courier}","${r.zone}","${r.completedAt}","${r.outcome}","${r.evidenceOrReason}"`,
+            `"${r.trackingNumber}","${r.recipientName}","${r.recipientAddress}","${r.courierName}","${r.status}","${r.failureReason || ''}","${r.completedAt}"`,
         )
         .join('\n')
 
     const encodedUri = encodeURI(csvContent)
     const link = document.createElement('a')
     link.setAttribute('href', encodedUri)
-    link.setAttribute('download', `swiftdrop-delivery-report-2026-10-27.csv`)
+    link.setAttribute('download', `swiftdrop-report-${selectedDate}.csv`)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -78,26 +142,31 @@ export const AdminReportsPage: React.FC = () => {
         </p>
       </div>
 
+      {error && (
+        <div style={{ backgroundColor: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca', borderRadius: '8px', padding: '12px 16px', marginBottom: '20px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <AlertCircle size={16} />
+          <span>{error}</span>
+        </div>
+      )}
+
       {/* Filter Toolbar & Export */}
       <div className={styles.topFilterRow}>
         <div className={styles.filterGroupLeft}>
-          <button type="button" className={styles.filterButton} aria-label="Select date">
-            <Calendar size={15} aria-hidden="true" />
-            <span>Today, 27 Oct 2026</span>
-            <ChevronDown size={14} aria-hidden="true" />
-          </button>
-
-          <button type="button" className={styles.filterButton} aria-label="Select courier">
-            <User size={15} aria-hidden="true" />
-            <span>All couriers</span>
-            <ChevronDown size={14} aria-hidden="true" />
-          </button>
-
-          <button type="button" className={styles.filterButton} aria-label="Select zone">
-            <MapPin size={15} aria-hidden="true" />
-            <span>All zones</span>
-            <ChevronDown size={14} aria-hidden="true" />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#ffffff', border: '1px solid #d1d5db', borderRadius: '8px', padding: '6px 12px' }}>
+            <Calendar size={16} style={{ color: '#64748b' }} aria-hidden="true" />
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => {
+                if (e.target.value) {
+                  setSelectedDate(e.target.value)
+                  setPage(1)
+                }
+              }}
+              style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: '14px', color: '#1e293b' }}
+              aria-label="Select report date"
+            />
+          </div>
         </div>
 
         <button type="button" className={styles.exportButton} onClick={handleExportCsv}>
@@ -118,9 +187,7 @@ export const AdminReportsPage: React.FC = () => {
           </div>
           <div className={styles.metricInfo}>
             <span className={styles.metricLabel}>Completed attempts</span>
-            <span className={styles.metricValue}>
-              {DEFAULT_REPORTS_METRICS.completedAttempts}
-            </span>
+            <span className={styles.metricValue}>{metrics.completedAttempts}</span>
             <span className={styles.metricSubtext}>Delivered or failed</span>
           </div>
         </div>
@@ -131,9 +198,9 @@ export const AdminReportsPage: React.FC = () => {
           </div>
           <div className={styles.metricInfo}>
             <span className={styles.metricLabel}>Delivered</span>
-            <span className={styles.metricValue}>{DEFAULT_REPORTS_METRICS.deliveredCount}</span>
+            <span className={styles.metricValue}>{metrics.delivered}</span>
             <span className={styles.metricSubtext}>
-              {DEFAULT_REPORTS_METRICS.successRate}% success rate
+              {metrics.successRate}% success rate
             </span>
           </div>
         </div>
@@ -144,9 +211,9 @@ export const AdminReportsPage: React.FC = () => {
           </div>
           <div className={styles.metricInfo}>
             <span className={styles.metricLabel}>Failed attempts</span>
-            <span className={styles.metricValue}>{DEFAULT_REPORTS_METRICS.failedAttempts}</span>
+            <span className={styles.metricValue}>{metrics.failed}</span>
             <span className={styles.metricSubtext}>
-              {DEFAULT_REPORTS_METRICS.failureRate}% failure rate
+              {metrics.failureRate}% failure rate
             </span>
           </div>
         </div>
@@ -203,17 +270,15 @@ export const AdminReportsPage: React.FC = () => {
             <select
               className={styles.filterSelect}
               value={outcomeFilter}
-              onChange={(e) => setOutcomeFilter(e.target.value as 'all' | DeliveryOutcome)}
+              onChange={(e) => {
+                setOutcomeFilter(e.target.value as 'all' | DeliveryOutcome)
+                setPage(1)
+              }}
               aria-label="Filter outcome"
             >
               <option value="all">All outcomes</option>
               <option value="Delivered">Delivered</option>
               <option value="Failed">Failed</option>
-            </select>
-
-            <select className={styles.filterSelect} aria-label="Sort order">
-              <option value="latest">Latest first</option>
-              <option value="oldest">Oldest first</option>
             </select>
           </div>
         </div>
@@ -225,56 +290,68 @@ export const AdminReportsPage: React.FC = () => {
               <tr>
                 <th scope="col">Tracking / Recipient</th>
                 <th scope="col">Courier</th>
-                <th scope="col">Zone</th>
+                <th scope="col">Destination Address</th>
                 <th scope="col">Completed at</th>
                 <th scope="col">Outcome</th>
-                <th scope="col">Evidence / reason</th>
+                <th scope="col">Reason / Details</th>
               </tr>
             </thead>
             <tbody>
-              {filteredRecords.map((item) => (
-                <tr key={item.id}>
-                  <td>
-                    <div className={styles.trackingCell}>
-                      <span className={styles.trackingNo}>{item.trackingNo}</span>
-                      <span className={styles.recipientText}>{item.recipient}</span>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '36px', color: '#64748b' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
+                      <span>Loading delivery reports...</span>
                     </div>
                   </td>
-                  <td>
-                    <span className={styles.courierName}>{item.courier}</span>
-                  </td>
-                  <td>
-                    <span className={styles.zoneText}>{item.zone}</span>
-                  </td>
-                  <td>
-                    <span className={styles.completedAt}>{item.completedAt}</span>
-                  </td>
-                  <td>
-                    <span
-                      className={`${styles.outcomePill} ${
-                        item.outcome === 'Delivered'
-                          ? styles.outcomeDelivered
-                          : styles.outcomeFailed
-                      }`}
-                    >
-                      {item.outcome}
-                    </span>
-                  </td>
-                  <td>
-                    {item.outcome === 'Delivered' ? (
-                      <button
-                        type="button"
-                        className={styles.proofLink}
-                        onClick={() => alert(`Showing delivery proof photo for ${item.trackingNo}`)}
-                      >
-                        View proof ↗
-                      </button>
-                    ) : (
-                      <span className={styles.failureReason}>{item.evidenceOrReason}</span>
-                    )}
+                </tr>
+              ) : filteredLogs.length === 0 ? (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '36px', color: '#64748b' }}>
+                    No delivery records found for the selected date.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredLogs.map((item) => {
+                  const isDelivered = item.status === 'DELIVERED'
+                  return (
+                    <tr key={item.id}>
+                      <td>
+                        <div className={styles.trackingCell}>
+                          <span className={styles.trackingNo}>{item.trackingNumber}</span>
+                          <span className={styles.recipientText}>{item.recipientName}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span className={styles.courierName}>{item.courierName}</span>
+                      </td>
+                      <td>
+                        <span className={styles.zoneText}>{item.recipientAddress}</span>
+                      </td>
+                      <td>
+                        <span className={styles.completedAt}>
+                          {formatDateTime(item.completedAt)}
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          className={`${styles.outcomePill} ${
+                            isDelivered ? styles.outcomeDelivered : styles.outcomeFailed
+                          }`}
+                        >
+                          {isDelivered ? 'Delivered' : 'Failed'}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={styles.failureReason}>
+                          {item.failureReason || (isDelivered ? 'Successful delivery' : 'No reason provided')}
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
             </tbody>
           </table>
         </div>
@@ -282,30 +359,51 @@ export const AdminReportsPage: React.FC = () => {
         {/* Footer */}
         <div className={styles.tableFooter}>
           <div className={styles.footerLeft}>
-            <span className={styles.footerCount}>Showing 1-6 of 50 attempts</span>
+            <span className={styles.footerCount}>
+              Showing {filteredLogs.length} of {totalCount} attempts
+            </span>
             <span className={styles.footerNote}>
-              * Each row is one completed delivery attempt. Retries are counted separately.
+              * Each row is one completed delivery attempt.
             </span>
           </div>
 
           <div className={styles.paginationControls}>
-            <button type="button" className={styles.pageBtn} aria-label="Previous">
+            <span style={{ fontSize: '13px', color: '#64748b', marginRight: '8px' }}>
+              Rows:
+            </span>
+            <select
+              className={styles.pageSelect}
+              aria-label="Rows per page"
+              value={limit}
+              onChange={(e) => {
+                setLimit(Number(e.target.value))
+                setPage(1)
+              }}
+            >
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="20">20</option>
+            </select>
+
+            <button
+              type="button"
+              className={styles.pageBtn}
+              aria-label="Previous"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
               <ChevronLeft size={14} aria-hidden="true" />
             </button>
-            <button type="button" className={`${styles.pageBtn} ${styles.pageBtnActive}`}>
-              1
-            </button>
-            <button type="button" className={styles.pageBtn}>
-              2
-            </button>
-            <button type="button" className={styles.pageBtn}>
-              3
-            </button>
-            <span style={{ padding: '0 4px', color: '#94a3b8' }}>...</span>
-            <button type="button" className={styles.pageBtn}>
-              9
-            </button>
-            <button type="button" className={styles.pageBtn} aria-label="Next">
+            <span style={{ padding: '0 8px', fontSize: '13px', color: '#475569' }}>
+              Page {page} of {Math.max(1, totalPages)}
+            </span>
+            <button
+              type="button"
+              className={styles.pageBtn}
+              aria-label="Next"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            >
               <ChevronRight size={14} aria-hidden="true" />
             </button>
           </div>
@@ -314,4 +412,3 @@ export const AdminReportsPage: React.FC = () => {
     </div>
   )
 }
-

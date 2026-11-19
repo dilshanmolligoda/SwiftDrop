@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   Calendar,
@@ -10,73 +10,131 @@ import {
   ArrowRight,
   UserCheck,
 } from 'lucide-react'
-import type {
-  CourierWorkload,
-  UnassignedParcel,
-} from '../types/admin-dashboard.types'
 import type { DeliveryItem, DeliveryStatus } from '../types/admin-deliveries.types'
 import { AssignCourierDrawer } from '../components/AssignCourierDrawer'
-import {
-  DEFAULT_DASHBOARD_METRICS,
-  INITIAL_COURIERS,
-  INITIAL_UNASSIGNED_PARCELS,
-} from '../config/admin-dashboard.mock'
+import { adminApi, type AdminDashboardKpis, type AdminUnassignedParcel } from '../api/admin-api'
 import styles from './AdminDashboardPage.module.css'
+
+function calculateWaitingTime(createdAt: string): string {
+  const diffMs = Date.now() - new Date(createdAt).getTime()
+  const diffMinutes = Math.floor(diffMs / (1000 * 60))
+  if (diffMinutes < 60) return `${Math.max(1, diffMinutes)}m`
+  const diffHours = Math.floor(diffMinutes / 60)
+  return `${diffHours}h ${diffMinutes % 60}m`
+}
 
 export const AdminDashboardPage: React.FC = () => {
   const navigate = useNavigate()
-  const [parcels, setParcels] = useState<UnassignedParcel[]>(INITIAL_UNASSIGNED_PARCELS)
-  const [couriers, setCouriers] = useState<CourierWorkload[]>(INITIAL_COURIERS)
-  const [selectedParcel, setSelectedParcel] = useState<UnassignedParcel | null>(null)
+  const [metrics, setMetrics] = useState<AdminDashboardKpis | null>(null)
+  const [parcels, setParcels] = useState<AdminUnassignedParcel[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [selectedParcel, setSelectedParcel] = useState<AdminUnassignedParcel | null>(null)
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false)
   const [assignSuccessMessage, setAssignSuccessMessage] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  const handleOpenAssign = (parcel: UnassignedParcel) => {
+  // Fetch live dashboard KPIs and unassigned parcels from the API
+  useEffect(() => {
+    let isMounted = true
+    const controller = new AbortController()
+
+    const loadDashboardData = async () => {
+      try {
+        setIsLoading(true)
+        setErrorMessage(null)
+
+        const [dashboardRes, unassignedRes] = await Promise.all([
+          adminApi.getDashboard(controller.signal),
+          adminApi.getUnassignedParcels(controller.signal),
+        ])
+
+        if (!isMounted) return
+        setMetrics(dashboardRes.kpis)
+        setParcels(unassignedRes)
+      } catch (err: unknown) {
+        if (!isMounted) return
+        if (err instanceof DOMException && err.name === 'AbortError') return
+        setErrorMessage(
+          err instanceof Error ? err.message : 'Failed to load dashboard data from server.',
+        )
+      } finally {
+        if (isMounted) setIsLoading(false)
+      }
+    }
+
+    void loadDashboardData()
+
+    return () => {
+      isMounted = false
+      controller.abort()
+    }
+  }, [])
+
+  const handleOpenAssign = (parcel: AdminUnassignedParcel) => {
     setSelectedParcel(parcel)
     setIsAssignModalOpen(true)
   }
 
-  const handleAssignToCourier = (courierId: string) => {
-    if (!selectedParcel) return
+  const handleAssignToCourier = async (deliveryId: string, courierId: string) => {
+    try {
+      const res = await adminApi.assignCourier(deliveryId, courierId)
 
-    const courier = couriers.find((c) => c.id === courierId)
-    if (!courier) return
+      // Remove assigned parcel from local state immediately
+      setParcels((prev) => prev.filter((p) => p.id !== deliveryId))
 
-    // Update courier workload immutably
-    setCouriers((prev) =>
-      prev.map((c) => (c.id === courierId ? { ...c, activeCount: c.activeCount + 1 } : c)),
-    )
+      // Update KPI counts in local state
+      setMetrics((prev) =>
+        prev
+          ? {
+              ...prev,
+              pendingDispatch: Math.max(0, prev.pendingDispatch - 1),
+              activeInTransit: prev.activeInTransit + 1,
+            }
+          : prev,
+      )
 
-    // Remove assigned parcel from local unassigned feed
-    setParcels((prev) => prev.filter((p) => p.id !== selectedParcel.id))
-
-    setIsAssignModalOpen(false)
-    setAssignSuccessMessage(`Parcel ${selectedParcel.trackingNo} assigned to ${courier.name}.`)
-    setTimeout(() => setAssignSuccessMessage(null), 4000)
-    setSelectedParcel(null)
+      setIsAssignModalOpen(false)
+      setSelectedParcel(null)
+      setAssignSuccessMessage(
+        `Parcel assigned successfully to ${res.courierName}.`,
+      )
+      setTimeout(() => setAssignSuccessMessage(null), 4000)
+    } catch (err: unknown) {
+      setErrorMessage(
+        err instanceof Error ? err.message : 'Failed to assign courier. Please try again.',
+      )
+    }
   }
 
-  const selectedDeliveryItem = React.useMemo<DeliveryItem | null>(() => {
+  const selectedDeliveryItem = useMemo<DeliveryItem | null>(() => {
     if (!selectedParcel) return null
     return {
       id: selectedParcel.id,
-      trackingNo: selectedParcel.trackingNo,
-      recipient: 'Nimal Perera',
-      pickup: selectedParcel.pickup,
-      dropoff: selectedParcel.dropoff,
-      pickupAddress: `Green Leaf Store, 24 Galle Road, ${selectedParcel.pickup}`,
-      dropoffAddress: `Nimal Perera, 18 Temple Road, ${selectedParcel.dropoff}`,
-      weightKg: parseFloat(selectedParcel.weight) || 2.5,
-      size: (selectedParcel.size as 'Small' | 'Medium' | 'Large') || 'Small',
-      dimensions: '30 × 20 × 15 cm',
-      status: selectedParcel.status as DeliveryStatus,
+      trackingNo: selectedParcel.trackingNumber,
+      recipient: selectedParcel.recipientName,
+      pickup: selectedParcel.senderAddress.split(',')[0]?.trim() || 'Pickup Depot',
+      dropoff: selectedParcel.recipientAddress.split(',')[0]?.trim() || 'Destination',
+      pickupAddress: selectedParcel.senderAddress,
+      dropoffAddress: selectedParcel.recipientAddress,
+      weightKg: typeof selectedParcel.weightKg === 'number' ? selectedParcel.weightKg : parseFloat(String(selectedParcel.weightKg)) || 1.0,
+      size: (selectedParcel.packageSize as 'Small' | 'Medium' | 'Large') || 'Medium',
+      dimensions: 'Standard package',
+      status: (selectedParcel.status as DeliveryStatus) || 'Pending dispatch',
       courierName: null,
       courierId: null,
-      waitingTime: selectedParcel.waitingTime,
-      zone: 'Colombo Central & South',
-      createdAt: '2026-10-27T08:00:00.000Z',
+      waitingTime: calculateWaitingTime(selectedParcel.createdAt),
+      zone: 'Western Province',
+      createdAt: selectedParcel.createdAt,
     }
   }, [selectedParcel])
+
+  const [todayLabel] = useState(() =>
+    new Intl.DateTimeFormat('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    }).format(new Date()),
+  )
 
   return (
     <div className={styles.pageContainer}>
@@ -89,7 +147,7 @@ export const AdminDashboardPage: React.FC = () => {
 
         <button type="button" className={styles.dateBadge} aria-label="Select date filter">
           <Calendar size={16} aria-hidden="true" />
-          <span>Today, 27 Oct 2026</span>
+          <span>Today, {todayLabel}</span>
           <ChevronDown size={14} aria-hidden="true" />
         </button>
       </div>
@@ -103,7 +161,7 @@ export const AdminDashboardPage: React.FC = () => {
           <div className={styles.metricInfo}>
             <span className={styles.metricLabel}>Unassigned parcels</span>
             <span className={styles.metricValue}>
-              {DEFAULT_DASHBOARD_METRICS.unassignedParcelsCount}
+              {metrics ? metrics.pendingDispatch : 0}
             </span>
             <span className={styles.metricSubtext}>Waiting for a courier</span>
           </div>
@@ -116,9 +174,11 @@ export const AdminDashboardPage: React.FC = () => {
           <div className={styles.metricInfo}>
             <span className={styles.metricLabel}>Active deliveries</span>
             <span className={styles.metricValue}>
-              {DEFAULT_DASHBOARD_METRICS.activeDeliveriesCount}
+              {metrics ? metrics.activeInTransit : 0}
             </span>
-            <span className={styles.metricSubtext}>Across 12 couriers</span>
+            <span className={styles.metricSubtext}>
+              Across {metrics ? metrics.activeCouriersCount : 0} couriers
+            </span>
           </div>
         </div>
 
@@ -129,30 +189,46 @@ export const AdminDashboardPage: React.FC = () => {
           <div className={styles.metricInfo}>
             <span className={styles.metricLabel}>Delivered today</span>
             <span className={styles.metricValue}>
-              {DEFAULT_DASHBOARD_METRICS.deliveredTodayCount}
+              {metrics ? metrics.deliveredToday : 0}
             </span>
             <span className={styles.metricSubtext}>
-              {DEFAULT_DASHBOARD_METRICS.completedAttemptsRate}% of completed attempts
+              {metrics && (metrics.deliveredToday + metrics.failedAttempts) > 0
+                ? Math.round((metrics.deliveredToday / (metrics.deliveredToday + metrics.failedAttempts)) * 100)
+                : 100}% success rate
             </span>
           </div>
         </div>
       </div>
 
       {/* Applications Awaiting Review Banner */}
-      <div className={styles.alertBanner} role="alert">
-        <div className={styles.alertLeft}>
-          <span className={styles.alertIcon}>
-            <AlertTriangle size={18} aria-hidden="true" />
-          </span>
-          <span className={styles.alertText}>
-            {DEFAULT_DASHBOARD_METRICS.pendingApplicationsCount} applications awaiting review
-          </span>
+      {(metrics?.pendingApprovalsCount ?? 0) > 0 && (
+        <div className={styles.alertBanner} role="alert">
+          <div className={styles.alertLeft}>
+            <span className={styles.alertIcon}>
+              <AlertTriangle size={18} aria-hidden="true" />
+            </span>
+            <span className={styles.alertText}>
+              {metrics?.pendingApprovalsCount} applications awaiting review
+            </span>
+          </div>
+          <Link to="/admin/users" className={styles.alertLink}>
+            Review applications
+            <ArrowRight size={14} aria-hidden="true" />
+          </Link>
         </div>
-        <Link to="/admin/users" className={styles.alertLink}>
-          Review applications
-          <ArrowRight size={14} aria-hidden="true" />
-        </Link>
-      </div>
+      )}
+
+      {/* Error notification banner */}
+      {errorMessage && (
+        <div className={`${styles.alertBanner} ${styles.errorBanner}`} role="alert">
+          <div className={styles.alertLeft}>
+            <span className={`${styles.alertIcon} ${styles.errorIcon}`}>
+              <AlertTriangle size={18} aria-hidden="true" />
+            </span>
+            <span className={styles.alertText}>{errorMessage}</span>
+          </div>
+        </div>
+      )}
 
       {/* Feedback banner if an assignment was made */}
       {assignSuccessMessage && (
@@ -174,7 +250,7 @@ export const AdminDashboardPage: React.FC = () => {
           <div>
             <h2 className={styles.feedTitle}>Unassigned parcels</h2>
             <p className={styles.feedSubtitle}>
-              Direct feed • Showing {parcels.length} of {DEFAULT_DASHBOARD_METRICS.unassignedParcelsCount}
+              Direct feed • Showing {parcels.length} unassigned
             </p>
           </div>
 
@@ -200,46 +276,49 @@ export const AdminDashboardPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {parcels.length === 0 ? (
+              {isLoading ? (
                 <tr>
                   <td colSpan={6} className={styles.emptyTableRow}>
-                    All current parcels have been assigned.
+                    Loading unassigned parcels...
+                  </td>
+                </tr>
+              ) : parcels.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className={styles.emptyTableRow}>
+                    No unassigned parcels at the moment. All parcels have been dispatched.
                   </td>
                 </tr>
               ) : (
                 parcels.map((parcel) => (
                   <tr key={parcel.id}>
                     <td>
-                      <span className={styles.trackingNo}>{parcel.trackingNo}</span>
+                      <span className={styles.trackingNo}>{parcel.trackingNumber}</span>
                     </td>
                     <td>
                       <span className={styles.routeText}>
-                        {parcel.pickup}
+                        {parcel.senderAddress.split(',')[0]}
                         <span className={styles.routeArrow} aria-hidden="true">→</span>
-                        {parcel.dropoff}
+                        {parcel.recipientAddress.split(',')[0]}
                       </span>
                     </td>
                     <td>
                       <span className={styles.parcelDetails}>
-                        {parcel.weight} • {parcel.size}
+                        {parcel.weightKg} kg • {parcel.packageSize}
                       </span>
                     </td>
                     <td>
-                      {parcel.status === 'Failed attempt' ? (
-                        <span className={styles.badgeFailed}>Failed attempt</span>
-                      ) : (
-                        <span className={styles.badgeNew}>New delivery</span>
-                      )}
+                      <span className={styles.badgeNew}>{parcel.status}</span>
                     </td>
                     <td>
-                      <span className={styles.waitingTime}>{parcel.waitingTime}</span>
+                      <span className={styles.waitingTime}>
+                        {calculateWaitingTime(parcel.createdAt)}
+                      </span>
                     </td>
                     <td>
                       <button
                         type="button"
                         className={styles.assignButton}
                         onClick={() => handleOpenAssign(parcel)}
-                        aria-label={`Assign courier to parcel ${parcel.trackingNo}`}
                       >
                         Assign
                       </button>
@@ -250,144 +329,19 @@ export const AdminDashboardPage: React.FC = () => {
             </tbody>
           </table>
         </div>
-
-        <p className={styles.feedFooterNote}>
-          Waiting — time since entering the unassigned queue
-        </p>
       </div>
 
-      {/* Bottom Grid: Courier Workloads & Today's Results */}
-      <div className={styles.bottomGrid}>
-        {/* Courier Workloads */}
-        <div className={styles.dashboardCard}>
-          <div className={styles.cardTopHeader}>
-            <div>
-              <h2 className={styles.cardHeading}>Courier workloads</h2>
-              <p className={styles.cardSubheading}>Active deliveries per courier</p>
-            </div>
-            <Link to="/admin/couriers" className={styles.cardHeaderLink}>
-              View couriers
-              <ArrowRight size={14} aria-hidden="true" />
-            </Link>
-          </div>
-
-          <div className={styles.courierList}>
-            {couriers.map((courier) => {
-              const fillPercentage = Math.min(
-                100,
-                Math.round((courier.activeCount / courier.capacity) * 100),
-              )
-
-              return (
-                <div key={courier.id} className={styles.courierRow}>
-                  <div className={styles.courierInfo}>
-                    <div className={styles.courierAvatar}>{courier.initials}</div>
-                    <div>
-                      <h3 className={styles.courierName}>{courier.name}</h3>
-                      <p className={styles.courierZone}>{courier.zone}</p>
-                    </div>
-                  </div>
-
-                  <div className={styles.courierBarArea}>
-                    <span className={styles.activeCountText}>{courier.activeCount} active</span>
-                    <div
-                      className={styles.progressBarTrack}
-                      role="progressbar"
-                      aria-valuenow={courier.activeCount}
-                      aria-valuemin={0}
-                      aria-valuemax={courier.capacity}
-                      aria-label={`${courier.name} workload`}
-                    >
-                      <div
-                        className={styles.progressBarFill}
-                        style={{ width: `${fillPercentage}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Today's Results */}
-        <div className={styles.dashboardCard}>
-          <div className={styles.cardTopHeader}>
-            <div>
-              <h2 className={styles.cardHeading}>Today's results</h2>
-            </div>
-            <Link to="/admin/reports" className={styles.cardHeaderLink}>
-              View reports
-              <ArrowRight size={14} aria-hidden="true" />
-            </Link>
-          </div>
-
-          {/* Stacked Progress Bar */}
-          <div className={styles.resultsProgressContainer}>
-            <div className={styles.stackedProgressBar}>
-              <div
-                className={styles.progressDelivered}
-                style={{ width: `${DEFAULT_DASHBOARD_METRICS.successRate}%` }}
-              >
-                {DEFAULT_DASHBOARD_METRICS.successRate}%
-              </div>
-              <div
-                className={styles.progressFailed}
-                style={{ width: `${100 - DEFAULT_DASHBOARD_METRICS.successRate}%` }}
-              />
-            </div>
-          </div>
-
-          {/* Big Stat & Legend */}
-          <div className={styles.successRateRow}>
-            <div className={styles.successStatArea}>
-              <h3 className={styles.bigSuccessNumber}>
-                {DEFAULT_DASHBOARD_METRICS.successRate}%
-              </h3>
-              <span className={styles.successStatLabel}>Success rate</span>
-            </div>
-
-            <div className={styles.legendArea}>
-              <div className={styles.legendItem}>
-                <span className={styles.legendDotDelivered} aria-hidden="true" />
-                <span>Delivered</span>
-                <span className={styles.legendCount}>
-                  {DEFAULT_DASHBOARD_METRICS.deliveredCount}
-                </span>
-              </div>
-              <div className={styles.legendItem}>
-                <span className={styles.legendDotFailed} aria-hidden="true" />
-                <span>Failed attempts</span>
-                <span className={styles.legendCount}>
-                  {DEFAULT_DASHBOARD_METRICS.failedAttemptsCount}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Results Footer Note & Action */}
-          <div className={styles.resultsFooter}>
-            <p className={styles.attemptsNote}>
-              {DEFAULT_DASHBOARD_METRICS.deliveredCount} delivered out of{' '}
-              {DEFAULT_DASHBOARD_METRICS.totalCompletedAttempts} completed attempts
-            </p>
-            <Link to="/admin/deliveries?status=failed" className={styles.reviewFailedLink}>
-              Review failed deliveries
-              <ArrowRight size={14} aria-hidden="true" />
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* Slide-over Assign Courier Drawer (matching Figma Aside - AssignCourierDrawer) */}
+      {/* Assign Courier Slide-over Drawer */}
       <AssignCourierDrawer
         isOpen={isAssignModalOpen}
         delivery={selectedDeliveryItem}
-        onClose={() => setIsAssignModalOpen(false)}
-        onAssign={(_delId, courierId) => handleAssignToCourier(courierId)}
+        onClose={() => {
+          setIsAssignModalOpen(false)
+          setSelectedParcel(null)
+        }}
+        onAssign={(deliveryId, courierId) => void handleAssignToCourier(deliveryId, courierId)}
       />
     </div>
   )
 }
-
 export default AdminDashboardPage

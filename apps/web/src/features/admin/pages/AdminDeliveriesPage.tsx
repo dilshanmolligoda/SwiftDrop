@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import {
   Package,
   Truck,
@@ -7,93 +7,159 @@ import {
   Home,
   ChevronRight,
   ChevronLeft,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react'
 import type { DeliveryItem, DeliveryStatus } from '../types/admin-deliveries.types'
-import { MOCK_DELIVERIES } from '../config/admin-deliveries.mock'
 import { AssignCourierDrawer } from '../components/AssignCourierDrawer'
+import { adminApi, type AdminDeliveryItem, type AdminDashboardKpis } from '../api/admin-api'
 import styles from './AdminDeliveriesPage.module.css'
 
 type FilterTab = 'all' | 'unassigned' | 'in_progress' | 'delivered' | 'failed'
 
+function mapBackendStatusToDisplay(status: string): DeliveryStatus {
+  switch (status) {
+    case 'CREATED':
+    case 'PENDING':
+      return 'New delivery'
+    case 'ASSIGNED':
+    case 'PICKED_UP':
+    case 'IN_TRANSIT':
+      return 'In transit'
+    case 'OUT_FOR_DELIVERY':
+      return 'Out for delivery'
+    case 'DELIVERED':
+      return 'Delivered'
+    case 'FAILED':
+    case 'RETURNED':
+      return 'Failed attempt'
+    default:
+      return (status as DeliveryStatus) || 'New delivery'
+  }
+}
+
+function calculateWaitingTime(createdAt: string): string {
+  const diffMs = Date.now() - new Date(createdAt).getTime()
+  const diffMinutes = Math.floor(diffMs / (1000 * 60))
+  if (diffMinutes < 60) return `${diffMinutes}m`
+  const diffHours = Math.floor(diffMinutes / 60)
+  if (diffHours < 24) return `${diffHours}h ${diffMinutes % 60}m`
+  const diffDays = Math.floor(diffHours / 24)
+  return `${diffDays}d ${diffHours % 24}h`
+}
+
 export const AdminDeliveriesPage: React.FC = () => {
-  const [deliveries, setDeliveries] = useState<DeliveryItem[]>(() => [...MOCK_DELIVERIES])
+  const [deliveries, setDeliveries] = useState<AdminDeliveryItem[]>([])
+  const [kpis, setKpis] = useState<AdminDashboardKpis | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+
   const [activeTab, setActiveTab] = useState<FilterTab>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [zoneFilter, setZoneFilter] = useState<string>('all')
   const [selectedForAssign, setSelectedForAssign] = useState<DeliveryItem | null>(null)
   const [isAssignDrawerOpen, setIsAssignDrawerOpen] = useState(false)
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null)
 
-  // Counts for metric cards & tabs
-  const unassignedCount = useMemo(
-    () => deliveries.filter((d) => !d.courierName).length,
-    [deliveries],
-  )
-  const activeCount = useMemo(
-    () => deliveries.filter((d) => d.status === 'In transit' || d.status === 'Out for delivery').length,
-    [deliveries],
-  )
-  const deliveredCount = useMemo(
-    () => deliveries.filter((d) => d.status === 'Delivered').length,
-    [deliveries],
-  )
+  const [reloadTrigger, setReloadTrigger] = useState(0)
 
-  // Filtered deliveries list based on tabs, search, and dropdowns
+  useEffect(() => {
+    let isMounted = true
+    const controller = new AbortController()
+
+    async function fetchData() {
+      try {
+        const [deliveriesRes, dashboardRes] = await Promise.all([
+          adminApi.getDeliveries({
+            page,
+            limit,
+            search: searchQuery.trim() || undefined,
+          }),
+          adminApi.getDashboard(controller.signal),
+        ])
+        if (!isMounted) return
+        setDeliveries(deliveriesRes.data || [])
+        setTotalPages(deliveriesRes.pagination?.totalPages || 1)
+        setTotalCount(deliveriesRes.pagination?.total || 0)
+        setKpis(dashboardRes.kpis)
+      } catch (err: unknown) {
+        if (!isMounted) return
+        if (err instanceof DOMException && err.name === 'AbortError') return
+        console.error('Failed to load deliveries:', err)
+        setError('Could not load deliveries from backend.')
+        setDeliveries([])
+      } finally {
+        if (isMounted) setIsLoading(false)
+      }
+    }
+
+    void fetchData()
+
+    return () => {
+      isMounted = false
+      controller.abort()
+    }
+  }, [page, limit, searchQuery, reloadTrigger])
+
   const filteredDeliveries = useMemo(() => {
     return deliveries.filter((item) => {
+      const hasCourier = Boolean(item.activeAssignment?.courier)
+      const displayStatus = mapBackendStatusToDisplay(item.status)
+
       // Tab filter
-      if (activeTab === 'unassigned' && item.courierName) return false
-      if (activeTab === 'in_progress' && item.status !== 'In transit' && item.status !== 'Out for delivery') return false
-      if (activeTab === 'delivered' && item.status !== 'Delivered') return false
-      if (activeTab === 'failed' && item.status !== 'Failed attempt') return false
+      if (activeTab === 'unassigned' && hasCourier) return false
+      if (activeTab === 'in_progress' && displayStatus !== 'In transit' && displayStatus !== 'Out for delivery') {
+        return false
+      }
+      if (activeTab === 'delivered' && displayStatus !== 'Delivered') return false
+      if (activeTab === 'failed' && displayStatus !== 'Failed attempt') return false
 
       // Status dropdown filter
-      if (statusFilter !== 'all' && item.status !== statusFilter) return false
-
-      // Zone dropdown filter
-      if (zoneFilter !== 'all' && !item.zone.toLowerCase().includes(zoneFilter.toLowerCase())) return false
-
-      // Search query
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase()
-        const matchesTracking = item.trackingNo.toLowerCase().includes(query)
-        const matchesRecipient = item.recipient.toLowerCase().includes(query)
-        const matchesCourier = item.courierName?.toLowerCase().includes(query) ?? false
-        if (!matchesTracking && !matchesRecipient && !matchesCourier) return false
-      }
+      if (statusFilter !== 'all' && displayStatus !== statusFilter) return false
 
       return true
     })
-  }, [deliveries, activeTab, statusFilter, zoneFilter, searchQuery])
+  }, [deliveries, activeTab, statusFilter])
 
-  const handleOpenAssign = (item: DeliveryItem) => {
-    setSelectedForAssign(item)
+  const handleOpenAssign = (item: AdminDeliveryItem) => {
+    const formattedItem: DeliveryItem = {
+      id: item.id,
+      trackingNo: item.trackingNumber,
+      recipient: item.recipientName,
+      pickup: item.senderAddress,
+      dropoff: item.recipientAddress,
+      pickupAddress: item.senderAddress,
+      dropoffAddress: item.recipientAddress,
+      weightKg: Number(item.weightKg) || 0,
+      size: item.packageSize as any,
+      dimensions: 'Standard package',
+      status: mapBackendStatusToDisplay(item.status),
+      courierName: item.activeAssignment?.courier?.fullName || null,
+      courierId: item.activeAssignment?.courier?.id || null,
+      waitingTime: calculateWaitingTime(item.createdAt),
+      zone: item.recipientAddress,
+      createdAt: item.createdAt,
+    }
+    setSelectedForAssign(formattedItem)
     setIsAssignDrawerOpen(true)
   }
 
-  const handleAssignCourier = (deliveryId: string, courierId: string) => {
-    const courierNames: Record<string, string> = {
-      'c-1': 'Nuwan Silva',
-      'c-2': 'Kasun Perera',
-      'c-3': 'Sahan Perera',
+  const handleAssignCourier = async (deliveryId: string, courierId: string) => {
+    try {
+      const result = await adminApi.assignCourier(deliveryId, courierId)
+      setFeedbackMessage(`Assigned to ${result.courierName} successfully!`)
+      setIsAssignDrawerOpen(false)
+      setSelectedForAssign(null)
+      setReloadTrigger((v) => v + 1)
+      setTimeout(() => setFeedbackMessage(null), 4000)
+    } catch (err: any) {
+      console.error('Assign courier failed:', err)
+      alert(err.message || 'Failed to assign courier. Please try again.')
     }
-    const assignedName = courierNames[courierId] || 'Assigned Courier'
-
-    setDeliveries((prev) =>
-      prev.map((d) =>
-        d.id === deliveryId
-          ? {
-              ...d,
-              courierName: assignedName,
-              courierId,
-              status: 'In transit',
-              waitingTime: '—',
-            }
-          : d,
-      ),
-    )
-    setIsAssignDrawerOpen(false)
-    setSelectedForAssign(null)
   }
 
   const renderStatusBadge = (status: DeliveryStatus) => {
@@ -128,6 +194,19 @@ export const AdminDeliveriesPage: React.FC = () => {
         <p className={styles.pageSubtitle}>Assign and monitor parcels in one place.</p>
       </div>
 
+      {feedbackMessage && (
+        <div style={{ backgroundColor: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0', borderRadius: '8px', padding: '12px 16px', marginBottom: '20px', fontSize: '14px', fontWeight: 500 }}>
+          {feedbackMessage}
+        </div>
+      )}
+
+      {error && (
+        <div style={{ backgroundColor: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca', borderRadius: '8px', padding: '12px 16px', marginBottom: '20px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <AlertCircle size={16} />
+          <span>{error}</span>
+        </div>
+      )}
+
       {/* 3 Metric KPI Cards */}
       <div className={styles.metricsGrid}>
         <div className={styles.metricCard}>
@@ -136,7 +215,7 @@ export const AdminDeliveriesPage: React.FC = () => {
           </div>
           <div className={styles.metricInfo}>
             <span className={styles.metricLabel}>Unassigned</span>
-            <span className={styles.metricValue}>18</span>
+            <span className={styles.metricValue}>{kpis?.pendingDispatch ?? 0}</span>
             <span className={styles.metricSubtext}>Waiting for a courier</span>
           </div>
         </div>
@@ -147,7 +226,7 @@ export const AdminDeliveriesPage: React.FC = () => {
           </div>
           <div className={styles.metricInfo}>
             <span className={styles.metricLabel}>Active deliveries</span>
-            <span className={styles.metricValue}>64</span>
+            <span className={styles.metricValue}>{kpis?.activeInTransit ?? 0}</span>
             <span className={styles.metricSubtext}>Assigned and in progress</span>
           </div>
         </div>
@@ -158,7 +237,7 @@ export const AdminDeliveriesPage: React.FC = () => {
           </div>
           <div className={styles.metricInfo}>
             <span className={styles.metricLabel}>Delivered today</span>
-            <span className={styles.metricValue}>46</span>
+            <span className={styles.metricValue}>{kpis?.deliveredToday ?? 0}</span>
             <span className={styles.metricSubtext}>Completed today</span>
           </div>
         </div>
@@ -186,7 +265,7 @@ export const AdminDeliveriesPage: React.FC = () => {
             }`}
             onClick={() => setActiveTab('unassigned')}
           >
-            Unassigned ({unassignedCount})
+            Unassigned ({kpis?.pendingDispatch ?? 0})
           </button>
           <button
             type="button"
@@ -197,7 +276,7 @@ export const AdminDeliveriesPage: React.FC = () => {
             }`}
             onClick={() => setActiveTab('in_progress')}
           >
-            In progress ({activeCount})
+            In progress ({kpis?.activeInTransit ?? 0})
           </button>
           <button
             type="button"
@@ -208,7 +287,7 @@ export const AdminDeliveriesPage: React.FC = () => {
             }`}
             onClick={() => setActiveTab('delivered')}
           >
-            Delivered ({deliveredCount})
+            Delivered ({kpis?.deliveredToday ?? 0})
           </button>
           <button
             type="button"
@@ -217,7 +296,7 @@ export const AdminDeliveriesPage: React.FC = () => {
             className={`${styles.tabButton} ${activeTab === 'failed' ? styles.tabButtonActive : ''}`}
             onClick={() => setActiveTab('failed')}
           >
-            Failed attempts
+            Failed attempts ({kpis?.failedAttempts ?? 0})
           </button>
         </div>
 
@@ -230,7 +309,10 @@ export const AdminDeliveriesPage: React.FC = () => {
               className={styles.searchInput}
               placeholder="Search tracking or recipient"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
+                setPage(1)
+              }}
               aria-label="Search tracking or recipient"
             />
           </div>
@@ -248,26 +330,6 @@ export const AdminDeliveriesPage: React.FC = () => {
               <option value="Out for delivery">Out for delivery</option>
               <option value="In transit">In transit</option>
               <option value="Delivered">Delivered</option>
-            </select>
-
-            <select
-              className={styles.filterSelect}
-              value={zoneFilter}
-              onChange={(e) => setZoneFilter(e.target.value)}
-              aria-label="Filter by zone"
-            >
-              <option value="all">All zones</option>
-              <option value="Colombo">Colombo Central & South</option>
-              <option value="Nugegoda">Nugegoda</option>
-              <option value="Rajagiriya">Rajagiriya</option>
-              <option value="Dehiwala">Dehiwala / Mount Lavinia</option>
-            </select>
-
-            <select className={styles.filterSelect} aria-label="Filter by creation date">
-              <option value="any">Created: Any date</option>
-              <option value="today">Created: Today</option>
-              <option value="yesterday">Created: Yesterday</option>
-              <option value="week">Created: Past 7 days</option>
             </select>
           </div>
         </div>
@@ -287,65 +349,80 @@ export const AdminDeliveriesPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredDeliveries.length === 0 ? (
+              {isLoading ? (
                 <tr>
                   <td colSpan={7} style={{ textAlign: 'center', padding: '36px', color: '#64748b' }}>
-                    No deliveries match the selected filters.
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
+                      <span>Loading deliveries...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredDeliveries.length === 0 ? (
+                <tr>
+                  <td colSpan={7} style={{ textAlign: 'center', padding: '36px', color: '#64748b' }}>
+                    No deliveries found in the database.
                   </td>
                 </tr>
               ) : (
-                filteredDeliveries.map((item) => (
-                  <tr key={item.id}>
-                    <td>
-                      <div className={styles.trackingCell}>
-                        <span className={styles.trackingNo}>{item.trackingNo}</span>
-                        <span className={styles.recipientText}>{item.recipient}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <span className={styles.routeText}>
-                        {item.pickup}
-                        <span className={styles.routeArrow} aria-hidden="true">→</span>
-                        {item.dropoff}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={styles.parcelSpecs}>
-                        {item.weightKg} kg • {item.size}
-                      </span>
-                    </td>
-                    <td>{renderStatusBadge(item.status)}</td>
-                    <td>
-                      {item.courierName ? (
-                        <span className={styles.courierText}>{item.courierName}</span>
-                      ) : (
-                        <span className={styles.unassignedText}>Unassigned</span>
-                      )}
-                    </td>
-                    <td>
-                      <span className={styles.waitingTime}>{item.waitingTime}</span>
-                    </td>
-                    <td>
-                      {!item.courierName ? (
-                        <button
-                          type="button"
-                          className={styles.assignButton}
-                          onClick={() => handleOpenAssign(item)}
-                        >
-                          Assign
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          className={styles.viewDetailsLink}
-                          onClick={() => handleOpenAssign(item)}
-                        >
-                          View details →
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))
+                filteredDeliveries.map((item) => {
+                  const displayStatus = mapBackendStatusToDisplay(item.status)
+                  const courier = item.activeAssignment?.courier
+                  return (
+                    <tr key={item.id}>
+                      <td>
+                        <div className={styles.trackingCell}>
+                          <span className={styles.trackingNo}>{item.trackingNumber}</span>
+                          <span className={styles.recipientText}>{item.recipientName}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span className={styles.routeText}>
+                          {item.senderAddress}
+                          <span className={styles.routeArrow} aria-hidden="true">→</span>
+                          {item.recipientAddress}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={styles.parcelSpecs}>
+                          {item.weightKg} kg • {item.packageSize}
+                        </span>
+                      </td>
+                      <td>{renderStatusBadge(displayStatus)}</td>
+                      <td>
+                        {courier ? (
+                          <span className={styles.courierText}>{courier.fullName}</span>
+                        ) : (
+                          <span className={styles.unassignedText}>Unassigned</span>
+                        )}
+                      </td>
+                      <td>
+                        <span className={styles.waitingTime}>
+                          {calculateWaitingTime(item.createdAt)}
+                        </span>
+                      </td>
+                      <td>
+                        {!courier ? (
+                          <button
+                            type="button"
+                            className={styles.assignButton}
+                            onClick={() => handleOpenAssign(item)}
+                          >
+                            Assign
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className={styles.viewDetailsLink}
+                            onClick={() => handleOpenAssign(item)}
+                          >
+                            Reassign →
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })
               )}
             </tbody>
           </table>
@@ -353,34 +430,46 @@ export const AdminDeliveriesPage: React.FC = () => {
 
         {/* Table Footer */}
         <div className={styles.tableFooter}>
-          <p className={styles.footerNote}>* Waiting: Time in the unassigned queue.</p>
+          <p className={styles.footerNote}>* Waiting: Time since parcel was created.</p>
 
           <div className={styles.paginationControls}>
-            <span className={styles.paginationText}>Showing 1-7 of 328 deliveries</span>
-            <select className={styles.pageSelect} aria-label="Rows per page" defaultValue="7">
-              <option value="7">7 per page</option>
-              <option value="15">15 per page</option>
-              <option value="25">25 per page</option>
+            <span className={styles.paginationText}>
+              Showing {filteredDeliveries.length} of {totalCount} deliveries
+            </span>
+            <select
+              className={styles.pageSelect}
+              aria-label="Rows per page"
+              value={limit}
+              onChange={(e) => {
+                setLimit(Number(e.target.value))
+                setPage(1)
+              }}
+            >
+              <option value="5">5 per page</option>
+              <option value="10">10 per page</option>
+              <option value="20">20 per page</option>
             </select>
 
             <div className={styles.pagesList}>
-              <button type="button" className={styles.pageBtn} aria-label="Previous page">
+              <button
+                type="button"
+                className={styles.pageBtn}
+                aria-label="Previous page"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
                 <ChevronLeft size={14} aria-hidden="true" />
               </button>
-              <button type="button" className={`${styles.pageBtn} ${styles.pageBtnActive}`}>
-                1
-              </button>
-              <button type="button" className={styles.pageBtn}>
-                2
-              </button>
-              <button type="button" className={styles.pageBtn}>
-                3
-              </button>
-              <span style={{ padding: '0 4px', color: '#94a3b8' }}>...</span>
-              <button type="button" className={styles.pageBtn}>
-                47
-              </button>
-              <button type="button" className={styles.pageBtn} aria-label="Next page">
+              <span style={{ padding: '0 8px', fontSize: '13px', color: '#475569' }}>
+                Page {page} of {Math.max(1, totalPages)}
+              </span>
+              <button
+                type="button"
+                className={styles.pageBtn}
+                aria-label="Next page"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              >
                 <ChevronRight size={14} aria-hidden="true" />
               </button>
             </div>
@@ -393,9 +482,8 @@ export const AdminDeliveriesPage: React.FC = () => {
         isOpen={isAssignDrawerOpen}
         delivery={selectedForAssign}
         onClose={() => setIsAssignDrawerOpen(false)}
-        onAssign={handleAssignCourier}
+        onAssign={(deliveryId, courierId) => void handleAssignCourier(deliveryId, courierId)}
       />
     </div>
   )
 }
-
