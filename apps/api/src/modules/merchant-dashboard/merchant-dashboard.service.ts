@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { MerchantDashboardRepository } from './merchant-dashboard.repository.js';
 import type {
   MerchantOrderDetail,
