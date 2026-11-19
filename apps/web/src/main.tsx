@@ -37,6 +37,7 @@ import MerchantDashboard from './features/merchant/pages/MerchantDashboard';
 import MerchantOrdersPage from './features/merchant/pages/MerchantOrdersPage';
 import { MerchantLayout } from './features/merchant/components/MerchantLayout';
 import AdminLandingPage from './features/admin/pages/AdminLandingPage';
+import MerchantTrackParcelPage from './features/merchant/pages/MerchantTrackParcelPage';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -174,6 +175,8 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/merchant" element={<MerchantLayout />}>
               <Route index element={<Navigate to="orders" replace />} />
               <Route path="orders" element={<MerchantOrdersPage />} />
+              <Route path="track" element={<MerchantTrackParcelPage />} />
+              <Route path="track/:trackingNumber" element={<MerchantTrackParcelPage />} />
             </Route>
             {/* /courier/* is served by the Courier Portal routes above. */}
             <Route path="/admin-landing" element={<AdminLandingPage />} />

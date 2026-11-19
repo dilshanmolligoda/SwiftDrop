@@ -319,4 +319,20 @@ export class MerchantDashboardRepository {
       proof: proofRows[0] ?? null,
     };
   }
+
+  async findByTrackingNumber(
+    merchantUserId: string,
+    trackingNumber: string,
+  ): Promise<MerchantOrderDetail | null> {
+    const rows = await this.prisma.$queryRaw<{ id: string }[]>`
+      SELECT "id"
+      FROM "merchant_orders"
+      WHERE "merchantUserId" = ${merchantUserId}::uuid
+        AND "trackingNumber" = ${trackingNumber}
+      LIMIT 1
+    `;
+
+    if (!rows[0]) return null;
+    return this.findOrder(merchantUserId, rows[0].id);
+  }
 }
