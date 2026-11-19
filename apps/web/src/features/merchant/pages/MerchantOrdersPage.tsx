@@ -1,90 +1,318 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { CalendarDays, Check, ChevronDown, Download, ImageOff, Package, Search, TriangleAlert, X } from 'lucide-react'
+import { apiRequest } from '../../../api/client'
+import { env as appEnv } from '../../../lib/env'
 import styles from './MerchantOrdersPage.module.css'
 
-type OrderStatus = 'Created' | 'Out for Delivery' | 'In Transit' | 'Picked Up' | 'Failed' | 'Delivered'
+type OrderStatus =
+  | 'AWAITING_PICKUP'
+  | 'OUT_FOR_DELIVERY'
+  | 'IN_TRANSIT'
+  | 'PICKED_UP'
+  | 'DELIVERY_FAILED'
+  | 'DELIVERED'
 
 interface MerchantOrder {
-  readonly trackingNo: string
-  readonly orderRef: string
+  readonly id: string
+  readonly trackingNumber: string
+  readonly reference: string
   readonly recipient: string
-  readonly address: string
-  readonly sizeWeight: string
-  readonly fee: string
+  readonly destination: string
+  readonly packageSize: 'SMALL' | 'MEDIUM' | 'LARGE' | null
+  readonly weightKg: number | null
+  readonly feeLkr: number | null
   readonly status: OrderStatus
-  readonly created: string
-  readonly source: string
+  readonly source: 'API' | 'PORTAL'
+  readonly createdAt: string
 }
 
-const orders: readonly MerchantOrder[] = [
-  { trackingNo: 'SD-24821', orderRef: 'GL-1048', recipient: 'Nimal Perera', address: '18 Temple Rd, Kandy', sizeWeight: 'M · 2.5 kg', fee: 'LKR 600', status: 'Created', created: '26 Oct 2026', source: 'API' },
-  { trackingNo: 'SD-24820', orderRef: 'GL-1047', recipient: 'Amali Silva', address: '42 Main St, Galle', sizeWeight: 'S · 1 kg', fee: 'LKR 450', status: 'Out for Delivery', created: '25 Oct 2026', source: 'API' },
-  { trackingNo: 'SD-24819', orderRef: 'GL-1046', recipient: 'Kavindu Jay', address: '12 Park Rd, Colombo', sizeWeight: 'M · 3 kg', fee: 'LKR 650', status: 'In Transit', created: '25 Oct 2026', source: 'Portal' },
-  { trackingNo: 'SD-24818', orderRef: 'GL-1045', recipient: 'Tharushi Silva', address: '8 Lake Rd, Negombo', sizeWeight: 'L · 5 kg', fee: 'LKR 850', status: 'Picked Up', created: '25 Oct 2026', source: 'API' },
-  { trackingNo: 'SD-24817', orderRef: 'GL-1044', recipient: 'Dinesh Fernando', address: '21 Beach Rd, Matara', sizeWeight: 'S · 1.5 kg', fee: 'LKR 500', status: 'Failed', created: '24 Oct 2026', source: 'API' },
-  { trackingNo: 'SD-24816', orderRef: 'GL-1043', recipient: 'Ishara Perera', address: '9 Hill St, Kandy', sizeWeight: 'M · 2 kg', fee: 'LKR 550', status: 'Delivered', created: '24 Oct 2026', source: 'Portal' },
-]
+interface MerchantDashboardResponse {
+  reportingPeriod: { month: number; year: number }
+  metrics: {
+    activeDeliveries: number
+    deliveredThisMonth: number
+    needsAttention: number
+  }
+}
+
+interface MerchantOrdersPageResponse {
+  data: MerchantOrder[]
+  page: number
+  pageSize: number
+  total: number
+}
+
+interface MerchantOrderDetail extends MerchantOrder {
+  timeline: Array<{
+    status: string
+    note: string | null
+    failureReason: string | null
+    createdAt: string
+  }>
+  failureReason: string | null
+  proof: {
+    id: string
+    originalFilename: string
+    contentType: string
+    sizeBytes: number
+    uploadedAt: string
+  } | null
+}
+
+const statusLabels: Record<OrderStatus, string> = {
+  AWAITING_PICKUP: 'Created',
+  OUT_FOR_DELIVERY: 'Out for Delivery',
+  IN_TRANSIT: 'In Transit',
+  PICKED_UP: 'Picked Up',
+  DELIVERY_FAILED: 'Failed',
+  DELIVERED: 'Delivered',
+}
 
 const statusClass: Record<OrderStatus, string> = {
-  Created: styles.created,
-  'Out for Delivery': styles.outForDelivery,
-  'In Transit': styles.inTransit,
-  'Picked Up': styles.pickedUp,
-  Failed: styles.failed,
-  Delivered: styles.delivered,
+  AWAITING_PICKUP: styles.created,
+  OUT_FOR_DELIVERY: styles.outForDelivery,
+  IN_TRANSIT: styles.inTransit,
+  PICKED_UP: styles.pickedUp,
+  DELIVERY_FAILED: styles.failed,
+  DELIVERED: styles.delivered,
 }
 
-const timelineSteps = ['Created', 'Picked Up', 'In Transit', 'Out for Delivery', 'Delivered'] as const
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(value))
+}
+
+function formatSizeWeight(order: MerchantOrder) {
+  const size = order.packageSize ? `${order.packageSize[0]}` : '-'
+  return `${size} · ${order.weightKg ?? '-'} kg`
+}
+
+function getLocalToday() {
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = String(today.getMonth() + 1).padStart(2, '0')
+  const day = String(today.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function formatTimelineStatus(status: string) {
+  const labels: Record<string, string> = {
+    CREATED: 'Created',
+    PENDING: 'Created',
+    ASSIGNED: 'Created',
+    PICKED_UP: 'Picked Up',
+    IN_TRANSIT: 'In Transit',
+    OUT_FOR_DELIVERY: 'Out for Delivery',
+    DELIVERED: 'Delivered',
+    FAILED: 'Failed',
+  }
+  return labels[status] ?? status
+}
 
 export const MerchantOrdersPage: React.FC = () => {
   const [search, setSearch] = useState('')
   const [selectedStatus, setSelectedStatus] = useState('All statuses')
-  const [selectedOrder, setSelectedOrder] = useState<MerchantOrder | null>(null)
-  const filteredOrders = useMemo(() => {
-    const query = search.trim().toLowerCase()
-    return orders.filter((order) => {
-      const matchesQuery = !query || [order.trackingNo, order.orderRef, order.recipient].some((value) => value.toLowerCase().includes(query))
-      return matchesQuery && (selectedStatus === 'All statuses' || order.status === selectedStatus)
-    })
-  }, [search, selectedStatus])
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(6)
+  const [orders, setOrders] = useState<MerchantOrder[]>([])
+  const [total, setTotal] = useState(0)
+  const [metrics, setMetrics] = useState<MerchantDashboardResponse['metrics'] | null>(null)
+  const [reportingPeriod, setReportingPeriod] = useState<{ month: number; year: number } | null>(null)
+  const [selectedOrder, setSelectedOrder] = useState<MerchantOrderDetail | null>(null)
+  const [createdFrom, setCreatedFrom] = useState('')
+  const [createdTo, setCreatedTo] = useState('')
+  const [isDateRangeOpen, setIsDateRangeOpen] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const today = getLocalToday()
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    const load = async () => {
+      setLoadError(null)
+      try {
+        const status =
+          selectedStatus === 'All statuses'
+            ? undefined
+            : (selectedStatus === 'Created'
+                ? 'AWAITING_PICKUP'
+                : selectedStatus === 'Out for Delivery'
+                  ? 'OUT_FOR_DELIVERY'
+                  : selectedStatus === 'In Transit'
+                    ? 'IN_TRANSIT'
+                    : selectedStatus === 'Picked Up'
+                      ? 'PICKED_UP'
+                      : selectedStatus === 'Failed'
+                        ? 'DELIVERY_FAILED'
+                        : 'DELIVERED') as OrderStatus | undefined
+
+        const [dashboard, ordersPage] = await Promise.all([
+          apiRequest<MerchantDashboardResponse>('/merchant/dashboard', { signal: controller.signal }),
+          apiRequest<MerchantOrdersPageResponse>('/merchant/orders', {
+            query: {
+              search: search.trim() || undefined,
+              status,
+              page,
+              pageSize,
+              createdFrom: createdFrom || undefined,
+              createdTo: createdTo || undefined,
+            },
+            signal: controller.signal,
+          }),
+        ])
+
+        if (controller.signal.aborted) return
+        setMetrics(dashboard.metrics)
+        setReportingPeriod(dashboard.reportingPeriod)
+        setOrders(ordersPage.data)
+        setTotal(ordersPage.total)
+      } catch (error: unknown) {
+        if (!controller.signal.aborted) {
+          setLoadError(error instanceof Error ? error.message : 'Unable to load merchant orders.')
+        }
+      }
+    }
+
+    void load()
+    return () => controller.abort()
+  }, [search, selectedStatus, page, pageSize, createdFrom, createdTo])
+
+  const openOrder = async (order: MerchantOrder) => {
+    try {
+      const detail = await apiRequest<MerchantOrderDetail>(`/merchant/orders/${order.id}`)
+      setSelectedOrder(detail)
+    } catch {
+      setSelectedOrder({
+        ...order,
+        timeline: [],
+        failureReason: null,
+        proof: null,
+      })
+    }
+  }
+
+  const exportCsv = async () => {
+    const status =
+      selectedStatus === 'All statuses'
+        ? undefined
+        : selectedStatus === 'Created'
+          ? 'AWAITING_PICKUP'
+          : selectedStatus === 'Out for Delivery'
+            ? 'OUT_FOR_DELIVERY'
+            : selectedStatus === 'In Transit'
+              ? 'IN_TRANSIT'
+              : selectedStatus === 'Picked Up'
+                ? 'PICKED_UP'
+                : selectedStatus === 'Failed'
+                  ? 'DELIVERY_FAILED'
+                  : 'DELIVERED'
+
+    const params = new URLSearchParams()
+    if (search.trim()) params.set('search', search.trim())
+    if (status) params.set('status', status)
+    if (createdFrom) params.set('createdFrom', createdFrom)
+    if (createdTo) params.set('createdTo', createdTo)
+
+    const url = `${appEnv.apiBaseUrl}/merchant/orders/export${params.size ? `?${params.toString()}` : ''}`
+    const response = await fetch(url, { credentials: 'include' })
+    if (!response.ok) throw new Error('Unable to export merchant orders.')
+    const blob = await response.blob()
+    const downloadUrl = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = downloadUrl
+    anchor.download = 'merchant-orders.csv'
+    anchor.click()
+    URL.revokeObjectURL(downloadUrl)
+  }
+
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
+  const start = total === 0 ? 0 : (page - 1) * pageSize + 1
+  const end = Math.min(page * pageSize, total)
+  const reportingMonth = reportingPeriod
+    ? new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(
+        new Date(reportingPeriod.year, reportingPeriod.month - 1),
+      )
+    : ''
+
+  const dateRangeLabel = (() => {
+    const formatRangeDate = (value: string) =>
+      new Intl.DateTimeFormat('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      }).format(new Date(`${value}T00:00:00`))
+
+    if (createdFrom && createdTo) {
+      return `${formatRangeDate(createdFrom)} – ${formatRangeDate(createdTo)}`
+    }
+    if (createdFrom) return `From ${formatRangeDate(createdFrom)}`
+    if (createdTo) return `To ${formatRangeDate(createdTo)}`
+    return 'Select date range'
+  })()
 
   return (
     <div className={styles.page}>
       <header><h1>Orders</h1><p>View and track all your business deliveries.</p></header>
       <section className={styles.metrics} aria-label="Order summary">
-        <div className={styles.metricCard}><div className={`${styles.metricIcon} ${styles.green}`}><Package size={21} /></div><div><span>ACTIVE DELIVERIES</span><strong>24</strong><small>All active orders</small></div></div>
-        <div className={styles.metricCard}><div className={`${styles.metricIcon} ${styles.mint}`}><Package size={21} /></div><div><span>DELIVERED THIS MONTH</span><strong>128</strong><small>October 2026</small></div></div>
-        <div className={styles.metricCard}><div className={`${styles.metricIcon} ${styles.yellow}`}><TriangleAlert size={20} /></div><div><span>NEEDS ATTENTION</span><strong>3</strong><small>Failed delivery attempts</small></div></div>
+        <div className={styles.metricCard}><div className={`${styles.metricIcon} ${styles.green}`}><Package size={21} /></div><div><span>ACTIVE DELIVERIES</span><strong>{metrics?.activeDeliveries ?? 0}</strong><small>All active orders</small></div></div>
+        <div className={styles.metricCard}><div className={`${styles.metricIcon} ${styles.mint}`}><Package size={21} /></div><div><span>DELIVERED THIS MONTH</span><strong>{metrics?.deliveredThisMonth ?? 0}</strong><small>{reportingMonth}</small></div></div>
+        <div className={styles.metricCard}><div className={`${styles.metricIcon} ${styles.yellow}`}><TriangleAlert size={20} /></div><div><span>NEEDS ATTENTION</span><strong>{metrics?.needsAttention ?? 0}</strong><small>Failed delivery attempts</small></div></div>
       </section>
       <section className={styles.ordersCard}>
-        <div className={styles.cardHeader}><h2>All orders</h2><button type="button" className={styles.export}><Download size={14} /> Export CSV</button></div>
+        <div className={styles.cardHeader}><h2>All orders</h2><button type="button" className={styles.export} onClick={() => void exportCsv()}><Download size={14} /> Export CSV</button></div>
         <div className={styles.filters}>
-          <label className={styles.search}><Search size={14} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search tracking number, order or recipient" aria-label="Search orders" /></label>
-          <label className={styles.select}><select value={selectedStatus} onChange={(event) => setSelectedStatus(event.target.value)}><option>All statuses</option>{(['Created', 'Out for Delivery', 'In Transit', 'Picked Up', 'Failed', 'Delivered'] as const).map((value) => <option key={value}>{value}</option>)}</select><ChevronDown size={13} /></label>
-          <button type="button" className={styles.date}><CalendarDays size={13} /> 01 Oct – 26 Oct 2026</button>
+          <label className={styles.search}><Search size={14} /><input value={search} onChange={(event) => { setPage(1); setSearch(event.target.value) }} placeholder="Search tracking number, order or recipient" aria-label="Search orders" /></label>
+          <label className={styles.select}><select value={selectedStatus} onChange={(event) => { setPage(1); setSelectedStatus(event.target.value) }}><option>All statuses</option>{(['Created', 'Out for Delivery', 'In Transit', 'Picked Up', 'Failed', 'Delivered'] as const).map((value) => <option key={value}>{value}</option>)}</select><ChevronDown size={13} /></label>
+          <div className={styles.dateRange}>
+            <button
+              type="button"
+              className={styles.dateRangeButton}
+              aria-expanded={isDateRangeOpen}
+              onClick={() => setIsDateRangeOpen((isOpen) => !isOpen)}
+            >
+              <CalendarDays size={13} />
+              <span>{dateRangeLabel}</span>
+              <ChevronDown size={13} />
+            </button>
+            {isDateRangeOpen && (
+              <div className={styles.datePopover} role="dialog" aria-label="Filter by date range">
+                <label>
+                  <span>Created from</span>
+                  <input type="date" max={createdTo || today} value={createdFrom} onChange={(event) => { setPage(1); setCreatedFrom(event.target.value) }} />
+                </label>
+                <label>
+                  <span>Created to</span>
+                  <input type="date" min={createdFrom || undefined} max={today} value={createdTo} onChange={(event) => { setPage(1); setCreatedTo(event.target.value) }} />
+                </label>
+                <div className={styles.dateActions}>
+                  <button type="button" onClick={() => { setPage(1); setCreatedFrom(''); setCreatedTo('') }}>Clear</button>
+                  <button type="button" onClick={() => setIsDateRangeOpen(false)}>Done</button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
         <div className={styles.tableWrapper}>
           <table><thead><tr><th>TRACKING<br />NO.</th><th>ORDER<br />REF</th><th>RECIPIENT</th><th>DROP-OFF<br />ADDRESS</th><th>SIZE /<br />WEIGHT</th><th>FEE</th><th>STATUS</th><th>CREATED</th><th>SOURCE</th></tr></thead>
-            <tbody>{filteredOrders.map((order) => <tr key={order.trackingNo} className={styles.orderRow} onClick={() => setSelectedOrder(order)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') setSelectedOrder(order) }} tabIndex={0}><td className={styles.strong}>{order.trackingNo}</td><td>{order.orderRef}</td><td className={styles.recipient}>{order.recipient}</td><td>{order.address}</td><td>{order.sizeWeight}</td><td className={styles.strong}>{order.fee}</td><td><span className={`${styles.status} ${statusClass[order.status]}`}>{order.status}</span></td><td>{order.created}</td><td>{order.source}</td></tr>)}</tbody>
+            <tbody>{orders.map((order) => <tr key={order.id} className={styles.orderRow} onClick={() => void openOrder(order)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') void openOrder(order) }} tabIndex={0}><td className={styles.strong}>{order.trackingNumber}</td><td>{order.reference}</td><td className={styles.recipient}>{order.recipient}</td><td>{order.destination}</td><td>{formatSizeWeight(order)}</td><td className={styles.strong}>{order.feeLkr == null ? '-' : `LKR ${order.feeLkr}`}</td><td><span className={`${styles.status} ${statusClass[order.status]}`}>{statusLabels[order.status]}</span></td><td>{formatDate(order.createdAt)}</td><td>{order.source}</td></tr>)}</tbody>
           </table>
         </div>
-        <footer className={styles.pagination}><span>Showing <strong>{filteredOrders.length ? '1–6' : '0'}</strong> of <strong>155</strong> orders</span><div><span>Rows per page</span><button type="button">6 <ChevronDown size={12} /></button><button type="button">Previous</button><button type="button" className={styles.current}>1</button><button type="button">2</button><button type="button">3</button><span>...</span><button type="button">26</button><button type="button">Next</button></div></footer>
+        {loadError && <p role="alert">{loadError}</p>}
+        <footer className={styles.pagination}><span>Showing <strong>{start}–{end}</strong> of <strong>{total}</strong> orders</span><div><span>Rows per page</span><select value={pageSize} onChange={(event) => { setPage(1); setPageSize(Number(event.target.value)) }}><option value={6}>6</option><option value={12}>12</option><option value={20}>20</option></select><button type="button" disabled={page <= 1} onClick={() => setPage((value) => value - 1)}>Previous</button>{Array.from({ length: Math.min(totalPages, 5) }, (_, index) => index + 1).map((pageNumber) => <button type="button" key={pageNumber} className={pageNumber === page ? styles.current : ''} onClick={() => setPage(pageNumber)}>{pageNumber}</button>)}<button type="button" disabled={page >= totalPages} onClick={() => setPage((value) => value + 1)}>Next</button></div></footer>
       </section>
       {selectedOrder && <div className={styles.drawerLayer} role="presentation"><button type="button" className={styles.drawerBackdrop} onClick={() => setSelectedOrder(null)} aria-label="Close order details" /><aside className={styles.drawer} role="dialog" aria-modal="true" aria-labelledby="order-details-title">
         <div className={styles.drawerHeader}><h2 id="order-details-title">Order details</h2><button type="button" onClick={() => setSelectedOrder(null)} aria-label="Close order details"><X size={18} /></button></div>
-        <div className={styles.drawerContent}><span className={styles.detailLabel}>Tracking number</span><div className={styles.trackingHeader}><strong>{selectedOrder.trackingNo}</strong><span className={`${styles.status} ${statusClass[selectedOrder.status]}`}>{selectedOrder.status}</span></div><p className={styles.detailMeta}>Order ref {selectedOrder.orderRef} &nbsp;·&nbsp; Source {selectedOrder.source}</p>
-          <div className={styles.detailGrid}><div><span className={styles.detailLabel}>Recipient</span><strong>{selectedOrder.recipient}</strong></div><div><span className={styles.detailLabel}>Drop-off address</span><strong>{selectedOrder.address}</strong></div><div><span className={styles.detailLabel}>Parcel</span><strong>{selectedOrder.sizeWeight}</strong></div><div><span className={styles.detailLabel}>Fee</span><strong>{selectedOrder.fee}</strong></div></div>
-          <section className={styles.timelineSection}><div className={styles.sectionHeading}><h3>Delivery timeline</h3><span>All times Sri Lanka time</span></div><ol className={styles.timeline}>{[...timelineSteps.slice(0, -1), ...(selectedOrder.status === 'Failed' ? ['Failed'] : ['Delivered'])].map((step, index) => {
-            const targetIndex = selectedOrder.status === 'Failed' ? timelineSteps.length - 1 : timelineSteps.indexOf(selectedOrder.status as (typeof timelineSteps)[number])
-            const isFailed = step === 'Failed'
-            const isPending = index > targetIndex
-            const isCompleted = !isPending && !isFailed
-            const hasNextStep = index < timelineSteps.length - 1
-            const connectorClass = hasNextStep ? selectedOrder.status === 'Failed' && step === 'Out for Delivery' ? styles.timelineConnectorFailed : index < targetIndex ? styles.timelineConnectorComplete : styles.timelineConnectorPending : ''
-            return <li key={`${step}-${index}`} className={`${isFailed ? styles.timelineFailed : ''} ${isPending ? styles.timelinePending : ''} ${connectorClass}`}><span className={styles.timelineIcon}>{isFailed ? <X size={11} /> : isCompleted ? <Check size={11} /> : null}</span><div><strong>{step}</strong>{!isPending && <span>{selectedOrder.created}, {index === 0 ? '09:10' : `${10 + index}:40`}</span>}</div></li>
+        <div className={styles.drawerContent}><span className={styles.detailLabel}>Tracking number</span><div className={styles.trackingHeader}><strong>{selectedOrder.trackingNumber}</strong><span className={`${styles.status} ${statusClass[selectedOrder.status]}`}>{statusLabels[selectedOrder.status]}</span></div><p className={styles.detailMeta}>Order ref {selectedOrder.reference} &nbsp;·&nbsp; Source {selectedOrder.source}</p>
+          <div className={styles.detailGrid}><div><span className={styles.detailLabel}>Recipient</span><strong>{selectedOrder.recipient}</strong></div><div><span className={styles.detailLabel}>Drop-off address</span><strong>{selectedOrder.destination}</strong></div><div><span className={styles.detailLabel}>Parcel</span><strong>{formatSizeWeight(selectedOrder)}</strong></div><div><span className={styles.detailLabel}>Fee</span><strong>{selectedOrder.feeLkr == null ? '-' : `LKR ${selectedOrder.feeLkr}`}</strong></div></div>
+          <section className={styles.timelineSection}><div className={styles.sectionHeading}><h3>Delivery timeline</h3><span>All times Sri Lanka time</span></div><ol className={styles.timeline}>{selectedOrder.timeline.map((event) => {
+            const isFailed = event.status === 'FAILED'
+            return <li key={`${event.status}-${event.createdAt}`} className={isFailed ? styles.timelineFailed : ''}><span className={styles.timelineIcon}>{isFailed ? <X size={11} /> : <Check size={11} />}</span><div><strong>{formatTimelineStatus(event.status)}</strong><span>{new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Colombo' }).format(new Date(event.createdAt))}</span></div></li>
           })}</ol></section>
-          {selectedOrder.status === 'Failed' && <div className={styles.failureReason}><strong>Failure reason</strong><span>Recipient unavailable at the delivery address.</span></div>}
-          <section className={styles.proofSection}><h3>Proof of delivery</h3><div className={styles.proofPlaceholder}><ImageOff size={18} /><span>Not available — delivery was unsuccessful.</span></div></section>
+          {selectedOrder.status === 'DELIVERY_FAILED' && <div className={styles.failureReason}><strong>Failure reason</strong><span>{selectedOrder.failureReason ?? 'Failure reason not available.'}</span></div>}
+          <section className={styles.proofSection}><h3>Proof of delivery</h3>{selectedOrder.proof ? <div className={styles.proofPlaceholder}><span>{selectedOrder.proof.originalFilename}</span></div> : <div className={styles.proofPlaceholder}><ImageOff size={18} /><span>Not available — delivery proof was not provided.</span></div>}</section>
         </div>
       </aside></div>}
     </div>

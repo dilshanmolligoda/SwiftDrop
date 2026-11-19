@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import {
   DeliveryFailureReason,
+  MerchantOrderStatus,
   ParcelStatus,
   type PrismaClient,
 } from '../src/generated/prisma/client.js';
@@ -28,6 +29,25 @@ const DEMO_SENDER_ADDRESS = '120 Union Place, Colombo 02';
 /** Used when a demo parcel has no recorded weight. */
 const DEMO_DEFAULT_WEIGHT_KG = 1;
 const DEMO_COST_LKR = 450;
+
+function mapParcelStatusToMerchantOrderStatus(
+  status: ParcelStatus,
+): MerchantOrderStatus {
+  switch (status) {
+    case ParcelStatus.PICKED_UP:
+      return MerchantOrderStatus.PICKED_UP;
+    case ParcelStatus.IN_TRANSIT:
+      return MerchantOrderStatus.IN_TRANSIT;
+    case ParcelStatus.OUT_FOR_DELIVERY:
+      return MerchantOrderStatus.OUT_FOR_DELIVERY;
+    case ParcelStatus.DELIVERED:
+      return MerchantOrderStatus.DELIVERED;
+    case ParcelStatus.FAILED:
+      return MerchantOrderStatus.DELIVERY_FAILED;
+    default:
+      return MerchantOrderStatus.AWAITING_PICKUP;
+  }
+}
 
 export interface DemoUserIds {
   readonly dispatcherId: string;
@@ -776,6 +796,42 @@ export async function seedDemoDeliveries(
           },
         });
       }
+
+      const codeNumber = Number(planned.definition.code);
+      const merchantStatus = mapParcelStatusToMerchantOrderStatus(
+        planned.parcel.status,
+      );
+      await tx.merchantOrder.upsert({
+        where: { trackingNumber },
+        create: {
+          merchantUserId: users.merchantId,
+          reference: `GL-${1048 - (codeNumber - 1001)}`,
+          trackingNumber,
+          recipientName: planned.parcel.recipientName,
+          destination: planned.parcel.recipientAddress,
+          source: codeNumber % 2 === 1 ? 'API' : 'PORTAL',
+          status: merchantStatus,
+          failedDeliveryAttempts:
+            merchantStatus === MerchantOrderStatus.DELIVERY_FAILED ? 1 : 0,
+          deliveredAt:
+            merchantStatus === MerchantOrderStatus.DELIVERED
+              ? planned.parcel.createdAt
+              : null,
+          createdAt: planned.parcel.createdAt,
+        },
+        update: {
+          recipientName: planned.parcel.recipientName,
+          destination: planned.parcel.recipientAddress,
+          source: codeNumber % 2 === 1 ? 'API' : 'PORTAL',
+          status: merchantStatus,
+          failedDeliveryAttempts:
+            merchantStatus === MerchantOrderStatus.DELIVERY_FAILED ? 1 : 0,
+          deliveredAt:
+            merchantStatus === MerchantOrderStatus.DELIVERED
+              ? planned.parcel.createdAt
+              : null,
+        },
+      });
 
       if (existing) reset += 1;
       else created += 1;

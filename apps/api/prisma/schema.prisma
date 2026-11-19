@@ -202,6 +202,7 @@ model MerchantOrder {
   trackingNumber         String              @unique
   recipientName          String
   destination             String
+  source                 String              @default("PORTAL") @db.VarChar(16)
   status                 MerchantOrderStatus @default(AWAITING_PICKUP)
   failedDeliveryAttempts Int                 @default(0)
   deliveredAt            DateTime?
