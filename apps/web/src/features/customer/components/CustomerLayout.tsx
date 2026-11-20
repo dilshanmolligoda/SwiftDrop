@@ -29,7 +29,7 @@ interface NavigationItem {
 const NAVIGATION_ITEMS: readonly NavigationItem[] = [
   { label: 'Dashboard', path: '/customer/dashboard', icon: Home },
   { label: 'My deliveries', path: '/customer/deliveries', icon: Package },
-  { label: 'Track a parcel', path: '/track', icon: Search },
+  { label: 'Track a parcel', path: '/customer/tracking', icon: Search },
   { label: 'Address book', path: '/customer/addresses', icon: BookOpen },
   { label: 'Notifications', path: '/customer/notifications', icon: Bell },
   { label: 'Help & support', path: '/customer/support', icon: HelpCircle },
