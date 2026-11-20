@@ -38,6 +38,11 @@ describe('TrackingService (isolated reader)', () => {
       },
     ],
   });
+  const publicNumber = 'SD-0123456789ABCDEFFEDCBA9876543210';
+  const publicRecord = (): ParcelReadRecord => ({
+    ...record(),
+    trackingNumber: publicNumber,
+  });
   let service: TrackingService;
   let publicService: PublicTrackingService;
   let reader: jest.Mocked<CustomerParcelReader & PublicParcelReader>;
@@ -61,17 +66,19 @@ describe('TrackingService (isolated reader)', () => {
   });
 
   it('returns only the public allowlist, including nested history fields', async () => {
-    const source = Object.assign(record(), {
+    const source = Object.assign(publicRecord(), {
       customerName: 'Private Name',
       phoneNumber: 'Private Phone',
       paymentData: { account: 'Private Payment' },
       internalNotes: 'Private Notes',
     });
     reader.findPublicParcel.mockResolvedValue(source);
-    const result = await publicService.getPublicTracking('  test-123 ');
-    expect(reader.findPublicParcel.mock.calls).toEqual([['TEST-123']]);
+    const result = await publicService.getPublicTracking(
+      `  ${publicNumber.toLowerCase()} `,
+    );
+    expect(reader.findPublicParcel.mock.calls).toEqual([[publicNumber]]);
     expect(result).toEqual({
-      trackingNumber: 'TEST-123',
+      trackingNumber: publicNumber,
       status: 'BOOKED',
       updatedAt: '2026-11-02T00:00:00Z',
       history: [{ status: 'BOOKED', occurredAt: '2026-11-01T00:00:00Z' }],
@@ -85,11 +92,11 @@ describe('TrackingService (isolated reader)', () => {
 
   it('does not invent events or optional timestamps', async () => {
     reader.findPublicParcel.mockResolvedValue({
-      ...record(),
+      ...publicRecord(),
       history: [],
       updatedAt: undefined,
     });
-    const result = await publicService.getPublicTracking('TEST-123');
+    const result = await publicService.getPublicTracking(publicNumber);
     expect(result.history).toEqual([]);
     expect(result).not.toHaveProperty('updatedAt');
   });
@@ -99,10 +106,20 @@ describe('TrackingService (isolated reader)', () => {
     async (parcel) => {
       reader.findPublicParcel.mockResolvedValue(parcel);
       await expect(
-        publicService.getPublicTracking('TEST-123'),
+        publicService.getPublicTracking(publicNumber),
       ).rejects.toBeInstanceOf(NotFoundException);
     },
   );
+
+  it('does not query legacy identifiers even if a matching private parcel exists', async () => {
+    reader.findPublicParcel.mockResolvedValue(record());
+    await expect(
+      publicService.getPublicTracking('SD-21011'),
+    ).rejects.toMatchObject({
+      response: { statusCode: 404, message: 'Parcel not found' },
+    });
+    expect(reader.findPublicParcel.mock.calls).toHaveLength(0);
+  });
 
   it('returns customer details only after matching the authenticated owner', async () => {
     reader.findCustomerParcel.mockResolvedValue(record());
@@ -172,7 +189,7 @@ describe('TrackingService (isolated reader)', () => {
     const failure = new Error('Reader unavailable');
     reader.findPublicParcel.mockRejectedValue(failure);
     reader.findCustomerParcel.mockRejectedValue(failure);
-    await expect(publicService.getPublicTracking('TEST-123')).rejects.toBe(
+    await expect(publicService.getPublicTracking(publicNumber)).rejects.toBe(
       failure,
     );
     await expect(service.getCustomerTracking(user, 'TEST-123')).rejects.toBe(

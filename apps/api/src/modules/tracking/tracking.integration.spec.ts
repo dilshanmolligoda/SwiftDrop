@@ -446,7 +446,7 @@ describe('Private tracking/history HTTP integration (isolated persistence)', () 
     expect(parcels.listForCustomer.mock.calls).toHaveLength(0);
   });
 
-  it('does not register public tracking, receipt downloads, or streams', async () => {
+  it('keeps legacy numbers private and does not register receipt downloads or streams', async () => {
     for (const path of [
       '/api/v1/tracking/SD-10001',
       '/api/v1/tracking/SD-10001/stream',

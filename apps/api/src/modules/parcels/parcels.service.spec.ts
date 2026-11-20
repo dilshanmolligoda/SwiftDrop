@@ -98,7 +98,7 @@ describe('ParcelsService', () => {
           customerId: mockUser.id,
           senderName: mockUser.email,
           costLkr: 350,
-          trackingNumber: expect.stringMatching(/^SD-\d{5}$/),
+          trackingNumber: expect.stringMatching(/^SD-[A-F0-9]{32}$/),
         }),
       );
       expect(result).toEqual(mockCreated);

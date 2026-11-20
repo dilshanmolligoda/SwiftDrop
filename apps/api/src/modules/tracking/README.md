@@ -1,9 +1,10 @@
-# Member 3 private tracking and history — Phase 2
+# Member 3 tracking and history
 
-TrackingModule is registered in AppModule and exposes three private REST APIs.
-Its real reader calls Member 2's exported ParcelsService; no Prisma schema,
-repository, parcel controller, pricing, authentication, or frontend code changes
-are needed. There is no public tracking, receipt-download, or real-time endpoint.
+TrackingModule is registered in AppModule and exposes three private REST APIs and
+one public tracking API. Its private reader calls Member 2's exported
+ParcelsService. The public reader uses a separate minimal Prisma SELECT. No Prisma
+schema, migration, pricing, authentication, or courier implementation changed.
+Receipt downloads and real-time endpoints remain unregistered.
 
 ## Registered APIs
 
@@ -14,10 +15,59 @@ Paths include the default /api/v1 prefix:
 | GET /customer/tracking/:trackingNumber | Owned parcel status, addresses, dates, and recorded history                    |
 | GET /customer/deliveries               | Filtered/paginated items, page, pageSize, total                                |
 | GET /customer/deliveries/summary       | activeDeliveries, deliveredThisMonth, needsAttention, reportingMonth, timeZone |
+| GET /tracking/:trackingNumber         | Public status and recorded event dates for secure tracking identifiers       |
 
 Existing /parcels/me still returns its original array. Existing /parcels/metrics,
 /parcels/:id, creation, and pricing routes remain unchanged. Do not replace them
 with these new response contracts.
+
+## Secure public tracking
+
+The previous SD-five-digit generator had only 90,000 possible values and is not
+safe for anonymous discovery. New customer bookings now use the existing
+trackingNumber field with SD- followed by 32 uppercase hex characters, generated
+by node:crypto randomBytes(16) (128 random bits). This is the only production
+change to Member 2's parcel creation service. Request DTOs, response field names,
+ownership, pricing, persistence, and booking events retain their existing contracts.
+The creation test now asserts the new format. Coordinate the longer displayed
+identifier with Member 2 and any external consumers; do not truncate it.
+
+Existing numbers are not rewritten. Authenticated tracking/history continue to
+accept them. PublicTrackingService and PublicParcelReaderAdapter independently
+reject every legacy/seed/browser-fallback format before querying persistence,
+using the same 404 Parcel not found response as an unknown secure identifier.
+Malformed input returns 400. Input is trimmed and uppercased, with the existing
+64-character transport bounds. Knowing a secure number grants access to its
+limited public tracking data; protect and share it accordingly.
+
+The response allowlist is trackingNumber, status, optional updatedAt, and history
+entries containing only status and occurredAt. The indexed exact Prisma lookup
+selects no account IDs, names, contacts, addresses, charges, locations, private
+notes, actor/proof metadata, or failure reasons. It reads both ParcelStatusHistory
+and courier ParcelStatusEvent, orders actual events chronologically, and retains
+repeated events. A current status or updatedAt never creates an inferred event.
+All nine Prisma statuses pass through unchanged. The private adapter is unchanged.
+
+The public action uses the existing @Public decorator, with its own singleton
+rate-limit guard. Private controllers retain their customer/ownership checks.
+The guard allows 20 requests per direct socket peer per 60 seconds and 600 total
+per process per 60 seconds, including malformed and legacy requests. It ignores
+forwarded address headers, bounds address storage at 10,000 entries, and returns
+429 with Retry-After when limited. All public lookup responses have Cache-Control:
+no-store and Referrer-Policy: no-referrer, including validation and error responses.
+
+Limits are process-local and reset on restart. Deploy shared edge/distributed
+limits before using multiple replicas; behind a reverse proxy the direct peer
+quota is shared by its visitors. Do not trust arbitrary X-Forwarded-For headers.
+Serve this API over HTTPS and redact tracking identifiers from reverse-proxy,
+access, error, and analytics logs. The page does not store them in browser storage
+or URL query parameters and sends anonymous requests with no-store/no-referrer.
+There is no public search/list API or automatic conversion of legacy identifiers.
+
+At /track, use a newly issued secure identifier to view status and recorded events
+without signing in. Legacy-number guidance links to /customer/tracking instead.
+The page preserves the existing SwiftDrop card, supports retry/429 cooldown, and
+aborts stale or unmounted requests. No production demo parcels are created.
 
 ## Authorization and ownership
 
@@ -120,21 +170,15 @@ port, and never work around the limit with an unscoped parcel query.
 
 ## Preserved but not registered
 
-PublicParcelReader is separate from CustomerParcelReader. The Phase 1 public
-projection/business logic now lives in PublicTrackingService, which is NOT a
-TrackingModule provider and has no public adapter/controller. This avoids a
-throwing placeholder public method on the real private adapter. Its existing
-privacy/normalization tests remain in tracking.service.spec.ts.
-
 The [receipt foundation](receipts/README.md) and all its source/tests are unchanged.
 It has no registered reader/controller or HTTP download. The earlier receipt
 foundation document records its original stage; actual parcel persistence now
 exists, but receipt reference/currency/eligibility/snapshot integration still
 requires agreement. No new PDF dependency or font was installed in this phase.
 
-Future-only paths include /tracking/:trackingNumber,
-/parcels/:parcelId/receipt, and /tracking/:trackingNumber/stream. No RabbitMQ, SSE,
-WebSocket, courier status writer, public tracking, or receipt download was added.
+Future-only paths include /parcels/:parcelId/receipt and
+/tracking/:trackingNumber/stream. No RabbitMQ, SSE,
+WebSocket, courier status writer, or receipt download was added.
 Member 6 still supplies authoritative future status updates; Member 8 owns later
 event/outbox/transport integration.
 
@@ -155,7 +199,10 @@ From the repository root:
 
 ```sh
 npm run test -w apps/api -- --runInBand --watch=false --testPathPatterns=modules/tracking
+npm run test -w apps/api -- --runInBand --watch=false --testPathPatterns=modules/parcels
 npm run build -w apps/api
+npm run build:web
+npm run lint:check -w apps/web
 ```
 
 Run installed ESLint against src/modules/tracking/**/*.ts from apps/api without

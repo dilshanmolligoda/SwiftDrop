@@ -7,6 +7,7 @@ import {
 import { PricingService } from '../pricing/pricing.service.js';
 import type { CreateParcelDto } from './dto/create-parcel.dto.js';
 import type { AuthenticatedUser } from '../auth/decorators/current-user.decorator.js';
+import { generateParcelTrackingNumber } from './parcel-tracking-number.js';
 
 @Injectable()
 export class ParcelsService {
@@ -25,8 +26,7 @@ export class ParcelsService {
       dto.packageSize,
     );
 
-    const randomSuffix = Math.floor(10000 + Math.random() * 90000);
-    const trackingNumber = `SD-${randomSuffix}`;
+    const trackingNumber = generateParcelTrackingNumber();
 
     return this.parcelsRepository.createParcel({
       trackingNumber,

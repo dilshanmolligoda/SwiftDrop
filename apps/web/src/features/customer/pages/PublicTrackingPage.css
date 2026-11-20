@@ -105,7 +105,9 @@
 }
 
 .tracking-card__input:focus-visible,
-.tracking-card__submit:focus-visible {
+.tracking-card__submit:focus-visible,
+.tracking-card__retry:focus-visible,
+.tracking-card__link:focus-visible {
   outline: 3px solid #0d5e36;
   outline-offset: 3px;
 }
@@ -136,7 +138,113 @@
 }
 
 .tracking-card__number {
+  color: #0f172a;
   font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.tracking-card__link {
+  color: #0d5e36;
+  text-decoration: underline;
+}
+
+.tracking-card__submit:disabled,
+.tracking-card__retry:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.tracking-card__retry {
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid #0d5e36;
+  border-radius: 8px;
+  background-color: #ffffff;
+  color: #0d5e36;
+  font: inherit;
+  cursor: pointer;
+}
+
+.tracking-card__result {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.tracking-card__result-heading {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.tracking-card__result-heading h2 {
+  flex: 1;
+  min-width: min(180px, 100%);
+  margin: 0;
+  font-size: 18px;
+}
+
+.tracking-card__badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background-color: #f1f5f9;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tracking-card__badge--transit {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+}
+
+.tracking-card__badge--delivered {
+  background-color: #eaf7ee;
+  color: #0d5e36;
+}
+
+.tracking-card__badge--failed {
+  background-color: #fef2f2;
+  color: #b91c1c;
+}
+
+.tracking-card__badge--returned {
+  background-color: #fff7ed;
+  color: #92400e;
+}
+
+.tracking-card__updated,
+.tracking-card__event-time,
+.tracking-card__empty {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.tracking-card__events-title {
+  margin: 24px 0 12px;
+  font-size: 16px;
+}
+
+.tracking-card__timeline {
+  margin: 0;
+  padding-left: 24px;
+  border-left: 2px solid #d5e8dc;
+  list-style: none;
+}
+
+.tracking-card__event {
+  padding: 0 0 20px;
+}
+
+.tracking-card__event:last-child {
+  padding-bottom: 0;
+}
+
+.tracking-card__event-time {
+  display: block;
+  margin-top: 4px;
 }
 
 @media (max-width: 540px) {

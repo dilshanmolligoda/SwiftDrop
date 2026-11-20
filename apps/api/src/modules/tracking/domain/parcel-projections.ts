@@ -7,7 +7,10 @@ import type {
 
 /** Explicit allowlist: never spread storage records or status-history events. */
 export function projectPublicTracking(
-  parcel: ParcelReadRecord,
+  parcel: Pick<
+    ParcelReadRecord,
+    'trackingNumber' | 'status' | 'updatedAt' | 'history'
+  >,
 ): PublicTrackingResponse {
   return {
     trackingNumber: parcel.trackingNumber,

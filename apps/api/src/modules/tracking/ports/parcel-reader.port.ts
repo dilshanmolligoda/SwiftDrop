@@ -1,4 +1,7 @@
-import type { ParcelReadRecord } from '../domain/parcel.types.js';
+import type {
+  ParcelReadRecord,
+  PublicTrackingResponse,
+} from '../domain/parcel.types.js';
 
 /** Private storage port. Bound only to authenticated customer-scoped queries. */
 export abstract class CustomerParcelReader {
@@ -18,9 +21,9 @@ export abstract class CustomerParcelReader {
   ): Promise<readonly ParcelReadRecord[]>;
 }
 
-/** Separate Phase 1 boundary; no public adapter or HTTP endpoint is registered. */
+/** Public storage boundary: never load private parcel or courier fields. */
 export abstract class PublicParcelReader {
   abstract findPublicParcel(
     trackingNumber: string,
-  ): Promise<ParcelReadRecord | null>;
+  ): Promise<PublicTrackingResponse | null>;
 }
