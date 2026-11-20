@@ -41,6 +41,7 @@ export type MerchantOrderMinAggregateOutputType = {
   trackingNumber: string | null
   recipientName: string | null
   destination: string | null
+  source: string | null
   status: $Enums.MerchantOrderStatus | null
   failedDeliveryAttempts: number | null
   deliveredAt: Date | null
@@ -55,6 +56,7 @@ export type MerchantOrderMaxAggregateOutputType = {
   trackingNumber: string | null
   recipientName: string | null
   destination: string | null
+  source: string | null
   status: $Enums.MerchantOrderStatus | null
   failedDeliveryAttempts: number | null
   deliveredAt: Date | null
@@ -69,6 +71,7 @@ export type MerchantOrderCountAggregateOutputType = {
   trackingNumber: number
   recipientName: number
   destination: number
+  source: number
   status: number
   failedDeliveryAttempts: number
   deliveredAt: number
@@ -93,6 +96,7 @@ export type MerchantOrderMinAggregateInputType = {
   trackingNumber?: true
   recipientName?: true
   destination?: true
+  source?: true
   status?: true
   failedDeliveryAttempts?: true
   deliveredAt?: true
@@ -107,6 +111,7 @@ export type MerchantOrderMaxAggregateInputType = {
   trackingNumber?: true
   recipientName?: true
   destination?: true
+  source?: true
   status?: true
   failedDeliveryAttempts?: true
   deliveredAt?: true
@@ -121,6 +126,7 @@ export type MerchantOrderCountAggregateInputType = {
   trackingNumber?: true
   recipientName?: true
   destination?: true
+  source?: true
   status?: true
   failedDeliveryAttempts?: true
   deliveredAt?: true
@@ -222,6 +228,7 @@ export type MerchantOrderGroupByOutputType = {
   trackingNumber: string
   recipientName: string
   destination: string
+  source: string
   status: $Enums.MerchantOrderStatus
   failedDeliveryAttempts: number
   deliveredAt: Date | null
@@ -259,6 +266,7 @@ export type MerchantOrderWhereInput = {
   trackingNumber?: Prisma.StringFilter<"MerchantOrder"> | string
   recipientName?: Prisma.StringFilter<"MerchantOrder"> | string
   destination?: Prisma.StringFilter<"MerchantOrder"> | string
+  source?: Prisma.StringFilter<"MerchantOrder"> | string
   status?: Prisma.EnumMerchantOrderStatusFilter<"MerchantOrder"> | $Enums.MerchantOrderStatus
   failedDeliveryAttempts?: Prisma.IntFilter<"MerchantOrder"> | number
   deliveredAt?: Prisma.DateTimeNullableFilter<"MerchantOrder"> | Date | string | null
@@ -274,6 +282,7 @@ export type MerchantOrderOrderByWithRelationInput = {
   trackingNumber?: Prisma.SortOrder
   recipientName?: Prisma.SortOrder
   destination?: Prisma.SortOrder
+  source?: Prisma.SortOrder
   status?: Prisma.SortOrder
   failedDeliveryAttempts?: Prisma.SortOrder
   deliveredAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -293,6 +302,7 @@ export type MerchantOrderWhereUniqueInput = Prisma.AtLeast<{
   reference?: Prisma.StringFilter<"MerchantOrder"> | string
   recipientName?: Prisma.StringFilter<"MerchantOrder"> | string
   destination?: Prisma.StringFilter<"MerchantOrder"> | string
+  source?: Prisma.StringFilter<"MerchantOrder"> | string
   status?: Prisma.EnumMerchantOrderStatusFilter<"MerchantOrder"> | $Enums.MerchantOrderStatus
   failedDeliveryAttempts?: Prisma.IntFilter<"MerchantOrder"> | number
   deliveredAt?: Prisma.DateTimeNullableFilter<"MerchantOrder"> | Date | string | null
@@ -308,6 +318,7 @@ export type MerchantOrderOrderByWithAggregationInput = {
   trackingNumber?: Prisma.SortOrder
   recipientName?: Prisma.SortOrder
   destination?: Prisma.SortOrder
+  source?: Prisma.SortOrder
   status?: Prisma.SortOrder
   failedDeliveryAttempts?: Prisma.SortOrder
   deliveredAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -330,6 +341,7 @@ export type MerchantOrderScalarWhereWithAggregatesInput = {
   trackingNumber?: Prisma.StringWithAggregatesFilter<"MerchantOrder"> | string
   recipientName?: Prisma.StringWithAggregatesFilter<"MerchantOrder"> | string
   destination?: Prisma.StringWithAggregatesFilter<"MerchantOrder"> | string
+  source?: Prisma.StringWithAggregatesFilter<"MerchantOrder"> | string
   status?: Prisma.EnumMerchantOrderStatusWithAggregatesFilter<"MerchantOrder"> | $Enums.MerchantOrderStatus
   failedDeliveryAttempts?: Prisma.IntWithAggregatesFilter<"MerchantOrder"> | number
   deliveredAt?: Prisma.DateTimeNullableWithAggregatesFilter<"MerchantOrder"> | Date | string | null
@@ -343,6 +355,7 @@ export type MerchantOrderCreateInput = {
   trackingNumber: string
   recipientName: string
   destination: string
+  source?: string
   status?: $Enums.MerchantOrderStatus
   failedDeliveryAttempts?: number
   deliveredAt?: Date | string | null
@@ -358,6 +371,7 @@ export type MerchantOrderUncheckedCreateInput = {
   trackingNumber: string
   recipientName: string
   destination: string
+  source?: string
   status?: $Enums.MerchantOrderStatus
   failedDeliveryAttempts?: number
   deliveredAt?: Date | string | null
@@ -371,6 +385,7 @@ export type MerchantOrderUpdateInput = {
   trackingNumber?: Prisma.StringFieldUpdateOperationsInput | string
   recipientName?: Prisma.StringFieldUpdateOperationsInput | string
   destination?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumMerchantOrderStatusFieldUpdateOperationsInput | $Enums.MerchantOrderStatus
   failedDeliveryAttempts?: Prisma.IntFieldUpdateOperationsInput | number
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -386,6 +401,7 @@ export type MerchantOrderUncheckedUpdateInput = {
   trackingNumber?: Prisma.StringFieldUpdateOperationsInput | string
   recipientName?: Prisma.StringFieldUpdateOperationsInput | string
   destination?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumMerchantOrderStatusFieldUpdateOperationsInput | $Enums.MerchantOrderStatus
   failedDeliveryAttempts?: Prisma.IntFieldUpdateOperationsInput | number
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -400,6 +416,7 @@ export type MerchantOrderCreateManyInput = {
   trackingNumber: string
   recipientName: string
   destination: string
+  source?: string
   status?: $Enums.MerchantOrderStatus
   failedDeliveryAttempts?: number
   deliveredAt?: Date | string | null
@@ -413,6 +430,7 @@ export type MerchantOrderUpdateManyMutationInput = {
   trackingNumber?: Prisma.StringFieldUpdateOperationsInput | string
   recipientName?: Prisma.StringFieldUpdateOperationsInput | string
   destination?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumMerchantOrderStatusFieldUpdateOperationsInput | $Enums.MerchantOrderStatus
   failedDeliveryAttempts?: Prisma.IntFieldUpdateOperationsInput | number
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -427,6 +445,7 @@ export type MerchantOrderUncheckedUpdateManyInput = {
   trackingNumber?: Prisma.StringFieldUpdateOperationsInput | string
   recipientName?: Prisma.StringFieldUpdateOperationsInput | string
   destination?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumMerchantOrderStatusFieldUpdateOperationsInput | $Enums.MerchantOrderStatus
   failedDeliveryAttempts?: Prisma.IntFieldUpdateOperationsInput | number
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -456,6 +475,7 @@ export type MerchantOrderCountOrderByAggregateInput = {
   trackingNumber?: Prisma.SortOrder
   recipientName?: Prisma.SortOrder
   destination?: Prisma.SortOrder
+  source?: Prisma.SortOrder
   status?: Prisma.SortOrder
   failedDeliveryAttempts?: Prisma.SortOrder
   deliveredAt?: Prisma.SortOrder
@@ -474,6 +494,7 @@ export type MerchantOrderMaxOrderByAggregateInput = {
   trackingNumber?: Prisma.SortOrder
   recipientName?: Prisma.SortOrder
   destination?: Prisma.SortOrder
+  source?: Prisma.SortOrder
   status?: Prisma.SortOrder
   failedDeliveryAttempts?: Prisma.SortOrder
   deliveredAt?: Prisma.SortOrder
@@ -488,6 +509,7 @@ export type MerchantOrderMinOrderByAggregateInput = {
   trackingNumber?: Prisma.SortOrder
   recipientName?: Prisma.SortOrder
   destination?: Prisma.SortOrder
+  source?: Prisma.SortOrder
   status?: Prisma.SortOrder
   failedDeliveryAttempts?: Prisma.SortOrder
   deliveredAt?: Prisma.SortOrder
@@ -551,6 +573,7 @@ export type MerchantOrderCreateWithoutMerchantInput = {
   trackingNumber: string
   recipientName: string
   destination: string
+  source?: string
   status?: $Enums.MerchantOrderStatus
   failedDeliveryAttempts?: number
   deliveredAt?: Date | string | null
@@ -564,6 +587,7 @@ export type MerchantOrderUncheckedCreateWithoutMerchantInput = {
   trackingNumber: string
   recipientName: string
   destination: string
+  source?: string
   status?: $Enums.MerchantOrderStatus
   failedDeliveryAttempts?: number
   deliveredAt?: Date | string | null
@@ -607,6 +631,7 @@ export type MerchantOrderScalarWhereInput = {
   trackingNumber?: Prisma.StringFilter<"MerchantOrder"> | string
   recipientName?: Prisma.StringFilter<"MerchantOrder"> | string
   destination?: Prisma.StringFilter<"MerchantOrder"> | string
+  source?: Prisma.StringFilter<"MerchantOrder"> | string
   status?: Prisma.EnumMerchantOrderStatusFilter<"MerchantOrder"> | $Enums.MerchantOrderStatus
   failedDeliveryAttempts?: Prisma.IntFilter<"MerchantOrder"> | number
   deliveredAt?: Prisma.DateTimeNullableFilter<"MerchantOrder"> | Date | string | null
@@ -620,6 +645,7 @@ export type MerchantOrderCreateManyMerchantInput = {
   trackingNumber: string
   recipientName: string
   destination: string
+  source?: string
   status?: $Enums.MerchantOrderStatus
   failedDeliveryAttempts?: number
   deliveredAt?: Date | string | null
@@ -633,6 +659,7 @@ export type MerchantOrderUpdateWithoutMerchantInput = {
   trackingNumber?: Prisma.StringFieldUpdateOperationsInput | string
   recipientName?: Prisma.StringFieldUpdateOperationsInput | string
   destination?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumMerchantOrderStatusFieldUpdateOperationsInput | $Enums.MerchantOrderStatus
   failedDeliveryAttempts?: Prisma.IntFieldUpdateOperationsInput | number
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -646,6 +673,7 @@ export type MerchantOrderUncheckedUpdateWithoutMerchantInput = {
   trackingNumber?: Prisma.StringFieldUpdateOperationsInput | string
   recipientName?: Prisma.StringFieldUpdateOperationsInput | string
   destination?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumMerchantOrderStatusFieldUpdateOperationsInput | $Enums.MerchantOrderStatus
   failedDeliveryAttempts?: Prisma.IntFieldUpdateOperationsInput | number
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -659,6 +687,7 @@ export type MerchantOrderUncheckedUpdateManyWithoutMerchantInput = {
   trackingNumber?: Prisma.StringFieldUpdateOperationsInput | string
   recipientName?: Prisma.StringFieldUpdateOperationsInput | string
   destination?: Prisma.StringFieldUpdateOperationsInput | string
+  source?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.EnumMerchantOrderStatusFieldUpdateOperationsInput | $Enums.MerchantOrderStatus
   failedDeliveryAttempts?: Prisma.IntFieldUpdateOperationsInput | number
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -675,6 +704,7 @@ export type MerchantOrderSelect<ExtArgs extends runtime.Types.Extensions.Interna
   trackingNumber?: boolean
   recipientName?: boolean
   destination?: boolean
+  source?: boolean
   status?: boolean
   failedDeliveryAttempts?: boolean
   deliveredAt?: boolean
@@ -690,6 +720,7 @@ export type MerchantOrderSelectCreateManyAndReturn<ExtArgs extends runtime.Types
   trackingNumber?: boolean
   recipientName?: boolean
   destination?: boolean
+  source?: boolean
   status?: boolean
   failedDeliveryAttempts?: boolean
   deliveredAt?: boolean
@@ -705,6 +736,7 @@ export type MerchantOrderSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
   trackingNumber?: boolean
   recipientName?: boolean
   destination?: boolean
+  source?: boolean
   status?: boolean
   failedDeliveryAttempts?: boolean
   deliveredAt?: boolean
@@ -720,6 +752,7 @@ export type MerchantOrderSelectScalar = {
   trackingNumber?: boolean
   recipientName?: boolean
   destination?: boolean
+  source?: boolean
   status?: boolean
   failedDeliveryAttempts?: boolean
   deliveredAt?: boolean
@@ -727,7 +760,7 @@ export type MerchantOrderSelectScalar = {
   updatedAt?: boolean
 }
 
-export type MerchantOrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "merchantUserId" | "reference" | "trackingNumber" | "recipientName" | "destination" | "status" | "failedDeliveryAttempts" | "deliveredAt" | "createdAt" | "updatedAt", ExtArgs["result"]["merchantOrder"]>
+export type MerchantOrderOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "merchantUserId" | "reference" | "trackingNumber" | "recipientName" | "destination" | "source" | "status" | "failedDeliveryAttempts" | "deliveredAt" | "createdAt" | "updatedAt", ExtArgs["result"]["merchantOrder"]>
 export type MerchantOrderInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   merchant?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -750,6 +783,7 @@ export type $MerchantOrderPayload<ExtArgs extends runtime.Types.Extensions.Inter
     trackingNumber: string
     recipientName: string
     destination: string
+    source: string
     status: $Enums.MerchantOrderStatus
     failedDeliveryAttempts: number
     deliveredAt: Date | null
@@ -1185,6 +1219,7 @@ export interface MerchantOrderFieldRefs {
   readonly trackingNumber: Prisma.FieldRef<"MerchantOrder", 'String'>
   readonly recipientName: Prisma.FieldRef<"MerchantOrder", 'String'>
   readonly destination: Prisma.FieldRef<"MerchantOrder", 'String'>
+  readonly source: Prisma.FieldRef<"MerchantOrder", 'String'>
   readonly status: Prisma.FieldRef<"MerchantOrder", 'MerchantOrderStatus'>
   readonly failedDeliveryAttempts: Prisma.FieldRef<"MerchantOrder", 'Int'>
   readonly deliveredAt: Prisma.FieldRef<"MerchantOrder", 'DateTime'>

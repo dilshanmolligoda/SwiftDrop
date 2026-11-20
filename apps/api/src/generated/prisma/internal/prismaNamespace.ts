@@ -1227,6 +1227,7 @@ export const MerchantOrderScalarFieldEnum = {
   trackingNumber: 'trackingNumber',
   recipientName: 'recipientName',
   destination: 'destination',
+  source: 'source',
   status: 'status',
   failedDeliveryAttempts: 'failedDeliveryAttempts',
   deliveredAt: 'deliveredAt',

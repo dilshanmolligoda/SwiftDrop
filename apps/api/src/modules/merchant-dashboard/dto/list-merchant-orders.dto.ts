@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  IsDateString,
   IsEnum,
   IsInt,
   IsOptional,
@@ -19,6 +20,14 @@ export class ListMerchantOrdersDto {
   @IsOptional()
   @IsEnum(MerchantOrderStatus)
   status?: MerchantOrderStatus;
+
+  @IsOptional()
+  @IsDateString()
+  createdFrom?: string;
+
+  @IsOptional()
+  @IsDateString()
+  createdTo?: string;
 
   @IsOptional()
   @Type(() => Number)
