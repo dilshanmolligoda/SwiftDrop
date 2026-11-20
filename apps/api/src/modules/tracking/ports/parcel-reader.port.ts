@@ -1,12 +1,7 @@
 import type { ParcelReadRecord } from '../domain/parcel.types.js';
 
-/** Nest injection token and storage port. Intentionally has no default adapter. */
-export abstract class ParcelReader {
-  /** Public lookup still returns internal data; the service must project it. */
-  abstract findPublicParcel(
-    trackingNumber: string,
-  ): Promise<ParcelReadRecord | null>;
-
+/** Private storage port. Bound only to authenticated customer-scoped queries. */
+export abstract class CustomerParcelReader {
   /** The real adapter must enforce customer ownership inside the storage query. */
   abstract findCustomerParcel(
     customerId: string,
@@ -21,4 +16,11 @@ export abstract class ParcelReader {
   abstract listCustomerParcels(
     customerId: string,
   ): Promise<readonly ParcelReadRecord[]>;
+}
+
+/** Separate Phase 1 boundary; no public adapter or HTTP endpoint is registered. */
+export abstract class PublicParcelReader {
+  abstract findPublicParcel(
+    trackingNumber: string,
+  ): Promise<ParcelReadRecord | null>;
 }

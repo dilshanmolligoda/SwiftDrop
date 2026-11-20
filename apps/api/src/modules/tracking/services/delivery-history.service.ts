@@ -12,7 +12,7 @@ import type {
 } from '../domain/parcel.types.js';
 import { projectDeliveryHistory } from '../domain/parcel-projections.js';
 import { parseDeliveryHistoryQuery } from '../dto/delivery-history-query.dto.js';
-import { ParcelReader } from '../ports/parcel-reader.port.js';
+import { CustomerParcelReader } from '../ports/parcel-reader.port.js';
 import {
   ParcelStatusPolicy,
   type ParcelStatusCategory,
@@ -21,18 +21,13 @@ import { requireCustomer } from './customer-access.js';
 
 function reportingMonth(date: Date): string | null {
   if (!Number.isFinite(date.getTime())) return null;
-  const parts = new Intl.DateTimeFormat('en-GB', {
-    year: 'numeric',
-    month: '2-digit',
-    timeZone: 'Asia/Colombo',
-  }).formatToParts(date);
-  return `${parts.find(({ type }) => type === 'year')?.value}-${parts.find(({ type }) => type === 'month')?.value}`;
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
 }
 
 @Injectable()
 export class DeliveryHistoryService {
   constructor(
-    @Inject(ParcelReader) private readonly reader: ParcelReader,
+    @Inject(CustomerParcelReader) private readonly reader: CustomerParcelReader,
     @Inject(ParcelStatusPolicy)
     private readonly statusPolicy: ParcelStatusPolicy,
   ) {}
@@ -114,18 +109,17 @@ export class DeliveryHistoryService {
       throw new InternalServerErrorException('Invalid reporting clock');
     const parcels = await this.readOwnedParcels(user);
     let activeDeliveries = 0;
-    let deliveredThisMonth: number | null = 0;
+    let deliveredThisMonth = 0;
     let needsAttention = 0;
     for (const parcel of parcels) {
       const category = this.classify(parcel.status);
       if (category === 'active') activeDeliveries++;
-      if (category === 'failed') needsAttention++;
+      if (this.statusPolicy.needsAttention(parcel.status)) needsAttention++;
       if (category === 'delivered') {
         const deliveredMonth = parcel.deliveredAt
           ? reportingMonth(new Date(parcel.deliveredAt))
           : null;
-        if (!deliveredMonth) deliveredThisMonth = null;
-        else if (deliveredMonth === month && deliveredThisMonth !== null) {
+        if (deliveredMonth === month) {
           deliveredThisMonth++;
         }
       }
@@ -135,7 +129,7 @@ export class DeliveryHistoryService {
       deliveredThisMonth,
       needsAttention,
       reportingMonth: month,
-      timeZone: 'Asia/Colombo',
+      timeZone: 'UTC',
     };
   }
 }

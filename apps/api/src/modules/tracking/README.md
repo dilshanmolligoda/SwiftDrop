@@ -1,149 +1,153 @@
-# Member 3 tracking/history foundation — Phase 1
+# Member 3 private tracking and history — Phase 2
 
-This directory contains independently testable read-side business logic. It is
-**not a working tracking API**. Nothing is registered in `AppModule`; there are no
-HTTP controllers, database adapters, default data, status mappings,
-or real-time connections. Existing application behavior is unchanged.
+TrackingModule is registered in AppModule and exposes three private REST APIs.
+Its real reader calls Member 2's exported ParcelsService; no Prisma schema,
+repository, parcel controller, pricing, authentication, or frontend code changes
+are needed. There is no public tracking, receipt-download, or real-time endpoint.
 
-The separate [receipt foundation](receipts/README.md) now provides validated
-server-side receipt formatting, in-memory PDF generation, and authorization
-orchestration. It also remains unregistered and requires a real receipt reader.
+## Registered APIs
 
-## Implemented components
+Paths include the default /api/v1 prefix:
 
-- `TrackingService`: normalized public lookup and authenticated-customer lookup.
-  Missing and other-owned private parcels both produce `404 Parcel not found`.
-- `DeliveryHistoryService`: customer-scoped snapshots, All/Active/History filters,
-  trimmed case-insensitive tracking-number search, stable creation-date/ID ordering,
-  pagination, and customer summary calculations.
-- Explicit response projections omit source-only fields and internal event notes.
-  Public results include only tracking number, status, optional update timestamp,
-  and recorded status/timestamp pairs. No synthetic timeline events are created.
-- DTOs match the installed Nest `ValidationPipe` conventions. Service entry points
-  also validate inputs, including unexpected query fields such as `customerId`.
-- Two required abstract classes serve as Nest injection tokens: `ParcelReader`
-  and `ParcelStatusPolicy`. Tests bind isolated mocks with `useValue`; application
-  code supplies no fake implementation or fallback for either dependency.
+| Method/path                            | Response                                                                       |
+| -------------------------------------- | ------------------------------------------------------------------------------ |
+| GET /customer/tracking/:trackingNumber | Owned parcel status, addresses, dates, and recorded history                    |
+| GET /customer/deliveries               | Filtered/paginated items, page, pageSize, total                                |
+| GET /customer/deliveries/summary       | activeDeliveries, deliveredThisMonth, needsAttention, reportingMonth, timeZone |
 
-## Required integration boundaries
+Existing /parcels/me still returns its original array. Existing /parcels/metrics,
+/parcels/:id, creation, and pricing routes remain unchanged. Do not replace them
+with these new response contracts.
 
-`ParcelReader` must be bound to Member 2's future exported persistent parcel query
-service, through a real adapter owned/agreed by the team. Do not query the merchant
-repository or import browser-local records. The reader returns `ParcelReadRecord`
-objects with canonical uppercase tracking numbers, opaque machine status codes,
-valid ISO-8601 timestamps with offsets, and real append-only event history.
-Status fields must never contain names, addresses, notes, or other free text.
+## Authorization and ownership
 
-The adapter must enforce customer ownership in storage queries using the supplied
-authenticated customer ID. Services verify it again: mismatched single records
-produce 404; mixed-owner list snapshots fail closed rather than leaking records
-or reporting incorrect totals. Storage errors propagate; they are not converted
-into empty accounts. The source may have additional private fields, but response
-projections must continue to copy only the explicit allowlist.
+Both new controllers declare @Roles(Role.CUSTOMER), consume @CurrentUser(), and
+use the existing application-global CSRF/JWT/Approval/Role guards. Authentication
+can use the established HttpOnly cookie or Bearer mechanism. Approval and account
+activity are checked against the live user by ApprovalGuard; the role guard uses
+the existing JWT claim. No auth/guard implementation was changed.
 
-`listCustomerParcels` currently requires a complete, consistent customer snapshot.
-History filtering and pagination happen in memory and summaries cover that whole
-snapshot. Do not implement this port with only one database page. Before enabling
-production use at scale, agree a storage-side filter/count/pagination/aggregation
-port and consistency guarantees. Never expose an unbounded full-snapshot HTTP
-endpoint as a workaround.
+No client-supplied customer ID controls a query. Tracking ignores unrelated query
+parameters; history rejects unexpected fields such as customerId through the
+ValidationPipe/DTO whitelist. Service entry points validate identities and role
+again, but do not establish sessions or replace the global approval guard.
 
-## Unresolved status and input contracts
+ParcelsReaderAdapter calls listForCustomer(authenticatedCustomerId), whose existing
+repository query enforces ownership. The adapter and services also verify returned
+ownership. Single-record missing/other-owned/mismatched results all return
+404 Parcel not found; a mixed-owner collection fails closed. Reader failures do
+not become invented empty accounts.
 
-No customer status enum has been agreed. `ParcelStatusPolicy.classify` must map
-each agreed source status to a query category: `active`, `delivered`, `failed`, or
-`other-terminal`. These are read-side categories, not a new canonical state
-machine. There is no default mapping from MerchantOrder or frontend statuses.
-The real policy must reject unrecognized codes; services also reject invalid
-classification results. Any additional terminal-state and attention rules need
-explicit team agreement. Currently History means all terminal categories, and
-Needs attention means the confirmed `failed` category only.
+## Real record mapping
 
-Transport validation currently accepts 1–64 ASCII letters/digits with separating
-hyphens, trims outer whitespace, and uppercases tracking numbers. It does not
-require an `SD` prefix. These provisional transport bounds must be confirmed with
-the tracking-number generator owner before endpoints are enabled.
+CustomerParcelReader is the private injection boundary bound to
+ParcelsReaderAdapter. The adapter talks only to ParcelsService, not its repository,
+PrismaService, merchant storage, or browser data. It maps:
 
-History query fields: `filter=all|active|history`, `search` (trimmed/uppercased,
-maximum 64 characters), `page` (1–1,000,000), `pageSize` (1–100, default 5).
-Pagination applies after filtering/searching; out-of-range pages return empty
-items with the original requested page and accurate total. No page clamping is
-performed. The full customer summary is independent of history filters/pages.
+- id, customerId, trackingNumber, and unchanged PostgreSQL status;
+- senderAddress to private origin and recipientAddress to private destination;
+- createdAt/updatedAt/deliveredAt Date objects to ISO strings (null delivery date
+  becomes omitted);
+- statusHistory status/createdAt to history status/occurredAt, sorted by timestamp
+  and stable event ID, without changing the source collection.
 
-Delivered-this-month uses the confirmed delivered category and `deliveredAt`,
-never `createdAt` or `updatedAt`. Calendar month and year use `Asia/Colombo`;
-timestamps remain source ISO values in projections. If any delivered parcel lacks
-a usable delivery date, the monthly count is `null` rather than an invented zero.
-An empty confirmed snapshot yields zero counts. The summary's `now` argument is
-an internal clock/test seam, not an eventual client query parameter.
+Missing history inclusion or invalid Date values fail rather than inventing
+history/timestamps. An actually empty included history remains empty. Free-text
+notes, locations, failure reasons, names, contact numbers, fees, and owner IDs are
+not included in the tracking/history response projections. Private tracking
+includes the real owned addresses. No stages are inferred from current status.
 
-## Authentication requirements before registering routes
+## Query and summary definitions
 
-Future private controllers must use existing global `JwtAuthGuard`,
-`ApprovalGuard`, and `RolesGuard`, plus `@Roles(Role.CUSTOMER)` and
-`@CurrentUser()`. Pass the authenticated identity to service methods, never an
-identity or customer ID copied from request bodies/query parameters. The small
-`requireCustomer` helper checks presence/role but does not authenticate a session
-or replace the live database approval guard. It deliberately does not trust stale
-JWT approval claims. Immediate role-change behavior should be agreed with the
-authentication owner because the existing role guard uses the JWT role claim.
+History query defaults: filter=all, search empty, page=1, pageSize=5.
+Allowed filters are all, active, history. Search matches tracking numbers only,
+is case-insensitive, trims outside whitespace, and is bounded to 64 characters.
+Page is 1–1,000,000 and pageSize is 1–100. Unexpected fields, duplicate scalar
+parameters, invalid enum values, and invalid numeric forms are rejected.
+Filtering/searching run before pagination. Ordering is createdAt descending then
+parcel ID descending. Out-of-range pages return empty items and the requested
+page with the accurate total. No page clamping occurs.
 
-Keep the public controller separate and apply `@Public()` without inherited
-customer-role metadata. Add agreed public rate limiting and privacy review before
-exposing tracking. No auth files or shared guards need to change for Phase 1.
+PrismaParcelStatusPolicy explicitly preserves the stored statuses:
 
-## Proposed endpoints — none registered
+| Stored status    | Category       | Needs attention |
+| ---------------- | -------------- | --------------- |
+| PENDING          | active         | no              |
+| PICKED_UP        | active         | no              |
+| IN_TRANSIT       | active         | no              |
+| OUT_FOR_DELIVERY | active         | no              |
+| DELIVERED        | delivered      | no              |
+| FAILED           | failed         | yes             |
+| RETURNED         | other-terminal | yes             |
 
-All paths below include the default `/api/v1` prefix and still require agreement
-with the parcels owner to avoid duplicate route ownership:
+History includes all terminal categories. RETURNED remains distinct from FAILED.
+PENDING is never renamed CREATED, and MerchantOrder statuses are not substituted.
+Unknown statuses fail explicitly. Attention classification is separate from the
+terminal outcome classification.
 
-| Method/path                              | Proposed use                                               |
-| ---------------------------------------- | ---------------------------------------------------------- |
-| `GET /tracking/:trackingNumber`          | Public, restricted tracking response                       |
-| `GET /customer/tracking/:trackingNumber` | Authenticated customer-owned tracking                      |
-| `GET /parcels/me`                        | Authenticated customer history with the query fields above |
-| `GET /parcels/me/summary`                | Complete customer summary                                  |
-| `GET /parcels/:parcelId/receipt`         | Future owner-authorized PDF download                       |
-| `GET /tracking/:trackingNumber/stream`   | Later public-safe SSE, coordinated with Member 8           |
+Summary calculations cover the full owned snapshot, independent of history
+filters/pages. They align with Member 2's existing UTC calendar-month semantics:
+active counts the four active statuses; delivered-this-month counts only DELIVERED
+with a usable deliveredAt in the current UTC year/month; attention counts FAILED
+and RETURNED. Missing delivery dates do not count as confirmed monthly deliveries.
+This replaces Phase 1's provisional Colombo-month/nullable monthly count.
+The response includes reportingMonth (YYYY-MM) and timeZone UTC. The internal now
+argument is a test seam, never a request parameter. Receipt PDF display dates
+retain their separate existing Sri Lanka-time behavior.
 
-Response shapes here are Phase 1 view models, not published shared API contracts.
-The existing frontend tracking timeline uses `stage`/`timestamp`; this foundation
-uses source `status`/`occurredAt`. The history frontend currently expects an owner
-ID for its local defensive filter, while these projected items omit that field.
-Agree the final response/adapter shape before wiring either page. Do not silently
-rename the other members' types. No frontend page is connected by this phase.
+## Scalability limitation
 
-## Dependencies outside Member 3
+The approved initial tracking lookup loads only the authenticated customer's
+complete list and filters it in memory. History filtering/pagination and summaries
+also use that complete snapshot. This is database-backed, but is not a dedicated
+indexed lookup or database-side pagination. Member 2 must later export an indexed
+customerId+trackingNumber query and coordinated storage-side filtering/counting/
+aggregation contracts for scale. Do not supply a single page to the complete-list
+port, and never work around the limit with an unscoped parcel query.
 
-- **Member 2 / schema owner:** persisted customer parcels and ownership, unique
-  tracking numbers, canonical statuses/timestamps, recorded booking fees, and an
-  exported read service. Schema/migrations/client generation remain separate,
-  coordinated work. Existing MerchantOrder persistence is not customer storage.
-- **Member 6:** real confirmed status history, transition rules, failure states,
-  delivery timestamps, and proof references. Do not reconstruct history from a
-  current status or create a parallel status writer here.
-- **Member 8:** event schema/versioning, transactional outbox and RabbitMQ
-  publication, deduplication/ordering, and the agreed SSE/real-time integration.
-  REST read logic does not depend on a fake broker or simulated updates.
-- **Receipts:** authoritative persisted fee/currency and booking snapshots, plus
-  agreed eligibility, remain dependencies. The [receipt extension](receipts/README.md)
-  supplies PDF generation and an ownership-checking service; no receipt endpoint
-  or persistent adapter is registered. Future
-  downloads should be attachments with private/no-store caching and no public
-  filesystem paths or URLs.
+## Preserved but not registered
 
-## Isolated verification
+PublicParcelReader is separate from CustomerParcelReader. The Phase 1 public
+projection/business logic now lives in PublicTrackingService, which is NOT a
+TrackingModule provider and has no public adapter/controller. This avoids a
+throwing placeholder public method on the real private adapter. Its existing
+privacy/normalization tests remain in tracking.service.spec.ts.
+
+The [receipt foundation](receipts/README.md) and all its source/tests are unchanged.
+It has no registered reader/controller or HTTP download. The earlier receipt
+foundation document records its original stage; actual parcel persistence now
+exists, but receipt reference/currency/eligibility/snapshot integration still
+requires agreement. No new PDF dependency or font was installed in this phase.
+
+Future-only paths include /tracking/:trackingNumber,
+/parcels/:parcelId/receipt, and /tracking/:trackingNumber/stream. No RabbitMQ, SSE,
+WebSocket, courier status writer, public tracking, or receipt download was added.
+Member 6 still supplies authoritative future status updates; Member 8 owns later
+event/outbox/transport integration.
+
+## Frontend integration remains separate
+
+No frontend file changed. Existing tracking UI expects stage/timestamp and uses
+CREATED rather than PENDING; history UI expects an owner ID for a local defensive
+filter while these projections omit it. Those explicit response/presentation
+mappings and RETURNED support must be agreed when connecting the pages.
+MyDeliveriesPage at /deliveries and DeliveryHistoryPage at /customer/deliveries
+still overlap; no route/navigation consolidation was performed.
+
+## Verification
 
 From the repository root:
 
 ```sh
-npm run test -w apps/api -- --runInBand --watch=false --runTestsByPath src/modules/tracking/dto/tracking-validation.spec.ts src/modules/tracking/services/tracking.service.spec.ts src/modules/tracking/services/delivery-history.service.spec.ts
+npm run test -w apps/api -- --runInBand --watch=false --testPathPatterns=modules/tracking
 npm run build -w apps/api
 ```
 
-For lint checks, run the installed ESLint from `apps/api` against
-`src/modules/tracking/**/*.ts` without `--fix`. The API's generic `lint` script
-auto-fixes files and should not be used for an isolated read-only lint check.
-All sample records/status policies live in `*.spec.ts` files, excluded from the
-production build. Unit tests do not contact a database, authenticate real browser
-sessions, or establish working production endpoints.
+Run installed ESLint against src/modules/tracking/**/*.ts from apps/api without
+--fix, and use Prettier --check. All fixtures are in *.spec.ts files, excluded from
+production builds. HTTP integration tests import the real TrackingModule, reader,
+controllers, validation pipes, and global guard classes, but override
+ParcelsService/PrismaService and user storage. They open temporary localhost
+sockets and never connect to PostgreSQL. They also confirm /parcels/me keeps its
+array response and deferred endpoints remain absent. Passing these tests is not
+live database or browser verification.

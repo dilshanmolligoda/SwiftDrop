@@ -52,9 +52,9 @@ export interface DeliveryHistoryPage {
 
 export interface DeliverySummary {
   readonly activeDeliveries: number;
-  /** null if any confirmed delivered parcel lacks a usable delivery timestamp. */
-  readonly deliveredThisMonth: number | null;
+  /** Confirmed delivered status with a delivery timestamp in the UTC month. */
+  readonly deliveredThisMonth: number;
   readonly needsAttention: number;
   readonly reportingMonth: string;
-  readonly timeZone: 'Asia/Colombo';
+  readonly timeZone: 'UTC';
 }

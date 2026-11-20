@@ -8,7 +8,7 @@ import {
 import { Test } from '@nestjs/testing';
 import type { AuthenticatedUser } from '../../auth/decorators/current-user.decorator.js';
 import type { ParcelReadRecord } from '../domain/parcel.types.js';
-import { ParcelReader } from '../ports/parcel-reader.port.js';
+import { CustomerParcelReader } from '../ports/parcel-reader.port.js';
 import {
   ParcelStatusPolicy,
   type ParcelStatusCategory,
@@ -35,7 +35,7 @@ describe('DeliveryHistoryService (isolated reader and status policy)', () => {
     destination: 'Private destination',
     history: [],
   });
-  // Deliberately test-only vocabulary. No production policy is supplied.
+  // Deliberately test-only vocabulary, independent of the production mapping.
   const categories: Readonly<Record<string, ParcelStatusCategory>> = {
     BOOKED: 'active',
     MOVING: 'active',
@@ -44,20 +44,24 @@ describe('DeliveryHistoryService (isolated reader and status policy)', () => {
     CANCELLED: 'other-terminal',
   };
   let service: DeliveryHistoryService;
-  let reader: jest.Mocked<ParcelReader>;
+  let reader: jest.Mocked<CustomerParcelReader>;
   let policy: jest.Mocked<ParcelStatusPolicy>;
 
   beforeEach(async () => {
     reader = {
-      findPublicParcel: jest.fn(),
       findCustomerParcel: jest.fn(),
       listCustomerParcels: jest.fn().mockResolvedValue([]),
     };
-    policy = { classify: jest.fn((status: string) => categories[status]) };
+    policy = {
+      classify: jest.fn((status: string) => categories[status]),
+      needsAttention: jest.fn(
+        (status: string) => categories[status] === 'failed',
+      ),
+    };
     const module = await Test.createTestingModule({
       providers: [
         DeliveryHistoryService,
-        { provide: ParcelReader, useValue: reader },
+        { provide: CustomerParcelReader, useValue: reader },
         { provide: ParcelStatusPolicy, useValue: policy },
       ],
     }).compile();
@@ -76,7 +80,7 @@ describe('DeliveryHistoryService (isolated reader and status policy)', () => {
       deliveredThisMonth: 0,
       needsAttention: 0,
       reportingMonth: '2026-11',
-      timeZone: 'Asia/Colombo',
+      timeZone: 'UTC',
     });
     expect(reader.listCustomerParcels.mock.calls).toEqual([
       [user.id],
@@ -172,14 +176,14 @@ describe('DeliveryHistoryService (isolated reader and status policy)', () => {
     expect(result.items[0]).not.toHaveProperty('customerId');
   });
 
-  it('counts confirmed delivery timestamps using Colombo month and year boundaries', async () => {
+  it('counts confirmed delivery timestamps using UTC month and year boundaries', async () => {
     reader.listCustomerParcels.mockResolvedValue([
       record('active', 'MOVING'),
       record('failed', 'UNDELIVERABLE'),
       record('cancelled', 'CANCELLED'),
-      { ...record('nov', 'DONE'), deliveredAt: '2026-10-31T18:30:00Z' },
-      { ...record('oct', 'DONE'), deliveredAt: '2026-10-31T18:29:59Z' },
-      { ...record('dec', 'DONE'), deliveredAt: '2026-11-30T18:30:00Z' },
+      { ...record('nov', 'DONE'), deliveredAt: '2026-11-01T00:00:00Z' },
+      { ...record('oct', 'DONE'), deliveredAt: '2026-10-31T23:59:59.999Z' },
+      { ...record('dec', 'DONE'), deliveredAt: '2026-12-01T00:00:00Z' },
       { ...record('last-year', 'DONE'), deliveredAt: '2025-11-15T00:00:00Z' },
     ]);
     await expect(service.getCustomerSummary(user, now)).resolves.toMatchObject({
@@ -189,7 +193,7 @@ describe('DeliveryHistoryService (isolated reader and status policy)', () => {
       reportingMonth: '2026-11',
     });
     await expect(
-      service.getCustomerSummary(user, new Date('2026-11-30T18:30:00Z')),
+      service.getCustomerSummary(user, new Date('2026-12-01T00:00:00Z')),
     ).resolves.toMatchObject({
       deliveredThisMonth: 1,
       reportingMonth: '2026-12',
@@ -197,7 +201,7 @@ describe('DeliveryHistoryService (isolated reader and status policy)', () => {
   });
 
   it.each([undefined, 'invalid'])(
-    'returns an unknown monthly count for an unusable delivery date %p',
+    'counts only confirmed usable delivery timestamps when a date is %p',
     async (deliveredAt) => {
       reader.listCustomerParcels.mockResolvedValue([
         { ...record('dated', 'DONE'), deliveredAt: '2026-11-10T00:00:00Z' },
@@ -205,7 +209,7 @@ describe('DeliveryHistoryService (isolated reader and status policy)', () => {
       ]);
       await expect(
         service.getCustomerSummary(user, now),
-      ).resolves.toMatchObject({ deliveredThisMonth: null });
+      ).resolves.toMatchObject({ deliveredThisMonth: 1 });
     },
   );
 

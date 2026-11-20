@@ -7,8 +7,12 @@ import {
 import { Test } from '@nestjs/testing';
 import type { AuthenticatedUser } from '../../auth/decorators/current-user.decorator.js';
 import type { ParcelReadRecord } from '../domain/parcel.types.js';
-import { ParcelReader } from '../ports/parcel-reader.port.js';
+import {
+  CustomerParcelReader,
+  PublicParcelReader,
+} from '../ports/parcel-reader.port.js';
 import { TrackingService } from './tracking.service.js';
+import { PublicTrackingService } from './public-tracking.service.js';
 
 describe('TrackingService (isolated reader)', () => {
   const user: AuthenticatedUser = {
@@ -35,7 +39,8 @@ describe('TrackingService (isolated reader)', () => {
     ],
   });
   let service: TrackingService;
-  let reader: jest.Mocked<ParcelReader>;
+  let publicService: PublicTrackingService;
+  let reader: jest.Mocked<CustomerParcelReader & PublicParcelReader>;
 
   beforeEach(async () => {
     reader = {
@@ -44,9 +49,15 @@ describe('TrackingService (isolated reader)', () => {
       listCustomerParcels: jest.fn(),
     };
     const module = await Test.createTestingModule({
-      providers: [TrackingService, { provide: ParcelReader, useValue: reader }],
+      providers: [
+        TrackingService,
+        PublicTrackingService,
+        { provide: CustomerParcelReader, useValue: reader },
+        { provide: PublicParcelReader, useValue: reader },
+      ],
     }).compile();
     service = module.get(TrackingService);
+    publicService = module.get(PublicTrackingService);
   });
 
   it('returns only the public allowlist, including nested history fields', async () => {
@@ -57,7 +68,7 @@ describe('TrackingService (isolated reader)', () => {
       internalNotes: 'Private Notes',
     });
     reader.findPublicParcel.mockResolvedValue(source);
-    const result = await service.getPublicTracking('  test-123 ');
+    const result = await publicService.getPublicTracking('  test-123 ');
     expect(reader.findPublicParcel.mock.calls).toEqual([['TEST-123']]);
     expect(result).toEqual({
       trackingNumber: 'TEST-123',
@@ -78,7 +89,7 @@ describe('TrackingService (isolated reader)', () => {
       history: [],
       updatedAt: undefined,
     });
-    const result = await service.getPublicTracking('TEST-123');
+    const result = await publicService.getPublicTracking('TEST-123');
     expect(result.history).toEqual([]);
     expect(result).not.toHaveProperty('updatedAt');
   });
@@ -88,7 +99,7 @@ describe('TrackingService (isolated reader)', () => {
     async (parcel) => {
       reader.findPublicParcel.mockResolvedValue(parcel);
       await expect(
-        service.getPublicTracking('TEST-123'),
+        publicService.getPublicTracking('TEST-123'),
       ).rejects.toBeInstanceOf(NotFoundException);
     },
   );
@@ -147,9 +158,9 @@ describe('TrackingService (isolated reader)', () => {
   );
 
   it('validates service calls even when no HTTP validation pipe is involved', async () => {
-    await expect(service.getPublicTracking('../bad')).rejects.toBeInstanceOf(
-      BadRequestException,
-    );
+    await expect(
+      publicService.getPublicTracking('../bad'),
+    ).rejects.toBeInstanceOf(BadRequestException);
     await expect(service.getCustomerTracking(user, '')).rejects.toBeInstanceOf(
       BadRequestException,
     );
@@ -161,7 +172,9 @@ describe('TrackingService (isolated reader)', () => {
     const failure = new Error('Reader unavailable');
     reader.findPublicParcel.mockRejectedValue(failure);
     reader.findCustomerParcel.mockRejectedValue(failure);
-    await expect(service.getPublicTracking('TEST-123')).rejects.toBe(failure);
+    await expect(publicService.getPublicTracking('TEST-123')).rejects.toBe(
+      failure,
+    );
     await expect(service.getCustomerTracking(user, 'TEST-123')).rejects.toBe(
       failure,
     );

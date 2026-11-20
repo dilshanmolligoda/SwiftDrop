@@ -1,29 +1,16 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import type { AuthenticatedUser } from '../../auth/decorators/current-user.decorator.js';
-import type {
-  CustomerTrackingResponse,
-  PublicTrackingResponse,
-} from '../domain/parcel.types.js';
-import {
-  projectCustomerTracking,
-  projectPublicTracking,
-} from '../domain/parcel-projections.js';
+import type { CustomerTrackingResponse } from '../domain/parcel.types.js';
+import { projectCustomerTracking } from '../domain/parcel-projections.js';
 import { normalizeTrackingNumber } from '../domain/tracking-number.js';
-import { ParcelReader } from '../ports/parcel-reader.port.js';
+import { CustomerParcelReader } from '../ports/parcel-reader.port.js';
 import { requireCustomer } from './customer-access.js';
 
 @Injectable()
 export class TrackingService {
-  constructor(@Inject(ParcelReader) private readonly reader: ParcelReader) {}
-
-  async getPublicTracking(number: unknown): Promise<PublicTrackingResponse> {
-    const trackingNumber = normalizeTrackingNumber(number);
-    const parcel = await this.reader.findPublicParcel(trackingNumber);
-    if (!parcel || parcel.trackingNumber !== trackingNumber) {
-      throw new NotFoundException('Parcel not found');
-    }
-    return projectPublicTracking(parcel);
-  }
+  constructor(
+    @Inject(CustomerParcelReader) private readonly reader: CustomerParcelReader,
+  ) {}
 
   async getCustomerTracking(
     user: AuthenticatedUser | null | undefined,
