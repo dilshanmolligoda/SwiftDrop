@@ -258,6 +258,10 @@ export type UserWhereInput = {
   courierProfile?: Prisma.XOR<Prisma.CourierProfileNullableScalarRelationFilter, Prisma.CourierProfileWhereInput> | null
   merchantOrders?: Prisma.MerchantOrderListRelationFilter
   parcels?: Prisma.ParcelListRelationFilter
+  courierAssignments?: Prisma.DeliveryAssignmentListRelationFilter
+  createdAssignments?: Prisma.DeliveryAssignmentListRelationFilter
+  parcelStatusEvents?: Prisma.ParcelStatusEventListRelationFilter
+  deliveryProofs?: Prisma.DeliveryProofListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -279,6 +283,10 @@ export type UserOrderByWithRelationInput = {
   courierProfile?: Prisma.CourierProfileOrderByWithRelationInput
   merchantOrders?: Prisma.MerchantOrderOrderByRelationAggregateInput
   parcels?: Prisma.ParcelOrderByRelationAggregateInput
+  courierAssignments?: Prisma.DeliveryAssignmentOrderByRelationAggregateInput
+  createdAssignments?: Prisma.DeliveryAssignmentOrderByRelationAggregateInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventOrderByRelationAggregateInput
+  deliveryProofs?: Prisma.DeliveryProofOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -303,6 +311,10 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   courierProfile?: Prisma.XOR<Prisma.CourierProfileNullableScalarRelationFilter, Prisma.CourierProfileWhereInput> | null
   merchantOrders?: Prisma.MerchantOrderListRelationFilter
   parcels?: Prisma.ParcelListRelationFilter
+  courierAssignments?: Prisma.DeliveryAssignmentListRelationFilter
+  createdAssignments?: Prisma.DeliveryAssignmentListRelationFilter
+  parcelStatusEvents?: Prisma.ParcelStatusEventListRelationFilter
+  deliveryProofs?: Prisma.DeliveryProofListRelationFilter
 }, "id" | "email" | "googleSubject">
 
 export type UserOrderByWithAggregationInput = {
@@ -364,6 +376,10 @@ export type UserCreateInput = {
   courierProfile?: Prisma.CourierProfileCreateNestedOneWithoutUserInput
   merchantOrders?: Prisma.MerchantOrderCreateNestedManyWithoutMerchantInput
   parcels?: Prisma.ParcelCreateNestedManyWithoutCustomerInput
+  courierAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutCourierInput
+  createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
+  deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -385,6 +401,10 @@ export type UserUncheckedCreateInput = {
   courierProfile?: Prisma.CourierProfileUncheckedCreateNestedOneWithoutUserInput
   merchantOrders?: Prisma.MerchantOrderUncheckedCreateNestedManyWithoutMerchantInput
   parcels?: Prisma.ParcelUncheckedCreateNestedManyWithoutCustomerInput
+  courierAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutCourierInput
+  createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
+  deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
 }
 
 export type UserUpdateInput = {
@@ -406,6 +426,10 @@ export type UserUpdateInput = {
   courierProfile?: Prisma.CourierProfileUpdateOneWithoutUserNestedInput
   merchantOrders?: Prisma.MerchantOrderUpdateManyWithoutMerchantNestedInput
   parcels?: Prisma.ParcelUpdateManyWithoutCustomerNestedInput
+  courierAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutCourierNestedInput
+  createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
+  deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -427,6 +451,10 @@ export type UserUncheckedUpdateInput = {
   courierProfile?: Prisma.CourierProfileUncheckedUpdateOneWithoutUserNestedInput
   merchantOrders?: Prisma.MerchantOrderUncheckedUpdateManyWithoutMerchantNestedInput
   parcels?: Prisma.ParcelUncheckedUpdateManyWithoutCustomerNestedInput
+  courierAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutCourierNestedInput
+  createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
+  deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -536,6 +564,11 @@ export type UserScalarRelationFilter = {
   isNot?: Prisma.UserWhereInput
 }
 
+export type UserNullableScalarRelationFilter = {
+  is?: Prisma.UserWhereInput | null
+  isNot?: Prisma.UserWhereInput | null
+}
+
 export type StringFieldUpdateOperationsInput = {
   set?: string
 }
@@ -562,6 +595,64 @@ export type NullableDateTimeFieldUpdateOperationsInput = {
 
 export type DateTimeFieldUpdateOperationsInput = {
   set?: Date | string
+}
+
+export type UserCreateNestedOneWithoutCourierAssignmentsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCourierAssignmentsInput, Prisma.UserUncheckedCreateWithoutCourierAssignmentsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCourierAssignmentsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserCreateNestedOneWithoutCreatedAssignmentsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCreatedAssignmentsInput, Prisma.UserUncheckedCreateWithoutCreatedAssignmentsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCreatedAssignmentsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutCourierAssignmentsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCourierAssignmentsInput, Prisma.UserUncheckedCreateWithoutCourierAssignmentsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCourierAssignmentsInput
+  upsert?: Prisma.UserUpsertWithoutCourierAssignmentsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCourierAssignmentsInput, Prisma.UserUpdateWithoutCourierAssignmentsInput>, Prisma.UserUncheckedUpdateWithoutCourierAssignmentsInput>
+}
+
+export type UserUpdateOneRequiredWithoutCreatedAssignmentsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutCreatedAssignmentsInput, Prisma.UserUncheckedCreateWithoutCreatedAssignmentsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutCreatedAssignmentsInput
+  upsert?: Prisma.UserUpsertWithoutCreatedAssignmentsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutCreatedAssignmentsInput, Prisma.UserUpdateWithoutCreatedAssignmentsInput>, Prisma.UserUncheckedUpdateWithoutCreatedAssignmentsInput>
+}
+
+export type UserCreateNestedOneWithoutParcelStatusEventsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutParcelStatusEventsInput, Prisma.UserUncheckedCreateWithoutParcelStatusEventsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutParcelStatusEventsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutParcelStatusEventsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutParcelStatusEventsInput, Prisma.UserUncheckedCreateWithoutParcelStatusEventsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutParcelStatusEventsInput
+  upsert?: Prisma.UserUpsertWithoutParcelStatusEventsInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutParcelStatusEventsInput, Prisma.UserUpdateWithoutParcelStatusEventsInput>, Prisma.UserUncheckedUpdateWithoutParcelStatusEventsInput>
+}
+
+export type UserCreateNestedOneWithoutDeliveryProofsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutDeliveryProofsInput, Prisma.UserUncheckedCreateWithoutDeliveryProofsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutDeliveryProofsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutDeliveryProofsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutDeliveryProofsInput, Prisma.UserUncheckedCreateWithoutDeliveryProofsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutDeliveryProofsInput
+  upsert?: Prisma.UserUpsertWithoutDeliveryProofsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutDeliveryProofsInput, Prisma.UserUpdateWithoutDeliveryProofsInput>, Prisma.UserUncheckedUpdateWithoutDeliveryProofsInput>
 }
 
 export type UserCreateNestedOneWithoutMerchantProfileInput = {
@@ -620,6 +711,454 @@ export type UserUpdateOneRequiredWithoutParcelsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutParcelsInput, Prisma.UserUpdateWithoutParcelsInput>, Prisma.UserUncheckedUpdateWithoutParcelsInput>
 }
 
+export type UserCreateWithoutCourierAssignmentsInput = {
+  id?: string
+  email: string
+  fullName: string
+  phoneNumber?: string | null
+  passwordHash?: string | null
+  role?: $Enums.Role
+  approvalStatus?: $Enums.ApprovalStatus
+  isActive?: boolean
+  googleSubject?: string | null
+  reviewedAt?: Date | string | null
+  reviewedBy?: string | null
+  rejectionReason?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  merchantProfile?: Prisma.MerchantProfileCreateNestedOneWithoutUserInput
+  courierProfile?: Prisma.CourierProfileCreateNestedOneWithoutUserInput
+  merchantOrders?: Prisma.MerchantOrderCreateNestedManyWithoutMerchantInput
+  parcels?: Prisma.ParcelCreateNestedManyWithoutCustomerInput
+  createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
+  deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
+}
+
+export type UserUncheckedCreateWithoutCourierAssignmentsInput = {
+  id?: string
+  email: string
+  fullName: string
+  phoneNumber?: string | null
+  passwordHash?: string | null
+  role?: $Enums.Role
+  approvalStatus?: $Enums.ApprovalStatus
+  isActive?: boolean
+  googleSubject?: string | null
+  reviewedAt?: Date | string | null
+  reviewedBy?: string | null
+  rejectionReason?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  merchantProfile?: Prisma.MerchantProfileUncheckedCreateNestedOneWithoutUserInput
+  courierProfile?: Prisma.CourierProfileUncheckedCreateNestedOneWithoutUserInput
+  merchantOrders?: Prisma.MerchantOrderUncheckedCreateNestedManyWithoutMerchantInput
+  parcels?: Prisma.ParcelUncheckedCreateNestedManyWithoutCustomerInput
+  createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
+  deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
+}
+
+export type UserCreateOrConnectWithoutCourierAssignmentsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutCourierAssignmentsInput, Prisma.UserUncheckedCreateWithoutCourierAssignmentsInput>
+}
+
+export type UserCreateWithoutCreatedAssignmentsInput = {
+  id?: string
+  email: string
+  fullName: string
+  phoneNumber?: string | null
+  passwordHash?: string | null
+  role?: $Enums.Role
+  approvalStatus?: $Enums.ApprovalStatus
+  isActive?: boolean
+  googleSubject?: string | null
+  reviewedAt?: Date | string | null
+  reviewedBy?: string | null
+  rejectionReason?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  merchantProfile?: Prisma.MerchantProfileCreateNestedOneWithoutUserInput
+  courierProfile?: Prisma.CourierProfileCreateNestedOneWithoutUserInput
+  merchantOrders?: Prisma.MerchantOrderCreateNestedManyWithoutMerchantInput
+  parcels?: Prisma.ParcelCreateNestedManyWithoutCustomerInput
+  courierAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutCourierInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
+  deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
+}
+
+export type UserUncheckedCreateWithoutCreatedAssignmentsInput = {
+  id?: string
+  email: string
+  fullName: string
+  phoneNumber?: string | null
+  passwordHash?: string | null
+  role?: $Enums.Role
+  approvalStatus?: $Enums.ApprovalStatus
+  isActive?: boolean
+  googleSubject?: string | null
+  reviewedAt?: Date | string | null
+  reviewedBy?: string | null
+  rejectionReason?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  merchantProfile?: Prisma.MerchantProfileUncheckedCreateNestedOneWithoutUserInput
+  courierProfile?: Prisma.CourierProfileUncheckedCreateNestedOneWithoutUserInput
+  merchantOrders?: Prisma.MerchantOrderUncheckedCreateNestedManyWithoutMerchantInput
+  parcels?: Prisma.ParcelUncheckedCreateNestedManyWithoutCustomerInput
+  courierAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutCourierInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
+  deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
+}
+
+export type UserCreateOrConnectWithoutCreatedAssignmentsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutCreatedAssignmentsInput, Prisma.UserUncheckedCreateWithoutCreatedAssignmentsInput>
+}
+
+export type UserUpsertWithoutCourierAssignmentsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutCourierAssignmentsInput, Prisma.UserUncheckedUpdateWithoutCourierAssignmentsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutCourierAssignmentsInput, Prisma.UserUncheckedCreateWithoutCourierAssignmentsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutCourierAssignmentsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutCourierAssignmentsInput, Prisma.UserUncheckedUpdateWithoutCourierAssignmentsInput>
+}
+
+export type UserUpdateWithoutCourierAssignmentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  merchantProfile?: Prisma.MerchantProfileUpdateOneWithoutUserNestedInput
+  courierProfile?: Prisma.CourierProfileUpdateOneWithoutUserNestedInput
+  merchantOrders?: Prisma.MerchantOrderUpdateManyWithoutMerchantNestedInput
+  parcels?: Prisma.ParcelUpdateManyWithoutCustomerNestedInput
+  createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
+  deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
+}
+
+export type UserUncheckedUpdateWithoutCourierAssignmentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  merchantProfile?: Prisma.MerchantProfileUncheckedUpdateOneWithoutUserNestedInput
+  courierProfile?: Prisma.CourierProfileUncheckedUpdateOneWithoutUserNestedInput
+  merchantOrders?: Prisma.MerchantOrderUncheckedUpdateManyWithoutMerchantNestedInput
+  parcels?: Prisma.ParcelUncheckedUpdateManyWithoutCustomerNestedInput
+  createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
+  deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
+}
+
+export type UserUpsertWithoutCreatedAssignmentsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutCreatedAssignmentsInput, Prisma.UserUncheckedUpdateWithoutCreatedAssignmentsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutCreatedAssignmentsInput, Prisma.UserUncheckedCreateWithoutCreatedAssignmentsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutCreatedAssignmentsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutCreatedAssignmentsInput, Prisma.UserUncheckedUpdateWithoutCreatedAssignmentsInput>
+}
+
+export type UserUpdateWithoutCreatedAssignmentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  merchantProfile?: Prisma.MerchantProfileUpdateOneWithoutUserNestedInput
+  courierProfile?: Prisma.CourierProfileUpdateOneWithoutUserNestedInput
+  merchantOrders?: Prisma.MerchantOrderUpdateManyWithoutMerchantNestedInput
+  parcels?: Prisma.ParcelUpdateManyWithoutCustomerNestedInput
+  courierAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutCourierNestedInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
+  deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
+}
+
+export type UserUncheckedUpdateWithoutCreatedAssignmentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  merchantProfile?: Prisma.MerchantProfileUncheckedUpdateOneWithoutUserNestedInput
+  courierProfile?: Prisma.CourierProfileUncheckedUpdateOneWithoutUserNestedInput
+  merchantOrders?: Prisma.MerchantOrderUncheckedUpdateManyWithoutMerchantNestedInput
+  parcels?: Prisma.ParcelUncheckedUpdateManyWithoutCustomerNestedInput
+  courierAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutCourierNestedInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
+  deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
+}
+
+export type UserCreateWithoutParcelStatusEventsInput = {
+  id?: string
+  email: string
+  fullName: string
+  phoneNumber?: string | null
+  passwordHash?: string | null
+  role?: $Enums.Role
+  approvalStatus?: $Enums.ApprovalStatus
+  isActive?: boolean
+  googleSubject?: string | null
+  reviewedAt?: Date | string | null
+  reviewedBy?: string | null
+  rejectionReason?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  merchantProfile?: Prisma.MerchantProfileCreateNestedOneWithoutUserInput
+  courierProfile?: Prisma.CourierProfileCreateNestedOneWithoutUserInput
+  merchantOrders?: Prisma.MerchantOrderCreateNestedManyWithoutMerchantInput
+  parcels?: Prisma.ParcelCreateNestedManyWithoutCustomerInput
+  courierAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutCourierInput
+  createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
+  deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
+}
+
+export type UserUncheckedCreateWithoutParcelStatusEventsInput = {
+  id?: string
+  email: string
+  fullName: string
+  phoneNumber?: string | null
+  passwordHash?: string | null
+  role?: $Enums.Role
+  approvalStatus?: $Enums.ApprovalStatus
+  isActive?: boolean
+  googleSubject?: string | null
+  reviewedAt?: Date | string | null
+  reviewedBy?: string | null
+  rejectionReason?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  merchantProfile?: Prisma.MerchantProfileUncheckedCreateNestedOneWithoutUserInput
+  courierProfile?: Prisma.CourierProfileUncheckedCreateNestedOneWithoutUserInput
+  merchantOrders?: Prisma.MerchantOrderUncheckedCreateNestedManyWithoutMerchantInput
+  parcels?: Prisma.ParcelUncheckedCreateNestedManyWithoutCustomerInput
+  courierAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutCourierInput
+  createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
+  deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
+}
+
+export type UserCreateOrConnectWithoutParcelStatusEventsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutParcelStatusEventsInput, Prisma.UserUncheckedCreateWithoutParcelStatusEventsInput>
+}
+
+export type UserUpsertWithoutParcelStatusEventsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutParcelStatusEventsInput, Prisma.UserUncheckedUpdateWithoutParcelStatusEventsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutParcelStatusEventsInput, Prisma.UserUncheckedCreateWithoutParcelStatusEventsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutParcelStatusEventsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutParcelStatusEventsInput, Prisma.UserUncheckedUpdateWithoutParcelStatusEventsInput>
+}
+
+export type UserUpdateWithoutParcelStatusEventsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  merchantProfile?: Prisma.MerchantProfileUpdateOneWithoutUserNestedInput
+  courierProfile?: Prisma.CourierProfileUpdateOneWithoutUserNestedInput
+  merchantOrders?: Prisma.MerchantOrderUpdateManyWithoutMerchantNestedInput
+  parcels?: Prisma.ParcelUpdateManyWithoutCustomerNestedInput
+  courierAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutCourierNestedInput
+  createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
+  deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
+}
+
+export type UserUncheckedUpdateWithoutParcelStatusEventsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  merchantProfile?: Prisma.MerchantProfileUncheckedUpdateOneWithoutUserNestedInput
+  courierProfile?: Prisma.CourierProfileUncheckedUpdateOneWithoutUserNestedInput
+  merchantOrders?: Prisma.MerchantOrderUncheckedUpdateManyWithoutMerchantNestedInput
+  parcels?: Prisma.ParcelUncheckedUpdateManyWithoutCustomerNestedInput
+  courierAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutCourierNestedInput
+  createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
+  deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
+}
+
+export type UserCreateWithoutDeliveryProofsInput = {
+  id?: string
+  email: string
+  fullName: string
+  phoneNumber?: string | null
+  passwordHash?: string | null
+  role?: $Enums.Role
+  approvalStatus?: $Enums.ApprovalStatus
+  isActive?: boolean
+  googleSubject?: string | null
+  reviewedAt?: Date | string | null
+  reviewedBy?: string | null
+  rejectionReason?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  merchantProfile?: Prisma.MerchantProfileCreateNestedOneWithoutUserInput
+  courierProfile?: Prisma.CourierProfileCreateNestedOneWithoutUserInput
+  merchantOrders?: Prisma.MerchantOrderCreateNestedManyWithoutMerchantInput
+  parcels?: Prisma.ParcelCreateNestedManyWithoutCustomerInput
+  courierAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutCourierInput
+  createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
+}
+
+export type UserUncheckedCreateWithoutDeliveryProofsInput = {
+  id?: string
+  email: string
+  fullName: string
+  phoneNumber?: string | null
+  passwordHash?: string | null
+  role?: $Enums.Role
+  approvalStatus?: $Enums.ApprovalStatus
+  isActive?: boolean
+  googleSubject?: string | null
+  reviewedAt?: Date | string | null
+  reviewedBy?: string | null
+  rejectionReason?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  merchantProfile?: Prisma.MerchantProfileUncheckedCreateNestedOneWithoutUserInput
+  courierProfile?: Prisma.CourierProfileUncheckedCreateNestedOneWithoutUserInput
+  merchantOrders?: Prisma.MerchantOrderUncheckedCreateNestedManyWithoutMerchantInput
+  parcels?: Prisma.ParcelUncheckedCreateNestedManyWithoutCustomerInput
+  courierAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutCourierInput
+  createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
+}
+
+export type UserCreateOrConnectWithoutDeliveryProofsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutDeliveryProofsInput, Prisma.UserUncheckedCreateWithoutDeliveryProofsInput>
+}
+
+export type UserUpsertWithoutDeliveryProofsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutDeliveryProofsInput, Prisma.UserUncheckedUpdateWithoutDeliveryProofsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutDeliveryProofsInput, Prisma.UserUncheckedCreateWithoutDeliveryProofsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutDeliveryProofsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutDeliveryProofsInput, Prisma.UserUncheckedUpdateWithoutDeliveryProofsInput>
+}
+
+export type UserUpdateWithoutDeliveryProofsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  merchantProfile?: Prisma.MerchantProfileUpdateOneWithoutUserNestedInput
+  courierProfile?: Prisma.CourierProfileUpdateOneWithoutUserNestedInput
+  merchantOrders?: Prisma.MerchantOrderUpdateManyWithoutMerchantNestedInput
+  parcels?: Prisma.ParcelUpdateManyWithoutCustomerNestedInput
+  courierAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutCourierNestedInput
+  createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
+}
+
+export type UserUncheckedUpdateWithoutDeliveryProofsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  merchantProfile?: Prisma.MerchantProfileUncheckedUpdateOneWithoutUserNestedInput
+  courierProfile?: Prisma.CourierProfileUncheckedUpdateOneWithoutUserNestedInput
+  merchantOrders?: Prisma.MerchantOrderUncheckedUpdateManyWithoutMerchantNestedInput
+  parcels?: Prisma.ParcelUncheckedUpdateManyWithoutCustomerNestedInput
+  courierAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutCourierNestedInput
+  createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
+}
+
 export type UserCreateWithoutMerchantProfileInput = {
   id?: string
   email: string
@@ -638,6 +1177,10 @@ export type UserCreateWithoutMerchantProfileInput = {
   courierProfile?: Prisma.CourierProfileCreateNestedOneWithoutUserInput
   merchantOrders?: Prisma.MerchantOrderCreateNestedManyWithoutMerchantInput
   parcels?: Prisma.ParcelCreateNestedManyWithoutCustomerInput
+  courierAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutCourierInput
+  createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
+  deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
 }
 
 export type UserUncheckedCreateWithoutMerchantProfileInput = {
@@ -658,6 +1201,10 @@ export type UserUncheckedCreateWithoutMerchantProfileInput = {
   courierProfile?: Prisma.CourierProfileUncheckedCreateNestedOneWithoutUserInput
   merchantOrders?: Prisma.MerchantOrderUncheckedCreateNestedManyWithoutMerchantInput
   parcels?: Prisma.ParcelUncheckedCreateNestedManyWithoutCustomerInput
+  courierAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutCourierInput
+  createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
+  deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
 }
 
 export type UserCreateOrConnectWithoutMerchantProfileInput = {
@@ -694,6 +1241,10 @@ export type UserUpdateWithoutMerchantProfileInput = {
   courierProfile?: Prisma.CourierProfileUpdateOneWithoutUserNestedInput
   merchantOrders?: Prisma.MerchantOrderUpdateManyWithoutMerchantNestedInput
   parcels?: Prisma.ParcelUpdateManyWithoutCustomerNestedInput
+  courierAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutCourierNestedInput
+  createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
+  deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMerchantProfileInput = {
@@ -714,6 +1265,10 @@ export type UserUncheckedUpdateWithoutMerchantProfileInput = {
   courierProfile?: Prisma.CourierProfileUncheckedUpdateOneWithoutUserNestedInput
   merchantOrders?: Prisma.MerchantOrderUncheckedUpdateManyWithoutMerchantNestedInput
   parcels?: Prisma.ParcelUncheckedUpdateManyWithoutCustomerNestedInput
+  courierAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutCourierNestedInput
+  createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
+  deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
 }
 
 export type UserCreateWithoutCourierProfileInput = {
@@ -734,6 +1289,10 @@ export type UserCreateWithoutCourierProfileInput = {
   merchantProfile?: Prisma.MerchantProfileCreateNestedOneWithoutUserInput
   merchantOrders?: Prisma.MerchantOrderCreateNestedManyWithoutMerchantInput
   parcels?: Prisma.ParcelCreateNestedManyWithoutCustomerInput
+  courierAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutCourierInput
+  createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
+  deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
 }
 
 export type UserUncheckedCreateWithoutCourierProfileInput = {
@@ -754,6 +1313,10 @@ export type UserUncheckedCreateWithoutCourierProfileInput = {
   merchantProfile?: Prisma.MerchantProfileUncheckedCreateNestedOneWithoutUserInput
   merchantOrders?: Prisma.MerchantOrderUncheckedCreateNestedManyWithoutMerchantInput
   parcels?: Prisma.ParcelUncheckedCreateNestedManyWithoutCustomerInput
+  courierAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutCourierInput
+  createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
+  deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
 }
 
 export type UserCreateOrConnectWithoutCourierProfileInput = {
@@ -790,6 +1353,10 @@ export type UserUpdateWithoutCourierProfileInput = {
   merchantProfile?: Prisma.MerchantProfileUpdateOneWithoutUserNestedInput
   merchantOrders?: Prisma.MerchantOrderUpdateManyWithoutMerchantNestedInput
   parcels?: Prisma.ParcelUpdateManyWithoutCustomerNestedInput
+  courierAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutCourierNestedInput
+  createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
+  deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCourierProfileInput = {
@@ -810,6 +1377,10 @@ export type UserUncheckedUpdateWithoutCourierProfileInput = {
   merchantProfile?: Prisma.MerchantProfileUncheckedUpdateOneWithoutUserNestedInput
   merchantOrders?: Prisma.MerchantOrderUncheckedUpdateManyWithoutMerchantNestedInput
   parcels?: Prisma.ParcelUncheckedUpdateManyWithoutCustomerNestedInput
+  courierAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutCourierNestedInput
+  createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
+  deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
 }
 
 export type UserCreateWithoutMerchantOrdersInput = {
@@ -830,6 +1401,10 @@ export type UserCreateWithoutMerchantOrdersInput = {
   merchantProfile?: Prisma.MerchantProfileCreateNestedOneWithoutUserInput
   courierProfile?: Prisma.CourierProfileCreateNestedOneWithoutUserInput
   parcels?: Prisma.ParcelCreateNestedManyWithoutCustomerInput
+  courierAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutCourierInput
+  createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
+  deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
 }
 
 export type UserUncheckedCreateWithoutMerchantOrdersInput = {
@@ -850,6 +1425,10 @@ export type UserUncheckedCreateWithoutMerchantOrdersInput = {
   merchantProfile?: Prisma.MerchantProfileUncheckedCreateNestedOneWithoutUserInput
   courierProfile?: Prisma.CourierProfileUncheckedCreateNestedOneWithoutUserInput
   parcels?: Prisma.ParcelUncheckedCreateNestedManyWithoutCustomerInput
+  courierAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutCourierInput
+  createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
+  deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
 }
 
 export type UserCreateOrConnectWithoutMerchantOrdersInput = {
@@ -886,6 +1465,10 @@ export type UserUpdateWithoutMerchantOrdersInput = {
   merchantProfile?: Prisma.MerchantProfileUpdateOneWithoutUserNestedInput
   courierProfile?: Prisma.CourierProfileUpdateOneWithoutUserNestedInput
   parcels?: Prisma.ParcelUpdateManyWithoutCustomerNestedInput
+  courierAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutCourierNestedInput
+  createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
+  deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMerchantOrdersInput = {
@@ -906,6 +1489,10 @@ export type UserUncheckedUpdateWithoutMerchantOrdersInput = {
   merchantProfile?: Prisma.MerchantProfileUncheckedUpdateOneWithoutUserNestedInput
   courierProfile?: Prisma.CourierProfileUncheckedUpdateOneWithoutUserNestedInput
   parcels?: Prisma.ParcelUncheckedUpdateManyWithoutCustomerNestedInput
+  courierAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutCourierNestedInput
+  createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
+  deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
 }
 
 export type UserCreateWithoutParcelsInput = {
@@ -926,6 +1513,10 @@ export type UserCreateWithoutParcelsInput = {
   merchantProfile?: Prisma.MerchantProfileCreateNestedOneWithoutUserInput
   courierProfile?: Prisma.CourierProfileCreateNestedOneWithoutUserInput
   merchantOrders?: Prisma.MerchantOrderCreateNestedManyWithoutMerchantInput
+  courierAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutCourierInput
+  createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
+  deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
 }
 
 export type UserUncheckedCreateWithoutParcelsInput = {
@@ -946,6 +1537,10 @@ export type UserUncheckedCreateWithoutParcelsInput = {
   merchantProfile?: Prisma.MerchantProfileUncheckedCreateNestedOneWithoutUserInput
   courierProfile?: Prisma.CourierProfileUncheckedCreateNestedOneWithoutUserInput
   merchantOrders?: Prisma.MerchantOrderUncheckedCreateNestedManyWithoutMerchantInput
+  courierAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutCourierInput
+  createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
+  deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
 }
 
 export type UserCreateOrConnectWithoutParcelsInput = {
@@ -982,6 +1577,10 @@ export type UserUpdateWithoutParcelsInput = {
   merchantProfile?: Prisma.MerchantProfileUpdateOneWithoutUserNestedInput
   courierProfile?: Prisma.CourierProfileUpdateOneWithoutUserNestedInput
   merchantOrders?: Prisma.MerchantOrderUpdateManyWithoutMerchantNestedInput
+  courierAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutCourierNestedInput
+  createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
+  deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
 }
 
 export type UserUncheckedUpdateWithoutParcelsInput = {
@@ -1002,6 +1601,10 @@ export type UserUncheckedUpdateWithoutParcelsInput = {
   merchantProfile?: Prisma.MerchantProfileUncheckedUpdateOneWithoutUserNestedInput
   courierProfile?: Prisma.CourierProfileUncheckedUpdateOneWithoutUserNestedInput
   merchantOrders?: Prisma.MerchantOrderUncheckedUpdateManyWithoutMerchantNestedInput
+  courierAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutCourierNestedInput
+  createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
+  deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
 }
 
 
@@ -1012,11 +1615,19 @@ export type UserUncheckedUpdateWithoutParcelsInput = {
 export type UserCountOutputType = {
   merchantOrders: number
   parcels: number
+  courierAssignments: number
+  createdAssignments: number
+  parcelStatusEvents: number
+  deliveryProofs: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   merchantOrders?: boolean | UserCountOutputTypeCountMerchantOrdersArgs
   parcels?: boolean | UserCountOutputTypeCountParcelsArgs
+  courierAssignments?: boolean | UserCountOutputTypeCountCourierAssignmentsArgs
+  createdAssignments?: boolean | UserCountOutputTypeCountCreatedAssignmentsArgs
+  parcelStatusEvents?: boolean | UserCountOutputTypeCountParcelStatusEventsArgs
+  deliveryProofs?: boolean | UserCountOutputTypeCountDeliveryProofsArgs
 }
 
 /**
@@ -1043,6 +1654,34 @@ export type UserCountOutputTypeCountParcelsArgs<ExtArgs extends runtime.Types.Ex
   where?: Prisma.ParcelWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountCourierAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.DeliveryAssignmentWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountCreatedAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.DeliveryAssignmentWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountParcelStatusEventsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ParcelStatusEventWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountDeliveryProofsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.DeliveryProofWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1063,6 +1702,10 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   courierProfile?: boolean | Prisma.User$courierProfileArgs<ExtArgs>
   merchantOrders?: boolean | Prisma.User$merchantOrdersArgs<ExtArgs>
   parcels?: boolean | Prisma.User$parcelsArgs<ExtArgs>
+  courierAssignments?: boolean | Prisma.User$courierAssignmentsArgs<ExtArgs>
+  createdAssignments?: boolean | Prisma.User$createdAssignmentsArgs<ExtArgs>
+  parcelStatusEvents?: boolean | Prisma.User$parcelStatusEventsArgs<ExtArgs>
+  deliveryProofs?: boolean | Prisma.User$deliveryProofsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -1123,6 +1766,10 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   courierProfile?: boolean | Prisma.User$courierProfileArgs<ExtArgs>
   merchantOrders?: boolean | Prisma.User$merchantOrdersArgs<ExtArgs>
   parcels?: boolean | Prisma.User$parcelsArgs<ExtArgs>
+  courierAssignments?: boolean | Prisma.User$courierAssignmentsArgs<ExtArgs>
+  createdAssignments?: boolean | Prisma.User$createdAssignmentsArgs<ExtArgs>
+  parcelStatusEvents?: boolean | Prisma.User$parcelStatusEventsArgs<ExtArgs>
+  deliveryProofs?: boolean | Prisma.User$deliveryProofsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1135,6 +1782,10 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     courierProfile: Prisma.$CourierProfilePayload<ExtArgs> | null
     merchantOrders: Prisma.$MerchantOrderPayload<ExtArgs>[]
     parcels: Prisma.$ParcelPayload<ExtArgs>[]
+    courierAssignments: Prisma.$DeliveryAssignmentPayload<ExtArgs>[]
+    createdAssignments: Prisma.$DeliveryAssignmentPayload<ExtArgs>[]
+    parcelStatusEvents: Prisma.$ParcelStatusEventPayload<ExtArgs>[]
+    deliveryProofs: Prisma.$DeliveryProofPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1549,6 +2200,10 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   courierProfile<T extends Prisma.User$courierProfileArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$courierProfileArgs<ExtArgs>>): Prisma.Prisma__CourierProfileClient<runtime.Types.Result.GetResult<Prisma.$CourierProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   merchantOrders<T extends Prisma.User$merchantOrdersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$merchantOrdersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MerchantOrderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   parcels<T extends Prisma.User$parcelsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$parcelsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ParcelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  courierAssignments<T extends Prisma.User$courierAssignmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$courierAssignmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DeliveryAssignmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  createdAssignments<T extends Prisma.User$createdAssignmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$createdAssignmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DeliveryAssignmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  parcelStatusEvents<T extends Prisma.User$parcelStatusEventsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$parcelStatusEventsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ParcelStatusEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  deliveryProofs<T extends Prisma.User$deliveryProofsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$deliveryProofsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DeliveryProofPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2068,6 +2723,102 @@ export type User$parcelsArgs<ExtArgs extends runtime.Types.Extensions.InternalAr
   take?: number
   skip?: number
   distinct?: Prisma.ParcelScalarFieldEnum | Prisma.ParcelScalarFieldEnum[]
+}
+
+/**
+ * User.courierAssignments
+ */
+export type User$courierAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the DeliveryAssignment
+   */
+  select?: Prisma.DeliveryAssignmentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the DeliveryAssignment
+   */
+  omit?: Prisma.DeliveryAssignmentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.DeliveryAssignmentInclude<ExtArgs> | null
+  where?: Prisma.DeliveryAssignmentWhereInput
+  orderBy?: Prisma.DeliveryAssignmentOrderByWithRelationInput | Prisma.DeliveryAssignmentOrderByWithRelationInput[]
+  cursor?: Prisma.DeliveryAssignmentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.DeliveryAssignmentScalarFieldEnum | Prisma.DeliveryAssignmentScalarFieldEnum[]
+}
+
+/**
+ * User.createdAssignments
+ */
+export type User$createdAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the DeliveryAssignment
+   */
+  select?: Prisma.DeliveryAssignmentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the DeliveryAssignment
+   */
+  omit?: Prisma.DeliveryAssignmentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.DeliveryAssignmentInclude<ExtArgs> | null
+  where?: Prisma.DeliveryAssignmentWhereInput
+  orderBy?: Prisma.DeliveryAssignmentOrderByWithRelationInput | Prisma.DeliveryAssignmentOrderByWithRelationInput[]
+  cursor?: Prisma.DeliveryAssignmentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.DeliveryAssignmentScalarFieldEnum | Prisma.DeliveryAssignmentScalarFieldEnum[]
+}
+
+/**
+ * User.parcelStatusEvents
+ */
+export type User$parcelStatusEventsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ParcelStatusEvent
+   */
+  select?: Prisma.ParcelStatusEventSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ParcelStatusEvent
+   */
+  omit?: Prisma.ParcelStatusEventOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ParcelStatusEventInclude<ExtArgs> | null
+  where?: Prisma.ParcelStatusEventWhereInput
+  orderBy?: Prisma.ParcelStatusEventOrderByWithRelationInput | Prisma.ParcelStatusEventOrderByWithRelationInput[]
+  cursor?: Prisma.ParcelStatusEventWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ParcelStatusEventScalarFieldEnum | Prisma.ParcelStatusEventScalarFieldEnum[]
+}
+
+/**
+ * User.deliveryProofs
+ */
+export type User$deliveryProofsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the DeliveryProof
+   */
+  select?: Prisma.DeliveryProofSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the DeliveryProof
+   */
+  omit?: Prisma.DeliveryProofOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.DeliveryProofInclude<ExtArgs> | null
+  where?: Prisma.DeliveryProofWhereInput
+  orderBy?: Prisma.DeliveryProofOrderByWithRelationInput | Prisma.DeliveryProofOrderByWithRelationInput[]
+  cursor?: Prisma.DeliveryProofWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.DeliveryProofScalarFieldEnum | Prisma.DeliveryProofScalarFieldEnum[]
 }
 
 /**

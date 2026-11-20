@@ -28,12 +28,14 @@ export type AggregateParcel = {
 
 export type ParcelAvgAggregateOutputType = {
   weightKg: runtime.Decimal | null
+  weightGrams: number | null
   costLkr: runtime.Decimal | null
   failedDeliveryAttempts: number | null
 }
 
 export type ParcelSumAggregateOutputType = {
   weightKg: runtime.Decimal | null
+  weightGrams: number | null
   costLkr: runtime.Decimal | null
   failedDeliveryAttempts: number | null
 }
@@ -47,13 +49,17 @@ export type ParcelMinAggregateOutputType = {
   recipientName: string | null
   recipientAddress: string | null
   recipientPhone: string | null
+  deliveryInstructions: string | null
+  contentsDescription: string | null
   packageSize: $Enums.PackageSize | null
   weightKg: runtime.Decimal | null
+  weightGrams: number | null
   costLkr: runtime.Decimal | null
   status: $Enums.ParcelStatus | null
   failureReason: string | null
   failedDeliveryAttempts: number | null
   deliveredAt: Date | null
+  deliveredProofId: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -67,13 +73,17 @@ export type ParcelMaxAggregateOutputType = {
   recipientName: string | null
   recipientAddress: string | null
   recipientPhone: string | null
+  deliveryInstructions: string | null
+  contentsDescription: string | null
   packageSize: $Enums.PackageSize | null
   weightKg: runtime.Decimal | null
+  weightGrams: number | null
   costLkr: runtime.Decimal | null
   status: $Enums.ParcelStatus | null
   failureReason: string | null
   failedDeliveryAttempts: number | null
   deliveredAt: Date | null
+  deliveredProofId: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -87,13 +97,17 @@ export type ParcelCountAggregateOutputType = {
   recipientName: number
   recipientAddress: number
   recipientPhone: number
+  deliveryInstructions: number
+  contentsDescription: number
   packageSize: number
   weightKg: number
+  weightGrams: number
   costLkr: number
   status: number
   failureReason: number
   failedDeliveryAttempts: number
   deliveredAt: number
+  deliveredProofId: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -102,12 +116,14 @@ export type ParcelCountAggregateOutputType = {
 
 export type ParcelAvgAggregateInputType = {
   weightKg?: true
+  weightGrams?: true
   costLkr?: true
   failedDeliveryAttempts?: true
 }
 
 export type ParcelSumAggregateInputType = {
   weightKg?: true
+  weightGrams?: true
   costLkr?: true
   failedDeliveryAttempts?: true
 }
@@ -121,13 +137,17 @@ export type ParcelMinAggregateInputType = {
   recipientName?: true
   recipientAddress?: true
   recipientPhone?: true
+  deliveryInstructions?: true
+  contentsDescription?: true
   packageSize?: true
   weightKg?: true
+  weightGrams?: true
   costLkr?: true
   status?: true
   failureReason?: true
   failedDeliveryAttempts?: true
   deliveredAt?: true
+  deliveredProofId?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -141,13 +161,17 @@ export type ParcelMaxAggregateInputType = {
   recipientName?: true
   recipientAddress?: true
   recipientPhone?: true
+  deliveryInstructions?: true
+  contentsDescription?: true
   packageSize?: true
   weightKg?: true
+  weightGrams?: true
   costLkr?: true
   status?: true
   failureReason?: true
   failedDeliveryAttempts?: true
   deliveredAt?: true
+  deliveredProofId?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -161,13 +185,17 @@ export type ParcelCountAggregateInputType = {
   recipientName?: true
   recipientAddress?: true
   recipientPhone?: true
+  deliveryInstructions?: true
+  contentsDescription?: true
   packageSize?: true
   weightKg?: true
+  weightGrams?: true
   costLkr?: true
   status?: true
   failureReason?: true
   failedDeliveryAttempts?: true
   deliveredAt?: true
+  deliveredProofId?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -268,13 +296,17 @@ export type ParcelGroupByOutputType = {
   recipientName: string
   recipientAddress: string
   recipientPhone: string
+  deliveryInstructions: string | null
+  contentsDescription: string | null
   packageSize: $Enums.PackageSize
   weightKg: runtime.Decimal
+  weightGrams: number | null
   costLkr: runtime.Decimal
   status: $Enums.ParcelStatus
   failureReason: string | null
   failedDeliveryAttempts: number
   deliveredAt: Date | null
+  deliveredProofId: string | null
   createdAt: Date
   updatedAt: Date
   _count: ParcelCountAggregateOutputType | null
@@ -311,17 +343,25 @@ export type ParcelWhereInput = {
   recipientName?: Prisma.StringFilter<"Parcel"> | string
   recipientAddress?: Prisma.StringFilter<"Parcel"> | string
   recipientPhone?: Prisma.StringFilter<"Parcel"> | string
+  deliveryInstructions?: Prisma.StringNullableFilter<"Parcel"> | string | null
+  contentsDescription?: Prisma.StringNullableFilter<"Parcel"> | string | null
   packageSize?: Prisma.EnumPackageSizeFilter<"Parcel"> | $Enums.PackageSize
   weightKg?: Prisma.DecimalFilter<"Parcel"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: Prisma.IntNullableFilter<"Parcel"> | number | null
   costLkr?: Prisma.DecimalFilter<"Parcel"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.EnumParcelStatusFilter<"Parcel"> | $Enums.ParcelStatus
   failureReason?: Prisma.StringNullableFilter<"Parcel"> | string | null
   failedDeliveryAttempts?: Prisma.IntFilter<"Parcel"> | number
   deliveredAt?: Prisma.DateTimeNullableFilter<"Parcel"> | Date | string | null
+  deliveredProofId?: Prisma.UuidNullableFilter<"Parcel"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Parcel"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Parcel"> | Date | string
   customer?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
+  assignments?: Prisma.DeliveryAssignmentListRelationFilter
+  statusEvents?: Prisma.ParcelStatusEventListRelationFilter
+  proofs?: Prisma.DeliveryProofListRelationFilter
   statusHistory?: Prisma.ParcelStatusHistoryListRelationFilter
+  deliveredProof?: Prisma.XOR<Prisma.DeliveryProofNullableScalarRelationFilter, Prisma.DeliveryProofWhereInput> | null
 }
 
 export type ParcelOrderByWithRelationInput = {
@@ -333,22 +373,32 @@ export type ParcelOrderByWithRelationInput = {
   recipientName?: Prisma.SortOrder
   recipientAddress?: Prisma.SortOrder
   recipientPhone?: Prisma.SortOrder
+  deliveryInstructions?: Prisma.SortOrderInput | Prisma.SortOrder
+  contentsDescription?: Prisma.SortOrderInput | Prisma.SortOrder
   packageSize?: Prisma.SortOrder
   weightKg?: Prisma.SortOrder
+  weightGrams?: Prisma.SortOrderInput | Prisma.SortOrder
   costLkr?: Prisma.SortOrder
   status?: Prisma.SortOrder
   failureReason?: Prisma.SortOrderInput | Prisma.SortOrder
   failedDeliveryAttempts?: Prisma.SortOrder
   deliveredAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  deliveredProofId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   customer?: Prisma.UserOrderByWithRelationInput
+  assignments?: Prisma.DeliveryAssignmentOrderByRelationAggregateInput
+  statusEvents?: Prisma.ParcelStatusEventOrderByRelationAggregateInput
+  proofs?: Prisma.DeliveryProofOrderByRelationAggregateInput
   statusHistory?: Prisma.ParcelStatusHistoryOrderByRelationAggregateInput
+  deliveredProof?: Prisma.DeliveryProofOrderByWithRelationInput
 }
 
 export type ParcelWhereUniqueInput = Prisma.AtLeast<{
   id?: string
   trackingNumber?: string
+  deliveredProofId?: string
+  deliveredProofId_id?: Prisma.ParcelDeliveredProofIdIdCompoundUniqueInput
   AND?: Prisma.ParcelWhereInput | Prisma.ParcelWhereInput[]
   OR?: Prisma.ParcelWhereInput[]
   NOT?: Prisma.ParcelWhereInput | Prisma.ParcelWhereInput[]
@@ -358,8 +408,11 @@ export type ParcelWhereUniqueInput = Prisma.AtLeast<{
   recipientName?: Prisma.StringFilter<"Parcel"> | string
   recipientAddress?: Prisma.StringFilter<"Parcel"> | string
   recipientPhone?: Prisma.StringFilter<"Parcel"> | string
+  deliveryInstructions?: Prisma.StringNullableFilter<"Parcel"> | string | null
+  contentsDescription?: Prisma.StringNullableFilter<"Parcel"> | string | null
   packageSize?: Prisma.EnumPackageSizeFilter<"Parcel"> | $Enums.PackageSize
   weightKg?: Prisma.DecimalFilter<"Parcel"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: Prisma.IntNullableFilter<"Parcel"> | number | null
   costLkr?: Prisma.DecimalFilter<"Parcel"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.EnumParcelStatusFilter<"Parcel"> | $Enums.ParcelStatus
   failureReason?: Prisma.StringNullableFilter<"Parcel"> | string | null
@@ -368,8 +421,12 @@ export type ParcelWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"Parcel"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Parcel"> | Date | string
   customer?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
+  assignments?: Prisma.DeliveryAssignmentListRelationFilter
+  statusEvents?: Prisma.ParcelStatusEventListRelationFilter
+  proofs?: Prisma.DeliveryProofListRelationFilter
   statusHistory?: Prisma.ParcelStatusHistoryListRelationFilter
-}, "id" | "trackingNumber">
+  deliveredProof?: Prisma.XOR<Prisma.DeliveryProofNullableScalarRelationFilter, Prisma.DeliveryProofWhereInput> | null
+}, "id" | "trackingNumber" | "deliveredProofId" | "deliveredProofId_id">
 
 export type ParcelOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -380,13 +437,17 @@ export type ParcelOrderByWithAggregationInput = {
   recipientName?: Prisma.SortOrder
   recipientAddress?: Prisma.SortOrder
   recipientPhone?: Prisma.SortOrder
+  deliveryInstructions?: Prisma.SortOrderInput | Prisma.SortOrder
+  contentsDescription?: Prisma.SortOrderInput | Prisma.SortOrder
   packageSize?: Prisma.SortOrder
   weightKg?: Prisma.SortOrder
+  weightGrams?: Prisma.SortOrderInput | Prisma.SortOrder
   costLkr?: Prisma.SortOrder
   status?: Prisma.SortOrder
   failureReason?: Prisma.SortOrderInput | Prisma.SortOrder
   failedDeliveryAttempts?: Prisma.SortOrder
   deliveredAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  deliveredProofId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.ParcelCountOrderByAggregateInput
@@ -408,27 +469,33 @@ export type ParcelScalarWhereWithAggregatesInput = {
   recipientName?: Prisma.StringWithAggregatesFilter<"Parcel"> | string
   recipientAddress?: Prisma.StringWithAggregatesFilter<"Parcel"> | string
   recipientPhone?: Prisma.StringWithAggregatesFilter<"Parcel"> | string
+  deliveryInstructions?: Prisma.StringNullableWithAggregatesFilter<"Parcel"> | string | null
+  contentsDescription?: Prisma.StringNullableWithAggregatesFilter<"Parcel"> | string | null
   packageSize?: Prisma.EnumPackageSizeWithAggregatesFilter<"Parcel"> | $Enums.PackageSize
   weightKg?: Prisma.DecimalWithAggregatesFilter<"Parcel"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: Prisma.IntNullableWithAggregatesFilter<"Parcel"> | number | null
   costLkr?: Prisma.DecimalWithAggregatesFilter<"Parcel"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.EnumParcelStatusWithAggregatesFilter<"Parcel"> | $Enums.ParcelStatus
   failureReason?: Prisma.StringNullableWithAggregatesFilter<"Parcel"> | string | null
   failedDeliveryAttempts?: Prisma.IntWithAggregatesFilter<"Parcel"> | number
   deliveredAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Parcel"> | Date | string | null
+  deliveredProofId?: Prisma.UuidNullableWithAggregatesFilter<"Parcel"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Parcel"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Parcel"> | Date | string
 }
 
 export type ParcelCreateInput = {
-  id?: string
   trackingNumber: string
   senderName: string
   senderAddress: string
   recipientName: string
   recipientAddress: string
   recipientPhone: string
+  deliveryInstructions?: string | null
+  contentsDescription?: string | null
   packageSize?: $Enums.PackageSize
   weightKg: runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: number | null
   costLkr: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: $Enums.ParcelStatus
   failureReason?: string | null
@@ -437,7 +504,11 @@ export type ParcelCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   customer: Prisma.UserCreateNestedOneWithoutParcelsInput
+  assignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutParcelInput
+  statusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutParcelInput
+  proofs?: Prisma.DeliveryProofCreateNestedManyWithoutParcelInput
   statusHistory?: Prisma.ParcelStatusHistoryCreateNestedManyWithoutParcelInput
+  deliveredProof?: Prisma.DeliveryProofCreateNestedOneWithoutDeliveredParcelInput
 }
 
 export type ParcelUncheckedCreateInput = {
@@ -449,28 +520,37 @@ export type ParcelUncheckedCreateInput = {
   recipientName: string
   recipientAddress: string
   recipientPhone: string
+  deliveryInstructions?: string | null
+  contentsDescription?: string | null
   packageSize?: $Enums.PackageSize
   weightKg: runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: number | null
   costLkr: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: $Enums.ParcelStatus
   failureReason?: string | null
   failedDeliveryAttempts?: number
   deliveredAt?: Date | string | null
+  deliveredProofId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  assignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutParcelInput
+  statusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutParcelInput
+  proofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutParcelInput
   statusHistory?: Prisma.ParcelStatusHistoryUncheckedCreateNestedManyWithoutParcelInput
 }
 
 export type ParcelUpdateInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
   trackingNumber?: Prisma.StringFieldUpdateOperationsInput | string
   senderName?: Prisma.StringFieldUpdateOperationsInput | string
   senderAddress?: Prisma.StringFieldUpdateOperationsInput | string
   recipientName?: Prisma.StringFieldUpdateOperationsInput | string
   recipientAddress?: Prisma.StringFieldUpdateOperationsInput | string
   recipientPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  deliveryInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contentsDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   packageSize?: Prisma.EnumPackageSizeFieldUpdateOperationsInput | $Enums.PackageSize
   weightKg?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   costLkr?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.EnumParcelStatusFieldUpdateOperationsInput | $Enums.ParcelStatus
   failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -479,7 +559,11 @@ export type ParcelUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   customer?: Prisma.UserUpdateOneRequiredWithoutParcelsNestedInput
+  assignments?: Prisma.DeliveryAssignmentUpdateManyWithoutParcelNestedInput
+  statusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutParcelNestedInput
+  proofs?: Prisma.DeliveryProofUpdateManyWithoutParcelNestedInput
   statusHistory?: Prisma.ParcelStatusHistoryUpdateManyWithoutParcelNestedInput
+  deliveredProof?: Prisma.DeliveryProofUpdateOneWithoutDeliveredParcelNestedInput
 }
 
 export type ParcelUncheckedUpdateInput = {
@@ -491,15 +575,22 @@ export type ParcelUncheckedUpdateInput = {
   recipientName?: Prisma.StringFieldUpdateOperationsInput | string
   recipientAddress?: Prisma.StringFieldUpdateOperationsInput | string
   recipientPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  deliveryInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contentsDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   packageSize?: Prisma.EnumPackageSizeFieldUpdateOperationsInput | $Enums.PackageSize
   weightKg?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   costLkr?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.EnumParcelStatusFieldUpdateOperationsInput | $Enums.ParcelStatus
   failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   failedDeliveryAttempts?: Prisma.IntFieldUpdateOperationsInput | number
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deliveredProofId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  assignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutParcelNestedInput
+  statusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutParcelNestedInput
+  proofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutParcelNestedInput
   statusHistory?: Prisma.ParcelStatusHistoryUncheckedUpdateManyWithoutParcelNestedInput
 }
 
@@ -512,27 +603,33 @@ export type ParcelCreateManyInput = {
   recipientName: string
   recipientAddress: string
   recipientPhone: string
+  deliveryInstructions?: string | null
+  contentsDescription?: string | null
   packageSize?: $Enums.PackageSize
   weightKg: runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: number | null
   costLkr: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: $Enums.ParcelStatus
   failureReason?: string | null
   failedDeliveryAttempts?: number
   deliveredAt?: Date | string | null
+  deliveredProofId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type ParcelUpdateManyMutationInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
   trackingNumber?: Prisma.StringFieldUpdateOperationsInput | string
   senderName?: Prisma.StringFieldUpdateOperationsInput | string
   senderAddress?: Prisma.StringFieldUpdateOperationsInput | string
   recipientName?: Prisma.StringFieldUpdateOperationsInput | string
   recipientAddress?: Prisma.StringFieldUpdateOperationsInput | string
   recipientPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  deliveryInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contentsDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   packageSize?: Prisma.EnumPackageSizeFieldUpdateOperationsInput | $Enums.PackageSize
   weightKg?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   costLkr?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.EnumParcelStatusFieldUpdateOperationsInput | $Enums.ParcelStatus
   failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -551,13 +648,17 @@ export type ParcelUncheckedUpdateManyInput = {
   recipientName?: Prisma.StringFieldUpdateOperationsInput | string
   recipientAddress?: Prisma.StringFieldUpdateOperationsInput | string
   recipientPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  deliveryInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contentsDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   packageSize?: Prisma.EnumPackageSizeFieldUpdateOperationsInput | $Enums.PackageSize
   weightKg?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   costLkr?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.EnumParcelStatusFieldUpdateOperationsInput | $Enums.ParcelStatus
   failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   failedDeliveryAttempts?: Prisma.IntFieldUpdateOperationsInput | number
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deliveredProofId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -572,6 +673,21 @@ export type ParcelOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
+export type ParcelScalarRelationFilter = {
+  is?: Prisma.ParcelWhereInput
+  isNot?: Prisma.ParcelWhereInput
+}
+
+export type ParcelNullableScalarRelationFilter = {
+  is?: Prisma.ParcelWhereInput | null
+  isNot?: Prisma.ParcelWhereInput | null
+}
+
+export type ParcelDeliveredProofIdIdCompoundUniqueInput = {
+  deliveredProofId: string
+  id: string
+}
+
 export type ParcelCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   trackingNumber?: Prisma.SortOrder
@@ -581,19 +697,24 @@ export type ParcelCountOrderByAggregateInput = {
   recipientName?: Prisma.SortOrder
   recipientAddress?: Prisma.SortOrder
   recipientPhone?: Prisma.SortOrder
+  deliveryInstructions?: Prisma.SortOrder
+  contentsDescription?: Prisma.SortOrder
   packageSize?: Prisma.SortOrder
   weightKg?: Prisma.SortOrder
+  weightGrams?: Prisma.SortOrder
   costLkr?: Prisma.SortOrder
   status?: Prisma.SortOrder
   failureReason?: Prisma.SortOrder
   failedDeliveryAttempts?: Prisma.SortOrder
   deliveredAt?: Prisma.SortOrder
+  deliveredProofId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
 export type ParcelAvgOrderByAggregateInput = {
   weightKg?: Prisma.SortOrder
+  weightGrams?: Prisma.SortOrder
   costLkr?: Prisma.SortOrder
   failedDeliveryAttempts?: Prisma.SortOrder
 }
@@ -607,13 +728,17 @@ export type ParcelMaxOrderByAggregateInput = {
   recipientName?: Prisma.SortOrder
   recipientAddress?: Prisma.SortOrder
   recipientPhone?: Prisma.SortOrder
+  deliveryInstructions?: Prisma.SortOrder
+  contentsDescription?: Prisma.SortOrder
   packageSize?: Prisma.SortOrder
   weightKg?: Prisma.SortOrder
+  weightGrams?: Prisma.SortOrder
   costLkr?: Prisma.SortOrder
   status?: Prisma.SortOrder
   failureReason?: Prisma.SortOrder
   failedDeliveryAttempts?: Prisma.SortOrder
   deliveredAt?: Prisma.SortOrder
+  deliveredProofId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -627,26 +752,26 @@ export type ParcelMinOrderByAggregateInput = {
   recipientName?: Prisma.SortOrder
   recipientAddress?: Prisma.SortOrder
   recipientPhone?: Prisma.SortOrder
+  deliveryInstructions?: Prisma.SortOrder
+  contentsDescription?: Prisma.SortOrder
   packageSize?: Prisma.SortOrder
   weightKg?: Prisma.SortOrder
+  weightGrams?: Prisma.SortOrder
   costLkr?: Prisma.SortOrder
   status?: Prisma.SortOrder
   failureReason?: Prisma.SortOrder
   failedDeliveryAttempts?: Prisma.SortOrder
   deliveredAt?: Prisma.SortOrder
+  deliveredProofId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
 export type ParcelSumOrderByAggregateInput = {
   weightKg?: Prisma.SortOrder
+  weightGrams?: Prisma.SortOrder
   costLkr?: Prisma.SortOrder
   failedDeliveryAttempts?: Prisma.SortOrder
-}
-
-export type ParcelScalarRelationFilter = {
-  is?: Prisma.ParcelWhereInput
-  isNot?: Prisma.ParcelWhereInput
 }
 
 export type ParcelCreateNestedManyWithoutCustomerInput = {
@@ -691,6 +816,80 @@ export type ParcelUncheckedUpdateManyWithoutCustomerNestedInput = {
   deleteMany?: Prisma.ParcelScalarWhereInput | Prisma.ParcelScalarWhereInput[]
 }
 
+export type ParcelCreateNestedOneWithoutAssignmentsInput = {
+  create?: Prisma.XOR<Prisma.ParcelCreateWithoutAssignmentsInput, Prisma.ParcelUncheckedCreateWithoutAssignmentsInput>
+  connectOrCreate?: Prisma.ParcelCreateOrConnectWithoutAssignmentsInput
+  connect?: Prisma.ParcelWhereUniqueInput
+}
+
+export type ParcelUpdateOneRequiredWithoutAssignmentsNestedInput = {
+  create?: Prisma.XOR<Prisma.ParcelCreateWithoutAssignmentsInput, Prisma.ParcelUncheckedCreateWithoutAssignmentsInput>
+  connectOrCreate?: Prisma.ParcelCreateOrConnectWithoutAssignmentsInput
+  upsert?: Prisma.ParcelUpsertWithoutAssignmentsInput
+  connect?: Prisma.ParcelWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ParcelUpdateToOneWithWhereWithoutAssignmentsInput, Prisma.ParcelUpdateWithoutAssignmentsInput>, Prisma.ParcelUncheckedUpdateWithoutAssignmentsInput>
+}
+
+export type ParcelCreateNestedOneWithoutStatusEventsInput = {
+  create?: Prisma.XOR<Prisma.ParcelCreateWithoutStatusEventsInput, Prisma.ParcelUncheckedCreateWithoutStatusEventsInput>
+  connectOrCreate?: Prisma.ParcelCreateOrConnectWithoutStatusEventsInput
+  connect?: Prisma.ParcelWhereUniqueInput
+}
+
+export type ParcelUpdateOneRequiredWithoutStatusEventsNestedInput = {
+  create?: Prisma.XOR<Prisma.ParcelCreateWithoutStatusEventsInput, Prisma.ParcelUncheckedCreateWithoutStatusEventsInput>
+  connectOrCreate?: Prisma.ParcelCreateOrConnectWithoutStatusEventsInput
+  upsert?: Prisma.ParcelUpsertWithoutStatusEventsInput
+  connect?: Prisma.ParcelWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ParcelUpdateToOneWithWhereWithoutStatusEventsInput, Prisma.ParcelUpdateWithoutStatusEventsInput>, Prisma.ParcelUncheckedUpdateWithoutStatusEventsInput>
+}
+
+export type ParcelCreateNestedOneWithoutProofsInput = {
+  create?: Prisma.XOR<Prisma.ParcelCreateWithoutProofsInput, Prisma.ParcelUncheckedCreateWithoutProofsInput>
+  connectOrCreate?: Prisma.ParcelCreateOrConnectWithoutProofsInput
+  connect?: Prisma.ParcelWhereUniqueInput
+}
+
+export type ParcelCreateNestedOneWithoutDeliveredProofInput = {
+  create?: Prisma.XOR<Prisma.ParcelCreateWithoutDeliveredProofInput, Prisma.ParcelUncheckedCreateWithoutDeliveredProofInput>
+  connectOrCreate?: Prisma.ParcelCreateOrConnectWithoutDeliveredProofInput
+  connect?: Prisma.ParcelWhereUniqueInput
+}
+
+export type ParcelUncheckedCreateNestedOneWithoutDeliveredProofInput = {
+  create?: Prisma.XOR<Prisma.ParcelCreateWithoutDeliveredProofInput, Prisma.ParcelUncheckedCreateWithoutDeliveredProofInput>
+  connectOrCreate?: Prisma.ParcelCreateOrConnectWithoutDeliveredProofInput
+  connect?: Prisma.ParcelWhereUniqueInput
+}
+
+export type ParcelUpdateOneRequiredWithoutProofsNestedInput = {
+  create?: Prisma.XOR<Prisma.ParcelCreateWithoutProofsInput, Prisma.ParcelUncheckedCreateWithoutProofsInput>
+  connectOrCreate?: Prisma.ParcelCreateOrConnectWithoutProofsInput
+  upsert?: Prisma.ParcelUpsertWithoutProofsInput
+  connect?: Prisma.ParcelWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ParcelUpdateToOneWithWhereWithoutProofsInput, Prisma.ParcelUpdateWithoutProofsInput>, Prisma.ParcelUncheckedUpdateWithoutProofsInput>
+}
+
+export type ParcelUpdateOneWithoutDeliveredProofNestedInput = {
+  create?: Prisma.XOR<Prisma.ParcelCreateWithoutDeliveredProofInput, Prisma.ParcelUncheckedCreateWithoutDeliveredProofInput>
+  connectOrCreate?: Prisma.ParcelCreateOrConnectWithoutDeliveredProofInput
+  upsert?: Prisma.ParcelUpsertWithoutDeliveredProofInput
+  disconnect?: Prisma.ParcelWhereInput | boolean
+  delete?: Prisma.ParcelWhereInput | boolean
+  connect?: Prisma.ParcelWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ParcelUpdateToOneWithWhereWithoutDeliveredProofInput, Prisma.ParcelUpdateWithoutDeliveredProofInput>, Prisma.ParcelUncheckedUpdateWithoutDeliveredProofInput>
+}
+
+export type ParcelUncheckedUpdateOneWithoutDeliveredProofNestedInput = {
+  create?: Prisma.XOR<Prisma.ParcelCreateWithoutDeliveredProofInput, Prisma.ParcelUncheckedCreateWithoutDeliveredProofInput>
+  connectOrCreate?: Prisma.ParcelCreateOrConnectWithoutDeliveredProofInput
+  upsert?: Prisma.ParcelUpsertWithoutDeliveredProofInput
+  disconnect?: Prisma.ParcelWhereInput | boolean
+  delete?: Prisma.ParcelWhereInput | boolean
+  connect?: Prisma.ParcelWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ParcelUpdateToOneWithWhereWithoutDeliveredProofInput, Prisma.ParcelUpdateWithoutDeliveredProofInput>, Prisma.ParcelUncheckedUpdateWithoutDeliveredProofInput>
+}
+
 export type EnumPackageSizeFieldUpdateOperationsInput = {
   set?: $Enums.PackageSize
 }
@@ -703,8 +902,12 @@ export type DecimalFieldUpdateOperationsInput = {
   divide?: runtime.Decimal | runtime.DecimalJsLike | number | string
 }
 
-export type EnumParcelStatusFieldUpdateOperationsInput = {
-  set?: $Enums.ParcelStatus
+export type NullableIntFieldUpdateOperationsInput = {
+  set?: number | null
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
 }
 
 export type ParcelCreateNestedOneWithoutStatusHistoryInput = {
@@ -722,15 +925,17 @@ export type ParcelUpdateOneRequiredWithoutStatusHistoryNestedInput = {
 }
 
 export type ParcelCreateWithoutCustomerInput = {
-  id?: string
   trackingNumber: string
   senderName: string
   senderAddress: string
   recipientName: string
   recipientAddress: string
   recipientPhone: string
+  deliveryInstructions?: string | null
+  contentsDescription?: string | null
   packageSize?: $Enums.PackageSize
   weightKg: runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: number | null
   costLkr: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: $Enums.ParcelStatus
   failureReason?: string | null
@@ -738,7 +943,11 @@ export type ParcelCreateWithoutCustomerInput = {
   deliveredAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  assignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutParcelInput
+  statusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutParcelInput
+  proofs?: Prisma.DeliveryProofCreateNestedManyWithoutParcelInput
   statusHistory?: Prisma.ParcelStatusHistoryCreateNestedManyWithoutParcelInput
+  deliveredProof?: Prisma.DeliveryProofCreateNestedOneWithoutDeliveredParcelInput
 }
 
 export type ParcelUncheckedCreateWithoutCustomerInput = {
@@ -749,15 +958,22 @@ export type ParcelUncheckedCreateWithoutCustomerInput = {
   recipientName: string
   recipientAddress: string
   recipientPhone: string
+  deliveryInstructions?: string | null
+  contentsDescription?: string | null
   packageSize?: $Enums.PackageSize
   weightKg: runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: number | null
   costLkr: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: $Enums.ParcelStatus
   failureReason?: string | null
   failedDeliveryAttempts?: number
   deliveredAt?: Date | string | null
+  deliveredProofId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  assignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutParcelInput
+  statusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutParcelInput
+  proofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutParcelInput
   statusHistory?: Prisma.ParcelStatusHistoryUncheckedCreateNestedManyWithoutParcelInput
 }
 
@@ -799,27 +1015,33 @@ export type ParcelScalarWhereInput = {
   recipientName?: Prisma.StringFilter<"Parcel"> | string
   recipientAddress?: Prisma.StringFilter<"Parcel"> | string
   recipientPhone?: Prisma.StringFilter<"Parcel"> | string
+  deliveryInstructions?: Prisma.StringNullableFilter<"Parcel"> | string | null
+  contentsDescription?: Prisma.StringNullableFilter<"Parcel"> | string | null
   packageSize?: Prisma.EnumPackageSizeFilter<"Parcel"> | $Enums.PackageSize
   weightKg?: Prisma.DecimalFilter<"Parcel"> | runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: Prisma.IntNullableFilter<"Parcel"> | number | null
   costLkr?: Prisma.DecimalFilter<"Parcel"> | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.EnumParcelStatusFilter<"Parcel"> | $Enums.ParcelStatus
   failureReason?: Prisma.StringNullableFilter<"Parcel"> | string | null
   failedDeliveryAttempts?: Prisma.IntFilter<"Parcel"> | number
   deliveredAt?: Prisma.DateTimeNullableFilter<"Parcel"> | Date | string | null
+  deliveredProofId?: Prisma.UuidNullableFilter<"Parcel"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Parcel"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Parcel"> | Date | string
 }
 
-export type ParcelCreateWithoutStatusHistoryInput = {
-  id?: string
+export type ParcelCreateWithoutAssignmentsInput = {
   trackingNumber: string
   senderName: string
   senderAddress: string
   recipientName: string
   recipientAddress: string
   recipientPhone: string
+  deliveryInstructions?: string | null
+  contentsDescription?: string | null
   packageSize?: $Enums.PackageSize
   weightKg: runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: number | null
   costLkr: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: $Enums.ParcelStatus
   failureReason?: string | null
@@ -828,6 +1050,496 @@ export type ParcelCreateWithoutStatusHistoryInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   customer: Prisma.UserCreateNestedOneWithoutParcelsInput
+  statusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutParcelInput
+  proofs?: Prisma.DeliveryProofCreateNestedManyWithoutParcelInput
+  statusHistory?: Prisma.ParcelStatusHistoryCreateNestedManyWithoutParcelInput
+  deliveredProof?: Prisma.DeliveryProofCreateNestedOneWithoutDeliveredParcelInput
+}
+
+export type ParcelUncheckedCreateWithoutAssignmentsInput = {
+  id?: string
+  trackingNumber: string
+  customerId: string
+  senderName: string
+  senderAddress: string
+  recipientName: string
+  recipientAddress: string
+  recipientPhone: string
+  deliveryInstructions?: string | null
+  contentsDescription?: string | null
+  packageSize?: $Enums.PackageSize
+  weightKg: runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: number | null
+  costLkr: runtime.Decimal | runtime.DecimalJsLike | number | string
+  status?: $Enums.ParcelStatus
+  failureReason?: string | null
+  failedDeliveryAttempts?: number
+  deliveredAt?: Date | string | null
+  deliveredProofId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  statusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutParcelInput
+  proofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutParcelInput
+  statusHistory?: Prisma.ParcelStatusHistoryUncheckedCreateNestedManyWithoutParcelInput
+}
+
+export type ParcelCreateOrConnectWithoutAssignmentsInput = {
+  where: Prisma.ParcelWhereUniqueInput
+  create: Prisma.XOR<Prisma.ParcelCreateWithoutAssignmentsInput, Prisma.ParcelUncheckedCreateWithoutAssignmentsInput>
+}
+
+export type ParcelUpsertWithoutAssignmentsInput = {
+  update: Prisma.XOR<Prisma.ParcelUpdateWithoutAssignmentsInput, Prisma.ParcelUncheckedUpdateWithoutAssignmentsInput>
+  create: Prisma.XOR<Prisma.ParcelCreateWithoutAssignmentsInput, Prisma.ParcelUncheckedCreateWithoutAssignmentsInput>
+  where?: Prisma.ParcelWhereInput
+}
+
+export type ParcelUpdateToOneWithWhereWithoutAssignmentsInput = {
+  where?: Prisma.ParcelWhereInput
+  data: Prisma.XOR<Prisma.ParcelUpdateWithoutAssignmentsInput, Prisma.ParcelUncheckedUpdateWithoutAssignmentsInput>
+}
+
+export type ParcelUpdateWithoutAssignmentsInput = {
+  trackingNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  senderName?: Prisma.StringFieldUpdateOperationsInput | string
+  senderAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  recipientName?: Prisma.StringFieldUpdateOperationsInput | string
+  recipientAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  recipientPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  deliveryInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contentsDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageSize?: Prisma.EnumPackageSizeFieldUpdateOperationsInput | $Enums.PackageSize
+  weightKg?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  costLkr?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  status?: Prisma.EnumParcelStatusFieldUpdateOperationsInput | $Enums.ParcelStatus
+  failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  failedDeliveryAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customer?: Prisma.UserUpdateOneRequiredWithoutParcelsNestedInput
+  statusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutParcelNestedInput
+  proofs?: Prisma.DeliveryProofUpdateManyWithoutParcelNestedInput
+  statusHistory?: Prisma.ParcelStatusHistoryUpdateManyWithoutParcelNestedInput
+  deliveredProof?: Prisma.DeliveryProofUpdateOneWithoutDeliveredParcelNestedInput
+}
+
+export type ParcelUncheckedUpdateWithoutAssignmentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  trackingNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  customerId?: Prisma.StringFieldUpdateOperationsInput | string
+  senderName?: Prisma.StringFieldUpdateOperationsInput | string
+  senderAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  recipientName?: Prisma.StringFieldUpdateOperationsInput | string
+  recipientAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  recipientPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  deliveryInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contentsDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageSize?: Prisma.EnumPackageSizeFieldUpdateOperationsInput | $Enums.PackageSize
+  weightKg?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  costLkr?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  status?: Prisma.EnumParcelStatusFieldUpdateOperationsInput | $Enums.ParcelStatus
+  failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  failedDeliveryAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deliveredProofId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  statusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutParcelNestedInput
+  proofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutParcelNestedInput
+  statusHistory?: Prisma.ParcelStatusHistoryUncheckedUpdateManyWithoutParcelNestedInput
+}
+
+export type ParcelCreateWithoutStatusEventsInput = {
+  trackingNumber: string
+  senderName: string
+  senderAddress: string
+  recipientName: string
+  recipientAddress: string
+  recipientPhone: string
+  deliveryInstructions?: string | null
+  contentsDescription?: string | null
+  packageSize?: $Enums.PackageSize
+  weightKg: runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: number | null
+  costLkr: runtime.Decimal | runtime.DecimalJsLike | number | string
+  status?: $Enums.ParcelStatus
+  failureReason?: string | null
+  failedDeliveryAttempts?: number
+  deliveredAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  customer: Prisma.UserCreateNestedOneWithoutParcelsInput
+  assignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutParcelInput
+  proofs?: Prisma.DeliveryProofCreateNestedManyWithoutParcelInput
+  statusHistory?: Prisma.ParcelStatusHistoryCreateNestedManyWithoutParcelInput
+  deliveredProof?: Prisma.DeliveryProofCreateNestedOneWithoutDeliveredParcelInput
+}
+
+export type ParcelUncheckedCreateWithoutStatusEventsInput = {
+  id?: string
+  trackingNumber: string
+  customerId: string
+  senderName: string
+  senderAddress: string
+  recipientName: string
+  recipientAddress: string
+  recipientPhone: string
+  deliveryInstructions?: string | null
+  contentsDescription?: string | null
+  packageSize?: $Enums.PackageSize
+  weightKg: runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: number | null
+  costLkr: runtime.Decimal | runtime.DecimalJsLike | number | string
+  status?: $Enums.ParcelStatus
+  failureReason?: string | null
+  failedDeliveryAttempts?: number
+  deliveredAt?: Date | string | null
+  deliveredProofId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  assignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutParcelInput
+  proofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutParcelInput
+  statusHistory?: Prisma.ParcelStatusHistoryUncheckedCreateNestedManyWithoutParcelInput
+}
+
+export type ParcelCreateOrConnectWithoutStatusEventsInput = {
+  where: Prisma.ParcelWhereUniqueInput
+  create: Prisma.XOR<Prisma.ParcelCreateWithoutStatusEventsInput, Prisma.ParcelUncheckedCreateWithoutStatusEventsInput>
+}
+
+export type ParcelUpsertWithoutStatusEventsInput = {
+  update: Prisma.XOR<Prisma.ParcelUpdateWithoutStatusEventsInput, Prisma.ParcelUncheckedUpdateWithoutStatusEventsInput>
+  create: Prisma.XOR<Prisma.ParcelCreateWithoutStatusEventsInput, Prisma.ParcelUncheckedCreateWithoutStatusEventsInput>
+  where?: Prisma.ParcelWhereInput
+}
+
+export type ParcelUpdateToOneWithWhereWithoutStatusEventsInput = {
+  where?: Prisma.ParcelWhereInput
+  data: Prisma.XOR<Prisma.ParcelUpdateWithoutStatusEventsInput, Prisma.ParcelUncheckedUpdateWithoutStatusEventsInput>
+}
+
+export type ParcelUpdateWithoutStatusEventsInput = {
+  trackingNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  senderName?: Prisma.StringFieldUpdateOperationsInput | string
+  senderAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  recipientName?: Prisma.StringFieldUpdateOperationsInput | string
+  recipientAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  recipientPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  deliveryInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contentsDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageSize?: Prisma.EnumPackageSizeFieldUpdateOperationsInput | $Enums.PackageSize
+  weightKg?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  costLkr?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  status?: Prisma.EnumParcelStatusFieldUpdateOperationsInput | $Enums.ParcelStatus
+  failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  failedDeliveryAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customer?: Prisma.UserUpdateOneRequiredWithoutParcelsNestedInput
+  assignments?: Prisma.DeliveryAssignmentUpdateManyWithoutParcelNestedInput
+  proofs?: Prisma.DeliveryProofUpdateManyWithoutParcelNestedInput
+  statusHistory?: Prisma.ParcelStatusHistoryUpdateManyWithoutParcelNestedInput
+  deliveredProof?: Prisma.DeliveryProofUpdateOneWithoutDeliveredParcelNestedInput
+}
+
+export type ParcelUncheckedUpdateWithoutStatusEventsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  trackingNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  customerId?: Prisma.StringFieldUpdateOperationsInput | string
+  senderName?: Prisma.StringFieldUpdateOperationsInput | string
+  senderAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  recipientName?: Prisma.StringFieldUpdateOperationsInput | string
+  recipientAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  recipientPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  deliveryInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contentsDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageSize?: Prisma.EnumPackageSizeFieldUpdateOperationsInput | $Enums.PackageSize
+  weightKg?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  costLkr?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  status?: Prisma.EnumParcelStatusFieldUpdateOperationsInput | $Enums.ParcelStatus
+  failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  failedDeliveryAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deliveredProofId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  assignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutParcelNestedInput
+  proofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutParcelNestedInput
+  statusHistory?: Prisma.ParcelStatusHistoryUncheckedUpdateManyWithoutParcelNestedInput
+}
+
+export type ParcelCreateWithoutProofsInput = {
+  trackingNumber: string
+  senderName: string
+  senderAddress: string
+  recipientName: string
+  recipientAddress: string
+  recipientPhone: string
+  deliveryInstructions?: string | null
+  contentsDescription?: string | null
+  packageSize?: $Enums.PackageSize
+  weightKg: runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: number | null
+  costLkr: runtime.Decimal | runtime.DecimalJsLike | number | string
+  status?: $Enums.ParcelStatus
+  failureReason?: string | null
+  failedDeliveryAttempts?: number
+  deliveredAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  customer: Prisma.UserCreateNestedOneWithoutParcelsInput
+  assignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutParcelInput
+  statusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutParcelInput
+  statusHistory?: Prisma.ParcelStatusHistoryCreateNestedManyWithoutParcelInput
+  deliveredProof?: Prisma.DeliveryProofCreateNestedOneWithoutDeliveredParcelInput
+}
+
+export type ParcelUncheckedCreateWithoutProofsInput = {
+  id?: string
+  trackingNumber: string
+  customerId: string
+  senderName: string
+  senderAddress: string
+  recipientName: string
+  recipientAddress: string
+  recipientPhone: string
+  deliveryInstructions?: string | null
+  contentsDescription?: string | null
+  packageSize?: $Enums.PackageSize
+  weightKg: runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: number | null
+  costLkr: runtime.Decimal | runtime.DecimalJsLike | number | string
+  status?: $Enums.ParcelStatus
+  failureReason?: string | null
+  failedDeliveryAttempts?: number
+  deliveredAt?: Date | string | null
+  deliveredProofId?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  assignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutParcelInput
+  statusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutParcelInput
+  statusHistory?: Prisma.ParcelStatusHistoryUncheckedCreateNestedManyWithoutParcelInput
+}
+
+export type ParcelCreateOrConnectWithoutProofsInput = {
+  where: Prisma.ParcelWhereUniqueInput
+  create: Prisma.XOR<Prisma.ParcelCreateWithoutProofsInput, Prisma.ParcelUncheckedCreateWithoutProofsInput>
+}
+
+export type ParcelCreateWithoutDeliveredProofInput = {
+  trackingNumber: string
+  senderName: string
+  senderAddress: string
+  recipientName: string
+  recipientAddress: string
+  recipientPhone: string
+  deliveryInstructions?: string | null
+  contentsDescription?: string | null
+  packageSize?: $Enums.PackageSize
+  weightKg: runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: number | null
+  costLkr: runtime.Decimal | runtime.DecimalJsLike | number | string
+  status?: $Enums.ParcelStatus
+  failureReason?: string | null
+  failedDeliveryAttempts?: number
+  deliveredAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  customer: Prisma.UserCreateNestedOneWithoutParcelsInput
+  assignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutParcelInput
+  statusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutParcelInput
+  proofs?: Prisma.DeliveryProofCreateNestedManyWithoutParcelInput
+  statusHistory?: Prisma.ParcelStatusHistoryCreateNestedManyWithoutParcelInput
+}
+
+export type ParcelUncheckedCreateWithoutDeliveredProofInput = {
+  trackingNumber: string
+  customerId: string
+  senderName: string
+  senderAddress: string
+  recipientName: string
+  recipientAddress: string
+  recipientPhone: string
+  deliveryInstructions?: string | null
+  contentsDescription?: string | null
+  packageSize?: $Enums.PackageSize
+  weightKg: runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: number | null
+  costLkr: runtime.Decimal | runtime.DecimalJsLike | number | string
+  status?: $Enums.ParcelStatus
+  failureReason?: string | null
+  failedDeliveryAttempts?: number
+  deliveredAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  assignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutParcelInput
+  statusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutParcelInput
+  proofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutParcelInput
+  statusHistory?: Prisma.ParcelStatusHistoryUncheckedCreateNestedManyWithoutParcelInput
+}
+
+export type ParcelCreateOrConnectWithoutDeliveredProofInput = {
+  where: Prisma.ParcelWhereUniqueInput
+  create: Prisma.XOR<Prisma.ParcelCreateWithoutDeliveredProofInput, Prisma.ParcelUncheckedCreateWithoutDeliveredProofInput>
+}
+
+export type ParcelUpsertWithoutProofsInput = {
+  update: Prisma.XOR<Prisma.ParcelUpdateWithoutProofsInput, Prisma.ParcelUncheckedUpdateWithoutProofsInput>
+  create: Prisma.XOR<Prisma.ParcelCreateWithoutProofsInput, Prisma.ParcelUncheckedCreateWithoutProofsInput>
+  where?: Prisma.ParcelWhereInput
+}
+
+export type ParcelUpdateToOneWithWhereWithoutProofsInput = {
+  where?: Prisma.ParcelWhereInput
+  data: Prisma.XOR<Prisma.ParcelUpdateWithoutProofsInput, Prisma.ParcelUncheckedUpdateWithoutProofsInput>
+}
+
+export type ParcelUpdateWithoutProofsInput = {
+  trackingNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  senderName?: Prisma.StringFieldUpdateOperationsInput | string
+  senderAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  recipientName?: Prisma.StringFieldUpdateOperationsInput | string
+  recipientAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  recipientPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  deliveryInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contentsDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageSize?: Prisma.EnumPackageSizeFieldUpdateOperationsInput | $Enums.PackageSize
+  weightKg?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  costLkr?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  status?: Prisma.EnumParcelStatusFieldUpdateOperationsInput | $Enums.ParcelStatus
+  failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  failedDeliveryAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customer?: Prisma.UserUpdateOneRequiredWithoutParcelsNestedInput
+  assignments?: Prisma.DeliveryAssignmentUpdateManyWithoutParcelNestedInput
+  statusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutParcelNestedInput
+  statusHistory?: Prisma.ParcelStatusHistoryUpdateManyWithoutParcelNestedInput
+  deliveredProof?: Prisma.DeliveryProofUpdateOneWithoutDeliveredParcelNestedInput
+}
+
+export type ParcelUncheckedUpdateWithoutProofsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  trackingNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  customerId?: Prisma.StringFieldUpdateOperationsInput | string
+  senderName?: Prisma.StringFieldUpdateOperationsInput | string
+  senderAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  recipientName?: Prisma.StringFieldUpdateOperationsInput | string
+  recipientAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  recipientPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  deliveryInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contentsDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageSize?: Prisma.EnumPackageSizeFieldUpdateOperationsInput | $Enums.PackageSize
+  weightKg?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  costLkr?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  status?: Prisma.EnumParcelStatusFieldUpdateOperationsInput | $Enums.ParcelStatus
+  failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  failedDeliveryAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deliveredProofId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  assignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutParcelNestedInput
+  statusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutParcelNestedInput
+  statusHistory?: Prisma.ParcelStatusHistoryUncheckedUpdateManyWithoutParcelNestedInput
+}
+
+export type ParcelUpsertWithoutDeliveredProofInput = {
+  update: Prisma.XOR<Prisma.ParcelUpdateWithoutDeliveredProofInput, Prisma.ParcelUncheckedUpdateWithoutDeliveredProofInput>
+  create: Prisma.XOR<Prisma.ParcelCreateWithoutDeliveredProofInput, Prisma.ParcelUncheckedCreateWithoutDeliveredProofInput>
+  where?: Prisma.ParcelWhereInput
+}
+
+export type ParcelUpdateToOneWithWhereWithoutDeliveredProofInput = {
+  where?: Prisma.ParcelWhereInput
+  data: Prisma.XOR<Prisma.ParcelUpdateWithoutDeliveredProofInput, Prisma.ParcelUncheckedUpdateWithoutDeliveredProofInput>
+}
+
+export type ParcelUpdateWithoutDeliveredProofInput = {
+  trackingNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  senderName?: Prisma.StringFieldUpdateOperationsInput | string
+  senderAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  recipientName?: Prisma.StringFieldUpdateOperationsInput | string
+  recipientAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  recipientPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  deliveryInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contentsDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageSize?: Prisma.EnumPackageSizeFieldUpdateOperationsInput | $Enums.PackageSize
+  weightKg?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  costLkr?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  status?: Prisma.EnumParcelStatusFieldUpdateOperationsInput | $Enums.ParcelStatus
+  failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  failedDeliveryAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  customer?: Prisma.UserUpdateOneRequiredWithoutParcelsNestedInput
+  assignments?: Prisma.DeliveryAssignmentUpdateManyWithoutParcelNestedInput
+  statusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutParcelNestedInput
+  proofs?: Prisma.DeliveryProofUpdateManyWithoutParcelNestedInput
+  statusHistory?: Prisma.ParcelStatusHistoryUpdateManyWithoutParcelNestedInput
+}
+
+export type ParcelUncheckedUpdateWithoutDeliveredProofInput = {
+  trackingNumber?: Prisma.StringFieldUpdateOperationsInput | string
+  customerId?: Prisma.StringFieldUpdateOperationsInput | string
+  senderName?: Prisma.StringFieldUpdateOperationsInput | string
+  senderAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  recipientName?: Prisma.StringFieldUpdateOperationsInput | string
+  recipientAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  recipientPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  deliveryInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contentsDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  packageSize?: Prisma.EnumPackageSizeFieldUpdateOperationsInput | $Enums.PackageSize
+  weightKg?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  costLkr?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  status?: Prisma.EnumParcelStatusFieldUpdateOperationsInput | $Enums.ParcelStatus
+  failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  failedDeliveryAttempts?: Prisma.IntFieldUpdateOperationsInput | number
+  deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  assignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutParcelNestedInput
+  statusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutParcelNestedInput
+  proofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutParcelNestedInput
+  statusHistory?: Prisma.ParcelStatusHistoryUncheckedUpdateManyWithoutParcelNestedInput
+}
+
+export type ParcelCreateWithoutStatusHistoryInput = {
+  trackingNumber: string
+  senderName: string
+  senderAddress: string
+  recipientName: string
+  recipientAddress: string
+  recipientPhone: string
+  deliveryInstructions?: string | null
+  contentsDescription?: string | null
+  packageSize?: $Enums.PackageSize
+  weightKg: runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: number | null
+  costLkr: runtime.Decimal | runtime.DecimalJsLike | number | string
+  status?: $Enums.ParcelStatus
+  failureReason?: string | null
+  failedDeliveryAttempts?: number
+  deliveredAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  customer: Prisma.UserCreateNestedOneWithoutParcelsInput
+  assignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutParcelInput
+  statusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutParcelInput
+  proofs?: Prisma.DeliveryProofCreateNestedManyWithoutParcelInput
+  deliveredProof?: Prisma.DeliveryProofCreateNestedOneWithoutDeliveredParcelInput
 }
 
 export type ParcelUncheckedCreateWithoutStatusHistoryInput = {
@@ -839,15 +1551,22 @@ export type ParcelUncheckedCreateWithoutStatusHistoryInput = {
   recipientName: string
   recipientAddress: string
   recipientPhone: string
+  deliveryInstructions?: string | null
+  contentsDescription?: string | null
   packageSize?: $Enums.PackageSize
   weightKg: runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: number | null
   costLkr: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: $Enums.ParcelStatus
   failureReason?: string | null
   failedDeliveryAttempts?: number
   deliveredAt?: Date | string | null
+  deliveredProofId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  assignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutParcelInput
+  statusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutParcelInput
+  proofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutParcelInput
 }
 
 export type ParcelCreateOrConnectWithoutStatusHistoryInput = {
@@ -867,15 +1586,17 @@ export type ParcelUpdateToOneWithWhereWithoutStatusHistoryInput = {
 }
 
 export type ParcelUpdateWithoutStatusHistoryInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
   trackingNumber?: Prisma.StringFieldUpdateOperationsInput | string
   senderName?: Prisma.StringFieldUpdateOperationsInput | string
   senderAddress?: Prisma.StringFieldUpdateOperationsInput | string
   recipientName?: Prisma.StringFieldUpdateOperationsInput | string
   recipientAddress?: Prisma.StringFieldUpdateOperationsInput | string
   recipientPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  deliveryInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contentsDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   packageSize?: Prisma.EnumPackageSizeFieldUpdateOperationsInput | $Enums.PackageSize
   weightKg?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   costLkr?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.EnumParcelStatusFieldUpdateOperationsInput | $Enums.ParcelStatus
   failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -884,6 +1605,10 @@ export type ParcelUpdateWithoutStatusHistoryInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   customer?: Prisma.UserUpdateOneRequiredWithoutParcelsNestedInput
+  assignments?: Prisma.DeliveryAssignmentUpdateManyWithoutParcelNestedInput
+  statusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutParcelNestedInput
+  proofs?: Prisma.DeliveryProofUpdateManyWithoutParcelNestedInput
+  deliveredProof?: Prisma.DeliveryProofUpdateOneWithoutDeliveredParcelNestedInput
 }
 
 export type ParcelUncheckedUpdateWithoutStatusHistoryInput = {
@@ -895,15 +1620,22 @@ export type ParcelUncheckedUpdateWithoutStatusHistoryInput = {
   recipientName?: Prisma.StringFieldUpdateOperationsInput | string
   recipientAddress?: Prisma.StringFieldUpdateOperationsInput | string
   recipientPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  deliveryInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contentsDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   packageSize?: Prisma.EnumPackageSizeFieldUpdateOperationsInput | $Enums.PackageSize
   weightKg?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   costLkr?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.EnumParcelStatusFieldUpdateOperationsInput | $Enums.ParcelStatus
   failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   failedDeliveryAttempts?: Prisma.IntFieldUpdateOperationsInput | number
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deliveredProofId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  assignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutParcelNestedInput
+  statusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutParcelNestedInput
+  proofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutParcelNestedInput
 }
 
 export type ParcelCreateManyCustomerInput = {
@@ -914,27 +1646,33 @@ export type ParcelCreateManyCustomerInput = {
   recipientName: string
   recipientAddress: string
   recipientPhone: string
+  deliveryInstructions?: string | null
+  contentsDescription?: string | null
   packageSize?: $Enums.PackageSize
   weightKg: runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: number | null
   costLkr: runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: $Enums.ParcelStatus
   failureReason?: string | null
   failedDeliveryAttempts?: number
   deliveredAt?: Date | string | null
+  deliveredProofId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
 
 export type ParcelUpdateWithoutCustomerInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
   trackingNumber?: Prisma.StringFieldUpdateOperationsInput | string
   senderName?: Prisma.StringFieldUpdateOperationsInput | string
   senderAddress?: Prisma.StringFieldUpdateOperationsInput | string
   recipientName?: Prisma.StringFieldUpdateOperationsInput | string
   recipientAddress?: Prisma.StringFieldUpdateOperationsInput | string
   recipientPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  deliveryInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contentsDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   packageSize?: Prisma.EnumPackageSizeFieldUpdateOperationsInput | $Enums.PackageSize
   weightKg?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   costLkr?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.EnumParcelStatusFieldUpdateOperationsInput | $Enums.ParcelStatus
   failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -942,7 +1680,11 @@ export type ParcelUpdateWithoutCustomerInput = {
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  assignments?: Prisma.DeliveryAssignmentUpdateManyWithoutParcelNestedInput
+  statusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutParcelNestedInput
+  proofs?: Prisma.DeliveryProofUpdateManyWithoutParcelNestedInput
   statusHistory?: Prisma.ParcelStatusHistoryUpdateManyWithoutParcelNestedInput
+  deliveredProof?: Prisma.DeliveryProofUpdateOneWithoutDeliveredParcelNestedInput
 }
 
 export type ParcelUncheckedUpdateWithoutCustomerInput = {
@@ -953,15 +1695,22 @@ export type ParcelUncheckedUpdateWithoutCustomerInput = {
   recipientName?: Prisma.StringFieldUpdateOperationsInput | string
   recipientAddress?: Prisma.StringFieldUpdateOperationsInput | string
   recipientPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  deliveryInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contentsDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   packageSize?: Prisma.EnumPackageSizeFieldUpdateOperationsInput | $Enums.PackageSize
   weightKg?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   costLkr?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.EnumParcelStatusFieldUpdateOperationsInput | $Enums.ParcelStatus
   failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   failedDeliveryAttempts?: Prisma.IntFieldUpdateOperationsInput | number
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deliveredProofId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  assignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutParcelNestedInput
+  statusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutParcelNestedInput
+  proofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutParcelNestedInput
   statusHistory?: Prisma.ParcelStatusHistoryUncheckedUpdateManyWithoutParcelNestedInput
 }
 
@@ -973,13 +1722,17 @@ export type ParcelUncheckedUpdateManyWithoutCustomerInput = {
   recipientName?: Prisma.StringFieldUpdateOperationsInput | string
   recipientAddress?: Prisma.StringFieldUpdateOperationsInput | string
   recipientPhone?: Prisma.StringFieldUpdateOperationsInput | string
+  deliveryInstructions?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  contentsDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   packageSize?: Prisma.EnumPackageSizeFieldUpdateOperationsInput | $Enums.PackageSize
   weightKg?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
+  weightGrams?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   costLkr?: Prisma.DecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string
   status?: Prisma.EnumParcelStatusFieldUpdateOperationsInput | $Enums.ParcelStatus
   failureReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   failedDeliveryAttempts?: Prisma.IntFieldUpdateOperationsInput | number
   deliveredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deliveredProofId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -990,10 +1743,16 @@ export type ParcelUncheckedUpdateManyWithoutCustomerInput = {
  */
 
 export type ParcelCountOutputType = {
+  assignments: number
+  statusEvents: number
+  proofs: number
   statusHistory: number
 }
 
 export type ParcelCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  assignments?: boolean | ParcelCountOutputTypeCountAssignmentsArgs
+  statusEvents?: boolean | ParcelCountOutputTypeCountStatusEventsArgs
+  proofs?: boolean | ParcelCountOutputTypeCountProofsArgs
   statusHistory?: boolean | ParcelCountOutputTypeCountStatusHistoryArgs
 }
 
@@ -1005,6 +1764,27 @@ export type ParcelCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Exten
    * Select specific fields to fetch from the ParcelCountOutputType
    */
   select?: Prisma.ParcelCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * ParcelCountOutputType without action
+ */
+export type ParcelCountOutputTypeCountAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.DeliveryAssignmentWhereInput
+}
+
+/**
+ * ParcelCountOutputType without action
+ */
+export type ParcelCountOutputTypeCountStatusEventsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ParcelStatusEventWhereInput
+}
+
+/**
+ * ParcelCountOutputType without action
+ */
+export type ParcelCountOutputTypeCountProofsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.DeliveryProofWhereInput
 }
 
 /**
@@ -1024,17 +1804,25 @@ export type ParcelSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   recipientName?: boolean
   recipientAddress?: boolean
   recipientPhone?: boolean
+  deliveryInstructions?: boolean
+  contentsDescription?: boolean
   packageSize?: boolean
   weightKg?: boolean
+  weightGrams?: boolean
   costLkr?: boolean
   status?: boolean
   failureReason?: boolean
   failedDeliveryAttempts?: boolean
   deliveredAt?: boolean
+  deliveredProofId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   customer?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  assignments?: boolean | Prisma.Parcel$assignmentsArgs<ExtArgs>
+  statusEvents?: boolean | Prisma.Parcel$statusEventsArgs<ExtArgs>
+  proofs?: boolean | Prisma.Parcel$proofsArgs<ExtArgs>
   statusHistory?: boolean | Prisma.Parcel$statusHistoryArgs<ExtArgs>
+  deliveredProof?: boolean | Prisma.Parcel$deliveredProofArgs<ExtArgs>
   _count?: boolean | Prisma.ParcelCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["parcel"]>
 
@@ -1047,16 +1835,21 @@ export type ParcelSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
   recipientName?: boolean
   recipientAddress?: boolean
   recipientPhone?: boolean
+  deliveryInstructions?: boolean
+  contentsDescription?: boolean
   packageSize?: boolean
   weightKg?: boolean
+  weightGrams?: boolean
   costLkr?: boolean
   status?: boolean
   failureReason?: boolean
   failedDeliveryAttempts?: boolean
   deliveredAt?: boolean
+  deliveredProofId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   customer?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  deliveredProof?: boolean | Prisma.Parcel$deliveredProofArgs<ExtArgs>
 }, ExtArgs["result"]["parcel"]>
 
 export type ParcelSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1068,16 +1861,21 @@ export type ParcelSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extens
   recipientName?: boolean
   recipientAddress?: boolean
   recipientPhone?: boolean
+  deliveryInstructions?: boolean
+  contentsDescription?: boolean
   packageSize?: boolean
   weightKg?: boolean
+  weightGrams?: boolean
   costLkr?: boolean
   status?: boolean
   failureReason?: boolean
   failedDeliveryAttempts?: boolean
   deliveredAt?: boolean
+  deliveredProofId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   customer?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  deliveredProof?: boolean | Prisma.Parcel$deliveredProofArgs<ExtArgs>
 }, ExtArgs["result"]["parcel"]>
 
 export type ParcelSelectScalar = {
@@ -1089,35 +1887,49 @@ export type ParcelSelectScalar = {
   recipientName?: boolean
   recipientAddress?: boolean
   recipientPhone?: boolean
+  deliveryInstructions?: boolean
+  contentsDescription?: boolean
   packageSize?: boolean
   weightKg?: boolean
+  weightGrams?: boolean
   costLkr?: boolean
   status?: boolean
   failureReason?: boolean
   failedDeliveryAttempts?: boolean
   deliveredAt?: boolean
+  deliveredProofId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type ParcelOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "trackingNumber" | "customerId" | "senderName" | "senderAddress" | "recipientName" | "recipientAddress" | "recipientPhone" | "packageSize" | "weightKg" | "costLkr" | "status" | "failureReason" | "failedDeliveryAttempts" | "deliveredAt" | "createdAt" | "updatedAt", ExtArgs["result"]["parcel"]>
+export type ParcelOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "trackingNumber" | "customerId" | "senderName" | "senderAddress" | "recipientName" | "recipientAddress" | "recipientPhone" | "deliveryInstructions" | "contentsDescription" | "packageSize" | "weightKg" | "weightGrams" | "costLkr" | "status" | "failureReason" | "failedDeliveryAttempts" | "deliveredAt" | "deliveredProofId" | "createdAt" | "updatedAt", ExtArgs["result"]["parcel"]>
 export type ParcelInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   customer?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  assignments?: boolean | Prisma.Parcel$assignmentsArgs<ExtArgs>
+  statusEvents?: boolean | Prisma.Parcel$statusEventsArgs<ExtArgs>
+  proofs?: boolean | Prisma.Parcel$proofsArgs<ExtArgs>
   statusHistory?: boolean | Prisma.Parcel$statusHistoryArgs<ExtArgs>
+  deliveredProof?: boolean | Prisma.Parcel$deliveredProofArgs<ExtArgs>
   _count?: boolean | Prisma.ParcelCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ParcelIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   customer?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  deliveredProof?: boolean | Prisma.Parcel$deliveredProofArgs<ExtArgs>
 }
 export type ParcelIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   customer?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  deliveredProof?: boolean | Prisma.Parcel$deliveredProofArgs<ExtArgs>
 }
 
 export type $ParcelPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Parcel"
   objects: {
     customer: Prisma.$UserPayload<ExtArgs>
+    assignments: Prisma.$DeliveryAssignmentPayload<ExtArgs>[]
+    statusEvents: Prisma.$ParcelStatusEventPayload<ExtArgs>[]
+    proofs: Prisma.$DeliveryProofPayload<ExtArgs>[]
     statusHistory: Prisma.$ParcelStatusHistoryPayload<ExtArgs>[]
+    deliveredProof: Prisma.$DeliveryProofPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1128,13 +1940,17 @@ export type $ParcelPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     recipientName: string
     recipientAddress: string
     recipientPhone: string
+    deliveryInstructions: string | null
+    contentsDescription: string | null
     packageSize: $Enums.PackageSize
     weightKg: runtime.Decimal
+    weightGrams: number | null
     costLkr: runtime.Decimal
     status: $Enums.ParcelStatus
     failureReason: string | null
     failedDeliveryAttempts: number
     deliveredAt: Date | null
+    deliveredProofId: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["parcel"]>
@@ -1532,7 +2348,11 @@ readonly fields: ParcelFieldRefs;
 export interface Prisma__ParcelClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   customer<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  assignments<T extends Prisma.Parcel$assignmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Parcel$assignmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DeliveryAssignmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  statusEvents<T extends Prisma.Parcel$statusEventsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Parcel$statusEventsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ParcelStatusEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  proofs<T extends Prisma.Parcel$proofsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Parcel$proofsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DeliveryProofPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   statusHistory<T extends Prisma.Parcel$statusHistoryArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Parcel$statusHistoryArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ParcelStatusHistoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  deliveredProof<T extends Prisma.Parcel$deliveredProofArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Parcel$deliveredProofArgs<ExtArgs>>): Prisma.Prisma__DeliveryProofClient<runtime.Types.Result.GetResult<Prisma.$DeliveryProofPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1570,13 +2390,17 @@ export interface ParcelFieldRefs {
   readonly recipientName: Prisma.FieldRef<"Parcel", 'String'>
   readonly recipientAddress: Prisma.FieldRef<"Parcel", 'String'>
   readonly recipientPhone: Prisma.FieldRef<"Parcel", 'String'>
+  readonly deliveryInstructions: Prisma.FieldRef<"Parcel", 'String'>
+  readonly contentsDescription: Prisma.FieldRef<"Parcel", 'String'>
   readonly packageSize: Prisma.FieldRef<"Parcel", 'PackageSize'>
   readonly weightKg: Prisma.FieldRef<"Parcel", 'Decimal'>
+  readonly weightGrams: Prisma.FieldRef<"Parcel", 'Int'>
   readonly costLkr: Prisma.FieldRef<"Parcel", 'Decimal'>
   readonly status: Prisma.FieldRef<"Parcel", 'ParcelStatus'>
   readonly failureReason: Prisma.FieldRef<"Parcel", 'String'>
   readonly failedDeliveryAttempts: Prisma.FieldRef<"Parcel", 'Int'>
   readonly deliveredAt: Prisma.FieldRef<"Parcel", 'DateTime'>
+  readonly deliveredProofId: Prisma.FieldRef<"Parcel", 'String'>
   readonly createdAt: Prisma.FieldRef<"Parcel", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"Parcel", 'DateTime'>
 }
@@ -1980,6 +2804,78 @@ export type ParcelDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Intern
 }
 
 /**
+ * Parcel.assignments
+ */
+export type Parcel$assignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the DeliveryAssignment
+   */
+  select?: Prisma.DeliveryAssignmentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the DeliveryAssignment
+   */
+  omit?: Prisma.DeliveryAssignmentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.DeliveryAssignmentInclude<ExtArgs> | null
+  where?: Prisma.DeliveryAssignmentWhereInput
+  orderBy?: Prisma.DeliveryAssignmentOrderByWithRelationInput | Prisma.DeliveryAssignmentOrderByWithRelationInput[]
+  cursor?: Prisma.DeliveryAssignmentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.DeliveryAssignmentScalarFieldEnum | Prisma.DeliveryAssignmentScalarFieldEnum[]
+}
+
+/**
+ * Parcel.statusEvents
+ */
+export type Parcel$statusEventsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ParcelStatusEvent
+   */
+  select?: Prisma.ParcelStatusEventSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ParcelStatusEvent
+   */
+  omit?: Prisma.ParcelStatusEventOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ParcelStatusEventInclude<ExtArgs> | null
+  where?: Prisma.ParcelStatusEventWhereInput
+  orderBy?: Prisma.ParcelStatusEventOrderByWithRelationInput | Prisma.ParcelStatusEventOrderByWithRelationInput[]
+  cursor?: Prisma.ParcelStatusEventWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ParcelStatusEventScalarFieldEnum | Prisma.ParcelStatusEventScalarFieldEnum[]
+}
+
+/**
+ * Parcel.proofs
+ */
+export type Parcel$proofsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the DeliveryProof
+   */
+  select?: Prisma.DeliveryProofSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the DeliveryProof
+   */
+  omit?: Prisma.DeliveryProofOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.DeliveryProofInclude<ExtArgs> | null
+  where?: Prisma.DeliveryProofWhereInput
+  orderBy?: Prisma.DeliveryProofOrderByWithRelationInput | Prisma.DeliveryProofOrderByWithRelationInput[]
+  cursor?: Prisma.DeliveryProofWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.DeliveryProofScalarFieldEnum | Prisma.DeliveryProofScalarFieldEnum[]
+}
+
+/**
  * Parcel.statusHistory
  */
 export type Parcel$statusHistoryArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2001,6 +2897,25 @@ export type Parcel$statusHistoryArgs<ExtArgs extends runtime.Types.Extensions.In
   take?: number
   skip?: number
   distinct?: Prisma.ParcelStatusHistoryScalarFieldEnum | Prisma.ParcelStatusHistoryScalarFieldEnum[]
+}
+
+/**
+ * Parcel.deliveredProof
+ */
+export type Parcel$deliveredProofArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the DeliveryProof
+   */
+  select?: Prisma.DeliveryProofSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the DeliveryProof
+   */
+  omit?: Prisma.DeliveryProofOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.DeliveryProofInclude<ExtArgs> | null
+  where?: Prisma.DeliveryProofWhereInput
 }
 
 /**

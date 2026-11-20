@@ -6,6 +6,8 @@ describe('PrismaParcelStatusPolicy', () => {
   const policy = new PrismaParcelStatusPolicy();
 
   it.each([
+    [ParcelStatus.CREATED, 'active', false],
+    [ParcelStatus.ASSIGNED, 'active', false],
     [ParcelStatus.PENDING, 'active', false],
     [ParcelStatus.PICKED_UP, 'active', false],
     [ParcelStatus.IN_TRANSIT, 'active', false],
@@ -21,8 +23,13 @@ describe('PrismaParcelStatusPolicy', () => {
     },
   );
 
+  it('explicitly supports every persisted parcel status', () => {
+    for (const status of Object.values(ParcelStatus)) {
+      expect(() => policy.classify(status)).not.toThrow();
+    }
+  });
+
   it.each([
-    'CREATED',
     'ACCEPTED',
     'AWAITING_PICKUP',
     'DELIVERY_FAILED',

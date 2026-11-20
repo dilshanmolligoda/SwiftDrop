@@ -1,0 +1,2 @@
+ALTER TABLE "merchant_orders"
+ADD COLUMN "source" VARCHAR(16) NOT NULL DEFAULT 'PORTAL';

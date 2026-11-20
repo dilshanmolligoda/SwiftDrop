@@ -199,6 +199,52 @@ describe('Private tracking/history HTTP integration (isolated persistence)', () 
     );
   });
 
+  it.each([ParcelStatus.CREATED, ParcelStatus.ASSIGNED])(
+    'tracks %s unchanged and includes it in active history and summary',
+    async (status) => {
+      const parcel = fixture(8, status);
+      parcel.statusHistory = [{ ...parcel.statusHistory![0], status }];
+      records.push(parcel);
+
+      const tracked = await get(
+        `${ROOT}/tracking/${parcel.trackingNumber}`,
+      ).expect(200);
+      expect(tracked.body as unknown).toMatchObject({
+        status,
+        history: [{ status, occurredAt: '2026-01-01T00:00:00.000Z' }],
+      });
+      expect(tracked.text).not.toContain('PICKED_UP');
+
+      const active = await get(
+        `${ROOT}/deliveries?filter=active&search=${parcel.trackingNumber}`,
+      ).expect(200);
+      expect(active.body as unknown).toMatchObject({
+        items: [{ trackingNumber: parcel.trackingNumber, status }],
+        total: 1,
+      });
+      const history = await get(
+        `${ROOT}/deliveries?filter=history&search=${parcel.trackingNumber}`,
+      ).expect(200);
+      expect(history.body as unknown).toMatchObject({ items: [], total: 0 });
+      const summary = await get(`${ROOT}/deliveries/summary`).expect(200);
+      expect(summary.body as unknown).toMatchObject({
+        activeDeliveries: 5,
+        deliveredThisMonth: 1,
+        needsAttention: 2,
+      });
+    },
+  );
+
+  it('does not invent an assignment or pickup event when only booking history exists', async () => {
+    records[0].status = ParcelStatus.ASSIGNED;
+    const response = await get(`${ROOT}/tracking/SD-10001`).expect(200);
+    expect(response.body as unknown).toMatchObject({
+      status: 'ASSIGNED',
+      history: [{ status: 'PENDING', occurredAt: '2026-01-01T00:00:00.000Z' }],
+    });
+    expect(response.text).not.toContain('PICKED_UP');
+  });
+
   it('normalizes lowercase and surrounding whitespace from path parameters', async () => {
     await get(`${ROOT}/tracking/${encodeURIComponent('  sd-10001  ')}`).expect(
       200,

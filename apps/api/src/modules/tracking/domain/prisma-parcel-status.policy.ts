@@ -6,6 +6,8 @@ import {
 } from '../ports/parcel-status-policy.port.js';
 
 const CATEGORIES: Readonly<Record<ParcelStatus, ParcelStatusCategory>> = {
+  CREATED: 'active',
+  ASSIGNED: 'active',
   PENDING: 'active',
   PICKED_UP: 'active',
   IN_TRANSIT: 'active',

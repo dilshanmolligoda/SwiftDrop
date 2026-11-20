@@ -15,23 +15,33 @@ import { CustomerDeliveryProvider } from './features/customer/context/CustomerDe
 import { CustomerLayout } from './features/customer/components/CustomerLayout.tsx'
 import { SettingsPage } from './features/customer/pages/SettingsPage.tsx'
 import { AddressBookPage } from './features/customer/pages/AddressBookPage.tsx'
-
 import { PublicTrackingPage } from './features/customer/pages/PublicTrackingPage.tsx'
 import { CustomerTrackingPage } from './features/customer/pages/CustomerTrackingPage.tsx'
 import { DeliveryHistoryPage } from './features/customer/pages/DeliveryHistoryPage.tsx'
+import { RequireRole } from './app/auth/RequireRole.tsx'
+import { CourierLayout } from './features/courier/components/CourierLayout.tsx'
+import { CourierDashboardPage } from './features/courier/pages/CourierDashboardPage.tsx'
+import { MyDeliveriesPage as CourierMyDeliveriesPage } from './features/courier/pages/MyDeliveriesPage.tsx'
+import { DeliveryDetailsPage } from './features/courier/pages/DeliveryDetailsPage.tsx'
 import { HelpSupportPage } from './features/customer/pages/HelpSupportPage.tsx'
 import { NotificationsPage } from './features/customer/pages/NotificationsPage.tsx'
 import CustomerDashboard from './features/customer/pages/CustomerDashboard.tsx'
-import MyDeliveriesPage from './features/customer/pages/MyDeliveriesPage.tsx'
+import CustomerMyDeliveriesPage from './features/customer/pages/MyDeliveriesPage.tsx'
 import { AdminLayout } from './components/layout/AdminLayout.tsx'
-import { AdminPlaceholderPage } from './features/admin/pages/AdminPlaceholderPage.tsx'
 import { AdminSettingsPage } from './features/admin/pages/AdminSettingsPage.tsx'
 import { AdminDashboardPage } from './features/admin/pages/AdminDashboardPage.tsx'
+import { AdminDeliveriesPage } from './features/admin/pages/AdminDeliveriesPage.tsx'
+import { AdminCouriersPage } from './features/admin/pages/AdminCouriersPage.tsx'
+import { AdminUsersApprovalsPage } from './features/admin/pages/AdminUsersApprovalsPage.tsx'
+import { AdminReviewApplicationPage } from './features/admin/pages/AdminReviewApplicationPage.tsx'
+import { AdminPricingPage } from './features/admin/pages/AdminPricingPage.tsx'
+import { AdminReportsPage } from './features/admin/pages/AdminReportsPage.tsx'
 import MerchantDashboard from './features/merchant/pages/MerchantDashboard';
 import MerchantOrdersPage from './features/merchant/pages/MerchantOrdersPage';
 import { MerchantLayout } from './features/merchant/components/MerchantLayout';
-import CourierDashboard from './features/courier/pages/CourierDashboard';
 import AdminLandingPage from './features/admin/pages/AdminLandingPage';
+import MerchantTrackParcelPage from './features/merchant/pages/MerchantTrackParcelPage';
+import MerchantPricingPage from './features/merchant/pages/MerchantPricingPage';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -96,6 +106,20 @@ createRoot(document.getElementById('root')!).render(
               }
             />
             <Route
+              path="/courier"
+              element={
+                <RequireRole roles={['COURIER']}>
+                  <CourierLayout />
+                </RequireRole>
+              }
+            >
+              <Route index element={<Navigate to="/courier/dashboard" replace />} />
+              <Route path="dashboard" element={<CourierDashboardPage />} />
+              <Route path="deliveries" element={<CourierMyDeliveriesPage />} />
+              <Route path="deliveries/:parcelId" element={<DeliveryDetailsPage />} />
+              <Route path="*" element={<Navigate to="/courier/dashboard" replace />} />
+            </Route>
+            <Route
               path="/customer/support"
               element={
                 <CustomerLayout>
@@ -152,7 +176,7 @@ createRoot(document.getElementById('root')!).render(
               path="/deliveries"
               element={
                 <CustomerLayout>
-                  <MyDeliveriesPage />
+                  <CustomerMyDeliveriesPage />
                 </CustomerLayout>
               }
             />
@@ -164,19 +188,25 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/merchant" element={<MerchantLayout />}>
               <Route index element={<Navigate to="orders" replace />} />
               <Route path="orders" element={<MerchantOrdersPage />} />
+              <Route path="track" element={<MerchantTrackParcelPage />} />
+              <Route path="track/:trackingNumber" element={<MerchantTrackParcelPage />} />
+              <Route path="pricing" element={<MerchantPricingPage />} />
+              <Route path="pricing/:date" element={<MerchantPricingPage />} />
             </Route>
-            <Route path="/courier/dashboard" element={<CourierDashboard />} />
+            {/* /courier/* is served by the Courier Portal routes above. */}
             <Route path="/admin-landing" element={<AdminLandingPage />} />
 
             {/* Member 7 Admin & Dispatcher Routes */}
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Navigate to="dashboard" replace />} />
               <Route path="dashboard" element={<AdminDashboardPage />} />
-              <Route path="deliveries" element={<AdminPlaceholderPage title="Deliveries" description="Unassigned parcels, real-time status updates, and courier assignment." />} />
-              <Route path="couriers" element={<AdminPlaceholderPage title="Couriers" description="Active courier list, current workloads, and assignment capacity." />} />
-              <Route path="users" element={<AdminPlaceholderPage title="Users & Approvals" description="Manage system users and review pending merchant registrations." />} />
-              <Route path="pricing" element={<AdminPlaceholderPage title="Zones & Pricing" description="Configure delivery zones and set per-zone pricing rules." />} />
-              <Route path="reports" element={<AdminPlaceholderPage title="Reports" description="Daily delivery summaries, success rates, and failure analysis." />} />
+              <Route path="deliveries" element={<AdminDeliveriesPage />} />
+              <Route path="couriers" element={<AdminCouriersPage />} />
+              <Route path="users" element={<AdminUsersApprovalsPage />} />
+              <Route path="users/review/:id" element={<AdminReviewApplicationPage />} />
+              <Route path="users/review" element={<AdminReviewApplicationPage />} />
+              <Route path="pricing" element={<AdminPricingPage />} />
+              <Route path="reports" element={<AdminReportsPage />} />
               <Route path="settings" element={<AdminSettingsPage />} />
             </Route>
           </Routes>

@@ -87,6 +87,33 @@ describe('ParcelsReaderAdapter and record mapping', () => {
     );
   });
 
+  it.each([ParcelStatus.CREATED, ParcelStatus.ASSIGNED])(
+    'preserves %s and its actual event without inferring pickup',
+    (status) => {
+      const source = fixture();
+      const event = { ...source.statusHistory![0], status };
+      const mapped = mapParcelRecord({
+        ...source,
+        status,
+        statusHistory: [event],
+      });
+      expect(mapped.status).toBe(status);
+      expect(mapped.history).toEqual([
+        { status, occurredAt: event.createdAt.toISOString() },
+      ]);
+      expect(mapped).not.toHaveProperty('deliveredAt');
+    },
+  );
+
+  it.each([ParcelStatus.CREATED, ParcelStatus.ASSIGNED])(
+    'does not manufacture a %s event from a current status alone',
+    (status) => {
+      expect(
+        mapParcelRecord({ ...fixture(), status, statusHistory: [] }).history,
+      ).toEqual([]);
+    },
+  );
+
   it('maps a confirmed delivered timestamp and never creates inferred events', () => {
     const mapped = mapParcelRecord({
       ...fixture(),

@@ -45,6 +45,21 @@ export { Prisma }
  */
 export type User = Prisma.UserModel
 /**
+ * Model DeliveryAssignment
+ * 
+ */
+export type DeliveryAssignment = Prisma.DeliveryAssignmentModel
+/**
+ * Model ParcelStatusEvent
+ * 
+ */
+export type ParcelStatusEvent = Prisma.ParcelStatusEventModel
+/**
+ * Model DeliveryProof
+ * 
+ */
+export type DeliveryProof = Prisma.DeliveryProofModel
+/**
  * Model MerchantProfile
  * 
  */

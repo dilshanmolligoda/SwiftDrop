@@ -11,6 +11,7 @@ import { ApprovalGuard } from './modules/auth/guards/approval.guard.js';
 import { RolesGuard } from './modules/auth/guards/roles.guard.js';
 import { CsrfGuard } from './modules/auth/guards/csrf.guard.js';
 import { cookieParserMiddleware } from './modules/auth/utils/cookie.util.js';
+import { CourierModule } from './modules/courier/courier.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 import { MerchantDashboardModule } from './modules/merchant-dashboard/merchant-dashboard.module.js';
@@ -27,6 +28,7 @@ import { TrackingModule } from './modules/tracking/tracking.module.js';
       validate: validateEnv,
     }),
     AuthModule,
+    CourierModule,
     HealthModule,
     MerchantDashboardModule,
     ParcelsModule,

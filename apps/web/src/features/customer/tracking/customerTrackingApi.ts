@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { env } from '../../../lib/env'
 
-export type ParcelStatus = 'PENDING' | 'PICKED_UP' | 'IN_TRANSIT' | 'OUT_FOR_DELIVERY' | 'DELIVERED' | 'FAILED' | 'RETURNED'
+export type ParcelStatus = 'CREATED' | 'ASSIGNED' | 'PENDING' | 'PICKED_UP' | 'IN_TRANSIT' | 'OUT_FOR_DELIVERY' | 'DELIVERED' | 'FAILED' | 'RETURNED'
 export type DeliveryFilter = 'all' | 'active' | 'history'
 
 export const STATUS_DETAILS: Record<ParcelStatus, { label: string; tone: string }> = {
+  CREATED: { label: 'Created', tone: 'neutral' },
+  ASSIGNED: { label: 'Assigned', tone: 'neutral' },
   PENDING: { label: 'Created', tone: 'neutral' },
   PICKED_UP: { label: 'Picked Up', tone: 'transit' },
   IN_TRANSIT: { label: 'In Transit', tone: 'transit' },

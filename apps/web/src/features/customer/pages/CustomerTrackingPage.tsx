@@ -26,7 +26,9 @@ function TrackingTimeline({ parcel }: { parcel: TrackingParcel | null }) {
   if (parcel) {
     // A current status alone is not evidence that any previous stage happened.
     if (!rows.some(row => row.current)) rows.push({ status: parcel.status, current: true })
-    const currentIndex = TIMELINE_STAGES.indexOf(parcel.status)
+    // Both new statuses precede pickup; future stages remain unrecorded.
+    const currentIndex = parcel.status === 'CREATED' || parcel.status === 'ASSIGNED'
+      ? 0 : TIMELINE_STAGES.indexOf(parcel.status)
     if (currentIndex >= 0) {
       rows.push(...TIMELINE_STAGES.slice(currentIndex + 1)
         .filter(status => !parcel.history.some(event => event.status === status))

@@ -72,6 +72,8 @@ PrismaParcelStatusPolicy explicitly preserves the stored statuses:
 
 | Stored status    | Category       | Needs attention |
 | ---------------- | -------------- | --------------- |
+| CREATED          | active         | no              |
+| ASSIGNED         | active         | no              |
 | PENDING          | active         | no              |
 | PICKED_UP        | active         | no              |
 | IN_TRANSIT       | active         | no              |
@@ -82,18 +84,29 @@ PrismaParcelStatusPolicy explicitly preserves the stored statuses:
 
 History includes all terminal categories. RETURNED remains distinct from FAILED.
 PENDING is never renamed CREATED, and MerchantOrder statuses are not substituted.
+CREATED and ASSIGNED also pass through unchanged. Assignment does not establish
+pickup; only an included recorded event can establish a timeline timestamp.
 Unknown statuses fail explicitly. Attention classification is separate from the
 terminal outcome classification.
 
 Summary calculations cover the full owned snapshot, independent of history
-filters/pages. They align with Member 2's existing UTC calendar-month semantics:
-active counts the four active statuses; delivered-this-month counts only DELIVERED
+filters/pages. They use UTC calendar-month semantics:
+active counts all six active statuses; delivered-this-month counts only DELIVERED
 with a usable deliveredAt in the current UTC year/month; attention counts FAILED
 and RETURNED. Missing delivery dates do not count as confirmed monthly deliveries.
 This replaces Phase 1's provisional Colombo-month/nullable monthly count.
 The response includes reportingMonth (YYYY-MM) and timeZone UTC. The internal now
 argument is a test seam, never a request parameter. Receipt PDF display dates
 retain their separate existing Sri Lanka-time behavior.
+
+The incoming courier service writes ParcelStatusEvent, while Member 2's exported
+customer query currently includes only ParcelStatusHistory. This adapter cannot
+read courier-only events through that contract and does not manufacture them from
+the current status or updatedAt. The courier completion writer also does not set
+deliveredAt, so those records cannot contribute to confirmed monthly deliveries
+until the writers/readers agree on the authoritative event and delivery-date
+contract. Member 2's separate /parcels/metrics still counts only four active
+statuses; it needs coordinated alignment rather than a change to this API.
 
 ## Scalability limitation
 
@@ -125,12 +138,14 @@ WebSocket, courier status writer, public tracking, or receipt download was added
 Member 6 still supplies authoritative future status updates; Member 8 owns later
 event/outbox/transport integration.
 
-## Frontend integration remains separate
+## Frontend integration
 
-No frontend file changed. Existing tracking UI expects stage/timestamp and uses
-CREATED rather than PENDING; history UI expects an owner ID for a local defensive
-filter while these projections omit it. Those explicit response/presentation
-mappings and RETURNED support must be agreed when connecting the pages.
+Member 3's customer tracking and history pages consume these API projections with
+cookie credentials. Their typed response parser supports all nine Prisma statuses.
+PENDING displays as Created, CREATED displays as Created, and ASSIGNED displays as
+Assigned without changing the API codes or implying a recorded pickup. Timeline
+confirmations and timestamps require real history events. No ownership IDs are
+invented in responses or supplied by the client to select another customer's data.
 MyDeliveriesPage at /deliveries and DeliveryHistoryPage at /customer/deliveries
 still overlap; no route/navigation consolidation was performed.
 
