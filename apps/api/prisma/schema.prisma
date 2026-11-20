@@ -177,8 +177,92 @@ model MerchantProfile {
   updatedAt       DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  apiKeys         ApiKey[]
+  webhookEndpoint WebhookEndpoint?
 
   @@map("merchant_profiles")
+}
+
+// Merchant API keys. Only a peppered hash of the key is stored; the full key
+// is shown to the merchant once, when it is created.
+model ApiKey {
+  id                String          @id @default(uuid()) @db.Uuid
+  merchantProfileId String          @db.Uuid
+  name              String
+  keyPrefix         String          @unique
+  keyHash           String          @unique
+  lastUsedAt        DateTime?
+  revokedAt         DateTime?
+  createdAt         DateTime        @default(now())
+
+  merchantProfile   MerchantProfile @relation(fields: [merchantProfileId], references: [id], onDelete: Cascade)
+
+  @@index([merchantProfileId])
+  @@map("api_keys")
+}
+
+enum WebhookDeliveryStatus {
+  PENDING
+  DELIVERED
+  FAILED
+}
+
+// One webhook URL per merchant. The signing secret is encrypted at rest
+// (AES-256-GCM, WEBHOOK_SECRET_ENCRYPTION_KEY) because it must be read back to
+// sign each delivery.
+model WebhookEndpoint {
+  id                String            @id @default(uuid()) @db.Uuid
+  merchantProfileId String            @unique @db.Uuid
+  url               String
+  encryptedSecret   String
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  merchantProfile   MerchantProfile   @relation(fields: [merchantProfileId], references: [id], onDelete: Cascade)
+  deliveries        WebhookDelivery[]
+
+  @@map("webhook_endpoints")
+}
+
+// One event to deliver to a merchant, retried with backoff until it is
+// delivered or given up on (FAILED).
+model WebhookDelivery {
+  id             String                   @id @default(uuid()) @db.Uuid
+  endpointId     String                   @db.Uuid
+  eventId        String                   @unique @db.Uuid
+  eventType      String
+  payload        Json
+  status         WebhookDeliveryStatus    @default(PENDING)
+  attemptCount   Int                      @default(0)
+  nextAttemptAt  DateTime?                @default(now())
+  lastStatusCode Int?
+  lastError      String?
+  deliveredAt    DateTime?
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+
+  endpoint       WebhookEndpoint          @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  attempts       WebhookDeliveryAttempt[]
+
+  @@index([status, nextAttemptAt])
+  @@index([endpointId, createdAt])
+  @@map("webhook_deliveries")
+}
+
+// Every HTTP attempt, for the merchant's delivery log.
+model WebhookDeliveryAttempt {
+  id            String          @id @default(uuid()) @db.Uuid
+  deliveryId    String          @db.Uuid
+  attemptNumber Int
+  statusCode    Int?
+  error         String?
+  durationMs    Int
+  attemptedAt   DateTime        @default(now())
+
+  delivery      WebhookDelivery @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+
+  @@index([deliveryId])
+  @@map("webhook_delivery_attempts")
 }
 
 model CourierProfile {

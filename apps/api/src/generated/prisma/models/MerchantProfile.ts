@@ -199,6 +199,8 @@ export type MerchantProfileWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"MerchantProfile"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"MerchantProfile"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
+  apiKeys?: Prisma.ApiKeyListRelationFilter
+  webhookEndpoint?: Prisma.XOR<Prisma.WebhookEndpointNullableScalarRelationFilter, Prisma.WebhookEndpointWhereInput> | null
 }
 
 export type MerchantProfileOrderByWithRelationInput = {
@@ -210,6 +212,8 @@ export type MerchantProfileOrderByWithRelationInput = {
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
+  apiKeys?: Prisma.ApiKeyOrderByRelationAggregateInput
+  webhookEndpoint?: Prisma.WebhookEndpointOrderByWithRelationInput
 }
 
 export type MerchantProfileWhereUniqueInput = Prisma.AtLeast<{
@@ -224,6 +228,8 @@ export type MerchantProfileWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"MerchantProfile"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"MerchantProfile"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
+  apiKeys?: Prisma.ApiKeyListRelationFilter
+  webhookEndpoint?: Prisma.XOR<Prisma.WebhookEndpointNullableScalarRelationFilter, Prisma.WebhookEndpointWhereInput> | null
 }, "id" | "userId">
 
 export type MerchantProfileOrderByWithAggregationInput = {
@@ -260,6 +266,8 @@ export type MerchantProfileCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutMerchantProfileInput
+  apiKeys?: Prisma.ApiKeyCreateNestedManyWithoutMerchantProfileInput
+  webhookEndpoint?: Prisma.WebhookEndpointCreateNestedOneWithoutMerchantProfileInput
 }
 
 export type MerchantProfileUncheckedCreateInput = {
@@ -270,6 +278,8 @@ export type MerchantProfileUncheckedCreateInput = {
   businessType: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  apiKeys?: Prisma.ApiKeyUncheckedCreateNestedManyWithoutMerchantProfileInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedCreateNestedOneWithoutMerchantProfileInput
 }
 
 export type MerchantProfileUpdateInput = {
@@ -280,6 +290,8 @@ export type MerchantProfileUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutMerchantProfileNestedInput
+  apiKeys?: Prisma.ApiKeyUpdateManyWithoutMerchantProfileNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUpdateOneWithoutMerchantProfileNestedInput
 }
 
 export type MerchantProfileUncheckedUpdateInput = {
@@ -290,6 +302,8 @@ export type MerchantProfileUncheckedUpdateInput = {
   businessType?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  apiKeys?: Prisma.ApiKeyUncheckedUpdateManyWithoutMerchantProfileNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedUpdateOneWithoutMerchantProfileNestedInput
 }
 
 export type MerchantProfileCreateManyInput = {
@@ -356,6 +370,11 @@ export type MerchantProfileMinOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
 }
 
+export type MerchantProfileScalarRelationFilter = {
+  is?: Prisma.MerchantProfileWhereInput
+  isNot?: Prisma.MerchantProfileWhereInput
+}
+
 export type MerchantProfileCreateNestedOneWithoutUserInput = {
   create?: Prisma.XOR<Prisma.MerchantProfileCreateWithoutUserInput, Prisma.MerchantProfileUncheckedCreateWithoutUserInput>
   connectOrCreate?: Prisma.MerchantProfileCreateOrConnectWithoutUserInput
@@ -388,6 +407,34 @@ export type MerchantProfileUncheckedUpdateOneWithoutUserNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.MerchantProfileUpdateToOneWithWhereWithoutUserInput, Prisma.MerchantProfileUpdateWithoutUserInput>, Prisma.MerchantProfileUncheckedUpdateWithoutUserInput>
 }
 
+export type MerchantProfileCreateNestedOneWithoutApiKeysInput = {
+  create?: Prisma.XOR<Prisma.MerchantProfileCreateWithoutApiKeysInput, Prisma.MerchantProfileUncheckedCreateWithoutApiKeysInput>
+  connectOrCreate?: Prisma.MerchantProfileCreateOrConnectWithoutApiKeysInput
+  connect?: Prisma.MerchantProfileWhereUniqueInput
+}
+
+export type MerchantProfileUpdateOneRequiredWithoutApiKeysNestedInput = {
+  create?: Prisma.XOR<Prisma.MerchantProfileCreateWithoutApiKeysInput, Prisma.MerchantProfileUncheckedCreateWithoutApiKeysInput>
+  connectOrCreate?: Prisma.MerchantProfileCreateOrConnectWithoutApiKeysInput
+  upsert?: Prisma.MerchantProfileUpsertWithoutApiKeysInput
+  connect?: Prisma.MerchantProfileWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.MerchantProfileUpdateToOneWithWhereWithoutApiKeysInput, Prisma.MerchantProfileUpdateWithoutApiKeysInput>, Prisma.MerchantProfileUncheckedUpdateWithoutApiKeysInput>
+}
+
+export type MerchantProfileCreateNestedOneWithoutWebhookEndpointInput = {
+  create?: Prisma.XOR<Prisma.MerchantProfileCreateWithoutWebhookEndpointInput, Prisma.MerchantProfileUncheckedCreateWithoutWebhookEndpointInput>
+  connectOrCreate?: Prisma.MerchantProfileCreateOrConnectWithoutWebhookEndpointInput
+  connect?: Prisma.MerchantProfileWhereUniqueInput
+}
+
+export type MerchantProfileUpdateOneRequiredWithoutWebhookEndpointNestedInput = {
+  create?: Prisma.XOR<Prisma.MerchantProfileCreateWithoutWebhookEndpointInput, Prisma.MerchantProfileUncheckedCreateWithoutWebhookEndpointInput>
+  connectOrCreate?: Prisma.MerchantProfileCreateOrConnectWithoutWebhookEndpointInput
+  upsert?: Prisma.MerchantProfileUpsertWithoutWebhookEndpointInput
+  connect?: Prisma.MerchantProfileWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.MerchantProfileUpdateToOneWithWhereWithoutWebhookEndpointInput, Prisma.MerchantProfileUpdateWithoutWebhookEndpointInput>, Prisma.MerchantProfileUncheckedUpdateWithoutWebhookEndpointInput>
+}
+
 export type MerchantProfileCreateWithoutUserInput = {
   id?: string
   businessName: string
@@ -395,6 +442,8 @@ export type MerchantProfileCreateWithoutUserInput = {
   businessType: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  apiKeys?: Prisma.ApiKeyCreateNestedManyWithoutMerchantProfileInput
+  webhookEndpoint?: Prisma.WebhookEndpointCreateNestedOneWithoutMerchantProfileInput
 }
 
 export type MerchantProfileUncheckedCreateWithoutUserInput = {
@@ -404,6 +453,8 @@ export type MerchantProfileUncheckedCreateWithoutUserInput = {
   businessType: string
   createdAt?: Date | string
   updatedAt?: Date | string
+  apiKeys?: Prisma.ApiKeyUncheckedCreateNestedManyWithoutMerchantProfileInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedCreateNestedOneWithoutMerchantProfileInput
 }
 
 export type MerchantProfileCreateOrConnectWithoutUserInput = {
@@ -429,6 +480,8 @@ export type MerchantProfileUpdateWithoutUserInput = {
   businessType?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  apiKeys?: Prisma.ApiKeyUpdateManyWithoutMerchantProfileNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUpdateOneWithoutMerchantProfileNestedInput
 }
 
 export type MerchantProfileUncheckedUpdateWithoutUserInput = {
@@ -438,8 +491,159 @@ export type MerchantProfileUncheckedUpdateWithoutUserInput = {
   businessType?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  apiKeys?: Prisma.ApiKeyUncheckedUpdateManyWithoutMerchantProfileNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedUpdateOneWithoutMerchantProfileNestedInput
 }
 
+export type MerchantProfileCreateWithoutApiKeysInput = {
+  id?: string
+  businessName: string
+  businessAddress: string
+  businessType: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutMerchantProfileInput
+  webhookEndpoint?: Prisma.WebhookEndpointCreateNestedOneWithoutMerchantProfileInput
+}
+
+export type MerchantProfileUncheckedCreateWithoutApiKeysInput = {
+  id?: string
+  userId: string
+  businessName: string
+  businessAddress: string
+  businessType: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedCreateNestedOneWithoutMerchantProfileInput
+}
+
+export type MerchantProfileCreateOrConnectWithoutApiKeysInput = {
+  where: Prisma.MerchantProfileWhereUniqueInput
+  create: Prisma.XOR<Prisma.MerchantProfileCreateWithoutApiKeysInput, Prisma.MerchantProfileUncheckedCreateWithoutApiKeysInput>
+}
+
+export type MerchantProfileUpsertWithoutApiKeysInput = {
+  update: Prisma.XOR<Prisma.MerchantProfileUpdateWithoutApiKeysInput, Prisma.MerchantProfileUncheckedUpdateWithoutApiKeysInput>
+  create: Prisma.XOR<Prisma.MerchantProfileCreateWithoutApiKeysInput, Prisma.MerchantProfileUncheckedCreateWithoutApiKeysInput>
+  where?: Prisma.MerchantProfileWhereInput
+}
+
+export type MerchantProfileUpdateToOneWithWhereWithoutApiKeysInput = {
+  where?: Prisma.MerchantProfileWhereInput
+  data: Prisma.XOR<Prisma.MerchantProfileUpdateWithoutApiKeysInput, Prisma.MerchantProfileUncheckedUpdateWithoutApiKeysInput>
+}
+
+export type MerchantProfileUpdateWithoutApiKeysInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  businessName?: Prisma.StringFieldUpdateOperationsInput | string
+  businessAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  businessType?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutMerchantProfileNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUpdateOneWithoutMerchantProfileNestedInput
+}
+
+export type MerchantProfileUncheckedUpdateWithoutApiKeysInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  businessName?: Prisma.StringFieldUpdateOperationsInput | string
+  businessAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  businessType?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedUpdateOneWithoutMerchantProfileNestedInput
+}
+
+export type MerchantProfileCreateWithoutWebhookEndpointInput = {
+  id?: string
+  businessName: string
+  businessAddress: string
+  businessType: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutMerchantProfileInput
+  apiKeys?: Prisma.ApiKeyCreateNestedManyWithoutMerchantProfileInput
+}
+
+export type MerchantProfileUncheckedCreateWithoutWebhookEndpointInput = {
+  id?: string
+  userId: string
+  businessName: string
+  businessAddress: string
+  businessType: string
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  apiKeys?: Prisma.ApiKeyUncheckedCreateNestedManyWithoutMerchantProfileInput
+}
+
+export type MerchantProfileCreateOrConnectWithoutWebhookEndpointInput = {
+  where: Prisma.MerchantProfileWhereUniqueInput
+  create: Prisma.XOR<Prisma.MerchantProfileCreateWithoutWebhookEndpointInput, Prisma.MerchantProfileUncheckedCreateWithoutWebhookEndpointInput>
+}
+
+export type MerchantProfileUpsertWithoutWebhookEndpointInput = {
+  update: Prisma.XOR<Prisma.MerchantProfileUpdateWithoutWebhookEndpointInput, Prisma.MerchantProfileUncheckedUpdateWithoutWebhookEndpointInput>
+  create: Prisma.XOR<Prisma.MerchantProfileCreateWithoutWebhookEndpointInput, Prisma.MerchantProfileUncheckedCreateWithoutWebhookEndpointInput>
+  where?: Prisma.MerchantProfileWhereInput
+}
+
+export type MerchantProfileUpdateToOneWithWhereWithoutWebhookEndpointInput = {
+  where?: Prisma.MerchantProfileWhereInput
+  data: Prisma.XOR<Prisma.MerchantProfileUpdateWithoutWebhookEndpointInput, Prisma.MerchantProfileUncheckedUpdateWithoutWebhookEndpointInput>
+}
+
+export type MerchantProfileUpdateWithoutWebhookEndpointInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  businessName?: Prisma.StringFieldUpdateOperationsInput | string
+  businessAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  businessType?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutMerchantProfileNestedInput
+  apiKeys?: Prisma.ApiKeyUpdateManyWithoutMerchantProfileNestedInput
+}
+
+export type MerchantProfileUncheckedUpdateWithoutWebhookEndpointInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  businessName?: Prisma.StringFieldUpdateOperationsInput | string
+  businessAddress?: Prisma.StringFieldUpdateOperationsInput | string
+  businessType?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  apiKeys?: Prisma.ApiKeyUncheckedUpdateManyWithoutMerchantProfileNestedInput
+}
+
+
+/**
+ * Count Type MerchantProfileCountOutputType
+ */
+
+export type MerchantProfileCountOutputType = {
+  apiKeys: number
+}
+
+export type MerchantProfileCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  apiKeys?: boolean | MerchantProfileCountOutputTypeCountApiKeysArgs
+}
+
+/**
+ * MerchantProfileCountOutputType without action
+ */
+export type MerchantProfileCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the MerchantProfileCountOutputType
+   */
+  select?: Prisma.MerchantProfileCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * MerchantProfileCountOutputType without action
+ */
+export type MerchantProfileCountOutputTypeCountApiKeysArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ApiKeyWhereInput
+}
 
 
 export type MerchantProfileSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -451,6 +655,9 @@ export type MerchantProfileSelect<ExtArgs extends runtime.Types.Extensions.Inter
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  apiKeys?: boolean | Prisma.MerchantProfile$apiKeysArgs<ExtArgs>
+  webhookEndpoint?: boolean | Prisma.MerchantProfile$webhookEndpointArgs<ExtArgs>
+  _count?: boolean | Prisma.MerchantProfileCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["merchantProfile"]>
 
 export type MerchantProfileSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -488,6 +695,9 @@ export type MerchantProfileSelectScalar = {
 export type MerchantProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "businessName" | "businessAddress" | "businessType" | "createdAt" | "updatedAt", ExtArgs["result"]["merchantProfile"]>
 export type MerchantProfileInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  apiKeys?: boolean | Prisma.MerchantProfile$apiKeysArgs<ExtArgs>
+  webhookEndpoint?: boolean | Prisma.MerchantProfile$webhookEndpointArgs<ExtArgs>
+  _count?: boolean | Prisma.MerchantProfileCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type MerchantProfileIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -500,6 +710,8 @@ export type $MerchantProfilePayload<ExtArgs extends runtime.Types.Extensions.Int
   name: "MerchantProfile"
   objects: {
     user: Prisma.$UserPayload<ExtArgs>
+    apiKeys: Prisma.$ApiKeyPayload<ExtArgs>[]
+    webhookEndpoint: Prisma.$WebhookEndpointPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -904,6 +1116,8 @@ readonly fields: MerchantProfileFieldRefs;
 export interface Prisma__MerchantProfileClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  apiKeys<T extends Prisma.MerchantProfile$apiKeysArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.MerchantProfile$apiKeysArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ApiKeyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  webhookEndpoint<T extends Prisma.MerchantProfile$webhookEndpointArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.MerchantProfile$webhookEndpointArgs<ExtArgs>>): Prisma.Prisma__WebhookEndpointClient<runtime.Types.Result.GetResult<Prisma.$WebhookEndpointPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1338,6 +1552,49 @@ export type MerchantProfileDeleteManyArgs<ExtArgs extends runtime.Types.Extensio
    * Limit how many MerchantProfiles to delete.
    */
   limit?: number
+}
+
+/**
+ * MerchantProfile.apiKeys
+ */
+export type MerchantProfile$apiKeysArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ApiKey
+   */
+  select?: Prisma.ApiKeySelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ApiKey
+   */
+  omit?: Prisma.ApiKeyOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ApiKeyInclude<ExtArgs> | null
+  where?: Prisma.ApiKeyWhereInput
+  orderBy?: Prisma.ApiKeyOrderByWithRelationInput | Prisma.ApiKeyOrderByWithRelationInput[]
+  cursor?: Prisma.ApiKeyWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ApiKeyScalarFieldEnum | Prisma.ApiKeyScalarFieldEnum[]
+}
+
+/**
+ * MerchantProfile.webhookEndpoint
+ */
+export type MerchantProfile$webhookEndpointArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the WebhookEndpoint
+   */
+  select?: Prisma.WebhookEndpointSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the WebhookEndpoint
+   */
+  omit?: Prisma.WebhookEndpointOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.WebhookEndpointInclude<ExtArgs> | null
+  where?: Prisma.WebhookEndpointWhereInput
 }
 
 /**
