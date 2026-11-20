@@ -1,26 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { AlertTriangle, ArrowRight, Package, Search, Truck } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { env } from '../../../lib/env'
+import {
+  CustomerApiError, getCustomerDeliveries, getCustomerSummary,
+  STATUS_DETAILS, trackingDetailsLink, useCustomerRequest,
+  type DeliveryFilter, type HistoryDelivery,
+} from '../tracking/customerTrackingApi'
 import './DeliveryHistoryPage.css'
 
-type DeliveryFilter = 'all' | 'active' | 'history'
-type HistoryStatus = 'CREATED' | 'PICKED_UP' | 'IN_TRANSIT' | 'OUT_FOR_DELIVERY' | 'DELIVERED' | 'FAILED'
 type CustomerSession =
   | { state: 'checking' | 'redirecting' | 'denied' }
   | { state: 'error'; message: string }
   | { state: 'customer'; customerId: string }
-
-// UI model for a future authenticated delivery response, not an assumed API DTO.
-interface HistoryDelivery {
-  readonly id: string
-  readonly customerId: string
-  readonly trackingNumber: string
-  readonly destination?: string
-  readonly createdAt?: string
-  readonly status: HistoryStatus
-  readonly deliveredAt?: string
-}
 
 const PAGE_SIZE = 5
 const FILTERS: readonly { value: DeliveryFilter; label: string }[] = [
@@ -28,57 +20,6 @@ const FILTERS: readonly { value: DeliveryFilter; label: string }[] = [
   { value: 'active', label: 'Active' },
   { value: 'history', label: 'History' },
 ]
-const STATUS_DETAILS: Record<HistoryStatus, { label: string; tone: string }> = {
-  CREATED: { label: 'Created', tone: 'neutral' },
-  PICKED_UP: { label: 'Picked Up', tone: 'transit' },
-  IN_TRANSIT: { label: 'In Transit', tone: 'transit' },
-  OUT_FOR_DELIVERY: { label: 'Out for Delivery', tone: 'transit' },
-  DELIVERED: { label: 'Delivered', tone: 'delivered' },
-  FAILED: { label: 'Failed', tone: 'failed' },
-}
-
-function isActive(delivery: HistoryDelivery): boolean {
-  return ['CREATED', 'PICKED_UP', 'IN_TRANSIT', 'OUT_FOR_DELIVERY'].includes(delivery.status)
-}
-
-function getMonthKey(value: Date): string | null {
-  if (!Number.isFinite(value.getTime())) return null
-  const parts = new Intl.DateTimeFormat('en-GB', {
-    year: 'numeric', month: '2-digit', timeZone: 'Asia/Colombo',
-  }).formatToParts(value)
-  return `${parts.find(({ type }) => type === 'year')?.value}-${parts.find(({ type }) => type === 'month')?.value}`
-}
-
-function getDeliveryMetrics(deliveries: readonly HistoryDelivery[], now = new Date()) {
-  const delivered = deliveries.filter(({ status }) => status === 'DELIVERED')
-  const month = getMonthKey(now)
-  const hasUnknownDeliveryDate = delivered.some(({ deliveredAt }) => !deliveredAt || !Number.isFinite(Date.parse(deliveredAt)))
-  return {
-    active: deliveries.filter(isActive).length,
-    // An absent delivery timestamp cannot establish a delivery's calendar month.
-    delivered: hasUnknownDeliveryDate || !month ? null : delivered.filter(({ deliveredAt }) => getMonthKey(new Date(deliveredAt!)) === month).length,
-    attention: deliveries.filter(({ status }) => status === 'FAILED').length,
-  }
-}
-
-function getDeliveryPage(deliveries: readonly HistoryDelivery[], filter: DeliveryFilter, search: string, requestedPage: number) {
-  const query = search.trim().toUpperCase()
-  const matches = deliveries.filter((delivery) => {
-    const matchesFilter = filter === 'all' || (filter === 'active' ? isActive(delivery) : ['DELIVERED', 'FAILED'].includes(delivery.status))
-    return matchesFilter && delivery.trackingNumber.toUpperCase().includes(query)
-  })
-  const pageCount = Math.ceil(matches.length / PAGE_SIZE)
-  const page = Math.max(1, Math.min(requestedPage, pageCount || 1))
-  const offset = (page - 1) * PAGE_SIZE
-  return {
-    items: matches.slice(offset, offset + PAGE_SIZE),
-    total: matches.length,
-    page,
-    pageCount,
-    start: matches.length ? offset + 1 : 0,
-    end: Math.min(offset + PAGE_SIZE, matches.length),
-  }
-}
 
 function DeliveryRow({ delivery }: { delivery: HistoryDelivery }) {
   const status = STATUS_DETAILS[delivery.status]
@@ -95,31 +36,37 @@ function DeliveryRow({ delivery }: { delivery: HistoryDelivery }) {
         <span className={`customer-deliveries-badge customer-deliveries-badge--${status.tone}`}>{status.label}</span>
       </td>
       <td className="customer-deliveries-cell customer-deliveries-action-cell">
-        {/* Tracking currently has no per-parcel URL contract. Add details and
-            receipt actions here only after their authorized APIs/routes exist. */}
-        <button className="customer-deliveries-details-button" type="button" disabled aria-label={`View details for ${delivery.trackingNumber} (not available yet)`} aria-describedby="customer-deliveries-actions-note">
+        <Link className="customer-deliveries-details-button" to={trackingDetailsLink(delivery.trackingNumber)} aria-label={`View details for ${delivery.trackingNumber}`}>
           View details <ArrowRight size={14} aria-hidden="true" />
-        </button>
+        </Link>
       </td>
     </tr>
   )
 }
 
-function DeliveryHistoryContent({ customerId, deliveries }: {
-  customerId: string
-  deliveries: readonly HistoryDelivery[] | null
-}) {
+function DeliveryHistoryContent({ onAccessError }: { onAccessError: (error: unknown) => boolean }) {
   const [filter, setFilter] = useState<DeliveryFilter>('all')
   const [search, setSearch] = useState('')
   const [requestedPage, setRequestedPage] = useState(1)
-  // Defense in depth for a future API adapter. Server-side ownership enforcement
-  // is still required; browser-wide localStorage is deliberately not a source.
-  const ownedDeliveries = deliveries?.filter((delivery) => delivery.customerId === customerId) ?? []
-  const metrics = deliveries === null ? null : getDeliveryMetrics(ownedDeliveries)
-  const result = getDeliveryPage(ownedDeliveries, filter, search, requestedPage)
-  const firstPageNumber = Math.max(1, Math.min(result.page - 2, result.pageCount - 4))
-  const pageNumbers = Array.from({ length: Math.min(5, result.pageCount) }, (_, index) => firstPageNumber + index)
-  const filtered = filter !== 'all' || Boolean(search.trim())
+  const normalizedSearch = search.trim().toUpperCase()
+  const loadDeliveries = useCallback(async (signal: AbortSignal) => {
+    const value = await getCustomerDeliveries({ filter, search: normalizedSearch, page: requestedPage, pageSize: PAGE_SIZE }, signal)
+    if (!signal.aborted) {
+      const lastPage = Math.max(1, Math.ceil(value.total / value.pageSize))
+      if (value.page > lastPage) setRequestedPage(lastPage)
+    }
+    return value
+  }, [filter, normalizedSearch, requestedPage])
+  const { data: result, loading, error, retry } = useCustomerRequest(loadDeliveries, onAccessError)
+  const { data: summary, error: summaryError, retry: retrySummary } = useCustomerRequest(getCustomerSummary, onAccessError)
+
+  const pageCount = result ? Math.ceil(result.total / result.pageSize) : 0
+  const page = result?.page ?? requestedPage
+  const start = result?.items.length ? (result.page - 1) * result.pageSize + 1 : 0
+  const end = result?.items.length ? start + result.items.length - 1 : 0
+  const firstPageNumber = Math.max(1, Math.min(page - 2, pageCount - 4))
+  const pageNumbers = Array.from({ length: Math.min(5, pageCount) }, (_, index) => firstPageNumber + index)
+  const filtered = filter !== 'all' || Boolean(normalizedSearch)
 
   return (
     <div className="customer-deliveries-page">
@@ -128,11 +75,11 @@ function DeliveryHistoryContent({ customerId, deliveries }: {
         <p className="customer-deliveries-subtitle">View and manage your parcel deliveries.</p>
       </header>
 
-      <section className="customer-deliveries-metrics" aria-label="Delivery summary">
+      <section className="customer-deliveries-metrics" aria-label="Delivery summary" aria-busy={!summary && !summaryError}>
         {[
-          { label: 'Active deliveries', value: metrics?.active, Icon: Package, attention: false },
-          { label: 'Delivered this month', value: metrics?.delivered, Icon: Truck, attention: false },
-          { label: 'Needs attention', value: metrics?.attention, Icon: AlertTriangle, attention: true },
+          { label: 'Active deliveries', value: summary?.activeDeliveries, Icon: Package, attention: false },
+          { label: 'Delivered this month', value: summary?.deliveredThisMonth, Icon: Truck, attention: false },
+          { label: 'Needs attention', value: summary?.needsAttention, Icon: AlertTriangle, attention: true },
         ].map(({ label, value, Icon, attention }) => (
           <div className="customer-deliveries-metric" key={label}>
             <span className={`customer-deliveries-metric-icon${attention ? ' customer-deliveries-metric-icon--attention' : ''}`} aria-hidden="true"><Icon size={22} /></span>
@@ -143,11 +90,12 @@ function DeliveryHistoryContent({ customerId, deliveries }: {
           </div>
         ))}
       </section>
-      <p className="customer-deliveries-summary-note">
-        {deliveries === null ? 'Customer delivery data is not connected yet. Statistics are unavailable.' : 'Statistics cover your deliveries. Calendar dates use Sri Lanka time.'}
-      </p>
+      <div className="customer-deliveries-summary-note" role={summaryError ? 'alert' : 'status'}>
+        {summaryError ? <>{summaryError} <button className="customer-deliveries-clear-button" type="button" onClick={retrySummary}>Retry statistics</button></>
+          : summary ? `Statistics cover your deliveries. Reporting month: ${summary.reportingMonth} (UTC).` : 'Loading delivery statistics…'}
+      </div>
 
-      <section className="customer-deliveries-card" aria-label="Your deliveries">
+      <section className="customer-deliveries-card" aria-label="Your deliveries" aria-busy={loading}>
         <div className="customer-deliveries-toolbar">
           <div className="customer-deliveries-filters" role="group" aria-label="Filter deliveries">
             {FILTERS.map(({ value, label }) => (
@@ -168,6 +116,7 @@ function DeliveryHistoryContent({ customerId, deliveries }: {
               id="customer-deliveries-search"
               className="customer-deliveries-search-input"
               type="search"
+              maxLength={64}
               placeholder="Search tracking number"
               value={search}
               onChange={(event) => { setSearch(event.target.value); setRequestedPage(1) }}
@@ -189,19 +138,20 @@ function DeliveryHistoryContent({ customerId, deliveries }: {
               </tr>
             </thead>
             <tbody>
-              {result.items.map((delivery) => <DeliveryRow key={delivery.id} delivery={delivery} />)}
-              {!result.total && (
+              {result?.items.map((delivery) => <DeliveryRow key={delivery.id} delivery={delivery} />)}
+              {!result?.items.length && (
                 <tr>
                   <td className="customer-deliveries-empty-cell" colSpan={5}>
                     <div className="customer-deliveries-empty">
                       <Package size={32} className="customer-deliveries-empty-icon" aria-hidden="true" />
-                      <h2 className="customer-deliveries-empty-title">
-                        {deliveries === null ? 'Delivery history is not connected yet.' : filtered ? 'No matching deliveries found.' : 'No deliveries found.'}
+                      <h2 className="customer-deliveries-empty-title" role={error ? 'alert' : 'status'}>
+                        {loading ? 'Loading deliveries…' : error ? 'Unable to load deliveries.' : filtered ? 'No matching deliveries found.' : 'No deliveries found.'}
                       </h2>
                       <p className="customer-deliveries-empty-description">
-                        {deliveries === null ? 'Your delivery list will appear here once customer delivery history is available.' : filtered ? 'Try another tracking number or select a different filter.' : 'Your deliveries will appear here once you create a delivery request.'}
+                        {loading ? 'Fetching your delivery history.' : error || (filtered ? 'Try another tracking number or select a different filter.' : 'Your deliveries will appear here once you create a delivery request.')}
                       </p>
-                      {filtered && <button className="customer-deliveries-clear-button" type="button" onClick={() => { setFilter('all'); setSearch(''); setRequestedPage(1) }}>Clear filters</button>}
+                      {error && <button className="customer-deliveries-retry-button" type="button" onClick={retry}>Try again</button>}
+                      {!loading && !error && filtered && <button className="customer-deliveries-clear-button" type="button" onClick={() => { setFilter('all'); setSearch(''); setRequestedPage(1) }}>Clear filters</button>}
                     </div>
                   </td>
                 </tr>
@@ -212,19 +162,19 @@ function DeliveryHistoryContent({ customerId, deliveries }: {
 
         <div className="customer-deliveries-footer">
           <p className="customer-deliveries-count" role="status" aria-atomic="true">
-            {deliveries === null ? 'Delivery list unavailable' : result.total ? `Showing ${result.start}–${result.end} of ${result.total}` : 'Showing 0 of 0'}
+            {loading ? 'Loading delivery list…' : error ? 'Delivery list unavailable' : result?.total ? `Showing ${start}–${end} of ${result.total}` : 'Showing 0 of 0'}
           </p>
           <nav className="customer-deliveries-pagination" aria-label="Delivery pages">
-            <button className="customer-deliveries-page-button" type="button" disabled={result.page <= 1} onClick={() => setRequestedPage(result.page - 1)}>Previous</button>
+            <button className="customer-deliveries-page-button" type="button" disabled={loading || !result || page <= 1} onClick={() => setRequestedPage(page - 1)}>Previous</button>
             {pageNumbers.map((page) => (
-              <button className="customer-deliveries-page-button customer-deliveries-page-number" type="button" key={page} aria-label={`Page ${page}`} aria-current={result.page === page ? 'page' : undefined} onClick={() => setRequestedPage(page)}>{page}</button>
+              <button className="customer-deliveries-page-button customer-deliveries-page-number" type="button" key={page} aria-label={`Page ${page}`} aria-current={result?.page === page ? 'page' : undefined} onClick={() => setRequestedPage(page)}>{page}</button>
             ))}
-            {!result.pageCount && <span className="customer-deliveries-page-empty">No pages</span>}
-            <button className="customer-deliveries-page-button" type="button" disabled={result.page >= result.pageCount} onClick={() => setRequestedPage(result.page + 1)}>Next</button>
+            {!pageCount && <span className="customer-deliveries-page-empty">No pages</span>}
+            <button className="customer-deliveries-page-button" type="button" disabled={loading || !result || page >= pageCount} onClick={() => setRequestedPage(page + 1)}>Next</button>
           </nav>
         </div>
       </section>
-      <p id="customer-deliveries-actions-note" className="customer-deliveries-actions-note">Parcel details and receipt downloads are not connected yet.</p>
+      <p id="customer-deliveries-actions-note" className="customer-deliveries-actions-note">Receipt downloads are not connected yet.</p>
     </div>
   )
 }
@@ -233,6 +183,12 @@ export function DeliveryHistoryPage() {
   const navigate = useNavigate()
   const [session, setSession] = useState<CustomerSession>({ state: 'checking' })
   const [attempt, setAttempt] = useState(0)
+  const onAccessError = useCallback((error: unknown) => {
+    if (!(error instanceof CustomerApiError) || ![401, 403].includes(error.status)) return false
+    setSession({ state: error.status === 401 ? 'redirecting' : 'denied' })
+    if (error.status === 401) navigate('/login', { replace: true })
+    return true
+  }, [navigate])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -283,9 +239,7 @@ export function DeliveryHistoryPage() {
   }, [navigate, attempt])
 
   if (session.state === 'customer') {
-    // No secure customer delivery endpoint is available. null means unavailable,
-    // not a confirmed empty account. Never populate from shared localStorage.
-    return <DeliveryHistoryContent key={session.customerId} customerId={session.customerId} deliveries={null} />
+    return <DeliveryHistoryContent key={session.customerId} onAccessError={onAccessError} />
   }
   if (session.state === 'checking' || session.state === 'redirecting') {
     return <div className="customer-deliveries-session" role="status">Verifying customer access…</div>

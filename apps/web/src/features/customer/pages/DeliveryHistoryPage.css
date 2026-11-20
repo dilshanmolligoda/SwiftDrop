@@ -222,6 +222,11 @@
   color: #b91c1c;
 }
 
+.customer-deliveries-badge--returned {
+  background-color: #fff7ed;
+  color: #92400e;
+}
+
 .customer-deliveries-action-cell {
   text-align: right;
 }
@@ -234,11 +239,16 @@
   padding: 0;
   border: 0;
   background-color: transparent;
-  color: #64748b;
+  color: #0d5e36;
   font: inherit;
   font-size: 12px;
   white-space: nowrap;
-  cursor: not-allowed;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.customer-deliveries-details-button:hover {
+  text-decoration: underline;
 }
 
 .customer-deliveries-empty-cell {
@@ -376,6 +386,7 @@
 }
 
 .customer-deliveries-filter:focus-visible,
+.customer-deliveries-details-button:focus-visible,
 .customer-deliveries-search-input:focus-visible,
 .customer-deliveries-table-scroll:focus-visible,
 .customer-deliveries-page-button:focus-visible,

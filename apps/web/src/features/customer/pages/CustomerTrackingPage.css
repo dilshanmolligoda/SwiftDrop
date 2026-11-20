@@ -223,6 +223,31 @@
   color: #b91c1c;
 }
 
+.customer-tracking-badge--transit {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+}
+
+.customer-tracking-badge--delivered {
+  background-color: #eaf7ee;
+  color: #0d5e36;
+}
+
+.customer-tracking-badge--returned {
+  background-color: #fff7ed;
+  color: #92400e;
+}
+
+.customer-tracking-summary-retry {
+  min-height: 44px;
+  padding: 4px 8px;
+  border: 0;
+  background-color: transparent;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .customer-tracking-timeline-note {
   max-width: 540px;
   margin: 8px 0 0;
@@ -301,6 +326,16 @@
 
 .customer-tracking-step--failed .customer-tracking-step-label {
   color: #b91c1c;
+}
+
+.customer-tracking-step--returned .customer-tracking-step-marker {
+  border-color: #92400e;
+  background-color: #fff7ed;
+  color: #92400e;
+}
+
+.customer-tracking-step--returned .customer-tracking-step-label {
+  color: #92400e;
 }
 
 .customer-tracking-step-time {
