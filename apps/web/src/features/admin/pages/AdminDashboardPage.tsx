@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   Calendar,
@@ -136,6 +136,35 @@ export const AdminDashboardPage: React.FC = () => {
     }).format(new Date()),
   )
 
+  const [isDateMenuOpen, setIsDateMenuOpen] = useState(false)
+  const [dateFilter, setDateFilter] = useState<'today' | 'yesterday' | 'past7' | 'past30'>('today')
+  const dateMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dateMenuRef.current && !dateMenuRef.current.contains(e.target as Node)) {
+        setIsDateMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const currentDateLabel = useMemo(() => {
+    switch (dateFilter) {
+      case 'today':
+        return `Today, ${todayLabel}`
+      case 'yesterday':
+        return 'Yesterday'
+      case 'past7':
+        return 'Past 7 days'
+      case 'past30':
+        return 'Past 30 days'
+      default:
+        return `Today, ${todayLabel}`
+    }
+  }, [dateFilter, todayLabel])
+
   return (
     <div className={styles.pageContainer}>
       {/* Page Header */}
@@ -145,11 +174,72 @@ export const AdminDashboardPage: React.FC = () => {
           <p className={styles.pageSubtitle}>Assign parcels and keep deliveries moving.</p>
         </div>
 
-        <button type="button" className={styles.dateBadge} aria-label="Select date filter">
-          <Calendar size={16} aria-hidden="true" />
-          <span>Today, {todayLabel}</span>
-          <ChevronDown size={14} aria-hidden="true" />
-        </button>
+        <div className={styles.dateDropdownWrapper} ref={dateMenuRef}>
+          <button
+            type="button"
+            className={styles.dateBadge}
+            aria-label="Select date filter"
+            aria-expanded={isDateMenuOpen}
+            onClick={() => setIsDateMenuOpen((prev) => !prev)}
+          >
+            <Calendar size={16} aria-hidden="true" />
+            <span>{currentDateLabel}</span>
+            <ChevronDown
+              size={14}
+              className={`${styles.chevron} ${isDateMenuOpen ? styles.chevronRotated : ''}`}
+              aria-hidden="true"
+            />
+          </button>
+
+          {isDateMenuOpen && (
+            <div className={styles.dateDropdownMenu} role="menu">
+              <button
+                type="button"
+                role="menuitem"
+                className={`${styles.dateOptionItem} ${dateFilter === 'today' ? styles.dateOptionSelected : ''}`}
+                onClick={() => {
+                  setDateFilter('today')
+                  setIsDateMenuOpen(false)
+                }}
+              >
+                <span>Today ({todayLabel})</span>
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                className={`${styles.dateOptionItem} ${dateFilter === 'yesterday' ? styles.dateOptionSelected : ''}`}
+                onClick={() => {
+                  setDateFilter('yesterday')
+                  setIsDateMenuOpen(false)
+                }}
+              >
+                <span>Yesterday</span>
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                className={`${styles.dateOptionItem} ${dateFilter === 'past7' ? styles.dateOptionSelected : ''}`}
+                onClick={() => {
+                  setDateFilter('past7')
+                  setIsDateMenuOpen(false)
+                }}
+              >
+                <span>Past 7 days</span>
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                className={`${styles.dateOptionItem} ${dateFilter === 'past30' ? styles.dateOptionSelected : ''}`}
+                onClick={() => {
+                  setDateFilter('past30')
+                  setIsDateMenuOpen(false)
+                }}
+              >
+                <span>Past 30 days</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* KPI Metrics Row */}
