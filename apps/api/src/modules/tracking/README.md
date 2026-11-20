@@ -1,10 +1,10 @@
 # Member 3 tracking and history
 
-TrackingModule is registered in AppModule and exposes three private REST APIs and
+TrackingModule is registered in AppModule and exposes four private REST APIs and
 one public tracking API. Its private reader calls Member 2's exported
 ParcelsService. The public reader uses a separate minimal Prisma SELECT. No Prisma
 schema, migration, pricing, authentication, or courier implementation changed.
-Receipt downloads and real-time endpoints remain unregistered.
+The receipt API reuses the pdf-lib foundation. Real-time endpoints remain unregistered.
 
 ## Registered APIs
 
@@ -16,6 +16,7 @@ Paths include the default /api/v1 prefix:
 | GET /customer/deliveries               | Filtered/paginated items, page, pageSize, total                                |
 | GET /customer/deliveries/summary       | activeDeliveries, deliveredThisMonth, needsAttention, reportingMonth, timeZone |
 | GET /tracking/:trackingNumber         | Public status and recorded event dates for secure tracking identifiers       |
+| GET /customer/deliveries/:parcelId/receipt | Owned booking-charge receipt as a private PDF download                    |
 
 Existing /parcels/me still returns its original array. Existing /parcels/metrics,
 /parcels/:id, creation, and pricing routes remain unchanged. Do not replace them
@@ -168,19 +169,19 @@ customerId+trackingNumber query and coordinated storage-side filtering/counting/
 aggregation contracts for scale. Do not supply a single page to the complete-list
 port, and never work around the limit with an unscoped parcel query.
 
-## Preserved but not registered
+## Receipts and deferred integrations
 
-The [receipt foundation](receipts/README.md) and all its source/tests are unchanged.
-It has no registered reader/controller or HTTP download. The earlier receipt
-foundation document records its original stage; actual parcel persistence now
-exists, but receipt reference/currency/eligibility/snapshot integration still
-requires agreement. No new PDF dependency or font was installed in this phase.
+The [receipt API](receipts/README.md) is registered at
+GET /customer/deliveries/:parcelId/receipt. It reuses the pdf-lib foundation with
+an ownership-scoped Prisma reader. All valid owned bookings can produce a
+recorded-charge receipt, independent of delivery status, without asserting payment.
+The stored parcel UUID is labeled Parcel reference; there is no invented receipt
+number. See the receipt documentation for exact Decimal conversion, safe headers,
+field mapping, unavailable/font limitations, and manual download checks.
 
-Future-only paths include /parcels/:parcelId/receipt and
-/tracking/:trackingNumber/stream. No RabbitMQ, SSE,
-WebSocket, courier status writer, or receipt download was added.
-Member 6 still supplies authoritative future status updates; Member 8 owns later
-event/outbox/transport integration.
+The old proposed /parcels/:parcelId/receipt alias is not registered. No RabbitMQ,
+SSE, WebSocket, or courier status writer was added. Member 8 owns later transport
+integration; GET /tracking/:trackingNumber/stream remains unregistered.
 
 ## Frontend integration
 

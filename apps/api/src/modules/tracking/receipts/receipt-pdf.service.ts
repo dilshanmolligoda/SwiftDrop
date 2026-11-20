@@ -170,7 +170,7 @@ class ReceiptLayout {
 
   render(document: ReceiptDocument): void {
     this.newPage(false);
-    this.field('Receipt reference', document.reference);
+    this.field('Parcel reference', document.reference);
     this.field('Booking date', document.bookingDate);
     this.y -= 8;
     this.parties(document);

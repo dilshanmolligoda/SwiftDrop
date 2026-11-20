@@ -251,6 +251,40 @@
   text-decoration: underline;
 }
 
+.customer-deliveries-receipt-button {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-height: 44px;
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  background-color: transparent;
+  color: #0d5e36;
+  font: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.customer-deliveries-receipt-button:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.customer-deliveries-receipt-button:disabled {
+  color: #64748b;
+  cursor: wait;
+}
+
+.customer-deliveries-receipt-error {
+  max-width: 220px;
+  margin: 4px 0 0 auto;
+  color: #b91c1c;
+  font-size: 12px;
+  white-space: normal;
+}
+
 .customer-deliveries-empty-cell {
   padding: 0;
 }
@@ -387,6 +421,7 @@
 
 .customer-deliveries-filter:focus-visible,
 .customer-deliveries-details-button:focus-visible,
+.customer-deliveries-receipt-button:focus-visible,
 .customer-deliveries-search-input:focus-visible,
 .customer-deliveries-table-scroll:focus-visible,
 .customer-deliveries-page-button:focus-visible,

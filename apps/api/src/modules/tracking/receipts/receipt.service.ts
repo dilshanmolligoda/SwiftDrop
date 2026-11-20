@@ -12,7 +12,7 @@ import { ReceiptPdfService } from './receipt-pdf.service.js';
 import type { ReceiptDownload } from './receipt.types.js';
 import { validateReceiptData } from './receipt-validation.js';
 
-/** Authorization orchestration only; no controller or persistent adapter is registered. */
+/** Authorization precedes private formatting; only the authenticated owner downloads. */
 @Injectable()
 export class ReceiptService {
   constructor(

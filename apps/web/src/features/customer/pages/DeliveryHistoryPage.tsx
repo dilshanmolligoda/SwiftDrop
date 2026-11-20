@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react'
-import { AlertTriangle, ArrowRight, Package, Search, Truck } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { AlertTriangle, ArrowRight, Download, Package, Search, Truck } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { env } from '../../../lib/env'
 import {
@@ -7,6 +7,7 @@ import {
   STATUS_DETAILS, trackingDetailsLink, useCustomerRequest,
   type DeliveryFilter, type HistoryDelivery,
 } from '../tracking/customerTrackingApi'
+import { getCustomerReceipt, saveCustomerReceipt } from '../tracking/customerReceiptApi'
 import './DeliveryHistoryPage.css'
 
 type CustomerSession =
@@ -21,7 +22,36 @@ const FILTERS: readonly { value: DeliveryFilter; label: string }[] = [
   { value: 'history', label: 'History' },
 ]
 
-function DeliveryRow({ delivery }: { delivery: HistoryDelivery }) {
+function DeliveryRow({ delivery, onAccessError }: { delivery: HistoryDelivery; onAccessError: (error: unknown) => boolean }) {
+  const [downloading, setDownloading] = useState(false)
+  const [receiptError, setReceiptError] = useState('')
+  const [receiptDownloaded, setReceiptDownloaded] = useState(false)
+  const receiptRequest = useRef<AbortController | null>(null)
+  useEffect(() => () => receiptRequest.current?.abort(), [])
+
+  const downloadReceipt = async () => {
+    if (receiptRequest.current) return
+    const controller = new AbortController()
+    receiptRequest.current = controller
+    setDownloading(true)
+    setReceiptError('')
+    setReceiptDownloaded(false)
+    try {
+      const receipt = await getCustomerReceipt(delivery.id, controller.signal)
+      if (controller.signal.aborted) return
+      saveCustomerReceipt(receipt, controller.signal)
+      setReceiptDownloaded(true)
+    } catch (error) {
+      if (controller.signal.aborted || onAccessError(error)) return
+      setReceiptError(error instanceof CustomerApiError ? error.message : 'Unable to save the receipt. Please try again.')
+    } finally {
+      if (!controller.signal.aborted) {
+        setDownloading(false)
+        receiptRequest.current = null
+      }
+    }
+  }
+
   const status = STATUS_DETAILS[delivery.status]
   const date = delivery.createdAt && Number.isFinite(Date.parse(delivery.createdAt))
     ? new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Colombo' }).format(new Date(delivery.createdAt))
@@ -39,6 +69,13 @@ function DeliveryRow({ delivery }: { delivery: HistoryDelivery }) {
         <Link className="customer-deliveries-details-button" to={trackingDetailsLink(delivery.trackingNumber)} aria-label={`View details for ${delivery.trackingNumber}`}>
           View details <ArrowRight size={14} aria-hidden="true" />
         </Link>
+        <button className="customer-deliveries-receipt-button" type="button" disabled={downloading}
+          aria-label={`${receiptError ? 'Retry receipt download' : 'Download receipt'} for ${delivery.trackingNumber}`}
+          onClick={() => void downloadReceipt()}>
+          <Download size={14} aria-hidden="true" />{downloading ? 'Downloading…' : receiptError ? 'Retry receipt' : 'Download receipt'}
+        </button>
+        {receiptError && <p className="customer-deliveries-receipt-error" role="alert">{receiptError}</p>}
+        <span className="customer-deliveries-sr-only" role="status" aria-atomic="true">{receiptDownloaded ? 'Receipt download started.' : downloading ? 'Downloading receipt…' : ''}</span>
       </td>
     </tr>
   )
@@ -132,13 +169,13 @@ function DeliveryHistoryContent({ onAccessError }: { onAccessError: (error: unkn
             <caption className="customer-deliveries-sr-only">Your {filter === 'all' ? '' : `${filter} `}deliveries, filtered by tracking number. Created dates use Sri Lanka time.</caption>
             <thead>
               <tr>
-                {['Tracking Number', 'Destination', 'Created', 'Status', 'View Details'].map((label) => (
+                {['Tracking Number', 'Destination', 'Created', 'Status', 'Actions'].map((label) => (
                   <th className="customer-deliveries-column" scope="col" key={label}>{label}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {result?.items.map((delivery) => <DeliveryRow key={delivery.id} delivery={delivery} />)}
+              {result?.items.map((delivery) => <DeliveryRow key={delivery.id} delivery={delivery} onAccessError={onAccessError} />)}
               {!result?.items.length && (
                 <tr>
                   <td className="customer-deliveries-empty-cell" colSpan={5}>
@@ -174,7 +211,7 @@ function DeliveryHistoryContent({ onAccessError }: { onAccessError: (error: unkn
           </nav>
         </div>
       </section>
-      <p id="customer-deliveries-actions-note" className="customer-deliveries-actions-note">Receipt downloads are not connected yet.</p>
+      <p id="customer-deliveries-actions-note" className="customer-deliveries-actions-note">Receipts record the booked delivery charge and do not confirm payment.</p>
     </div>
   )
 }

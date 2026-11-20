@@ -3,7 +3,7 @@ export interface ReceiptParty {
   readonly phone?: string;
 }
 
-/** Server-side booking snapshot. This is NOT an HTTP request DTO. */
+/** Server-side booking record. This is NOT an HTTP request DTO or payment proof. */
 export interface ReceiptData {
   readonly reference: string;
   readonly trackingNumber: string;
