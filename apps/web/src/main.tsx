@@ -36,6 +36,7 @@ import { AdminReportsPage } from './features/admin/pages/AdminReportsPage.tsx'
 import MerchantDashboard from './features/merchant/pages/MerchantDashboard';
 import MerchantOrdersPage from './features/merchant/pages/MerchantOrdersPage';
 import { MerchantLayout } from './features/merchant/components/MerchantLayout';
+import MerchantConnectionsPage from './features/merchant/pages/MerchantConnectionsPage';
 import AdminLandingPage from './features/admin/pages/AdminLandingPage';
 import MerchantTrackParcelPage from './features/merchant/pages/MerchantTrackParcelPage';
 import MerchantPricingPage from './features/merchant/pages/MerchantPricingPage';
@@ -180,6 +181,7 @@ createRoot(document.getElementById('root')!).render(
               <Route path="track/:trackingNumber" element={<MerchantTrackParcelPage />} />
               <Route path="pricing" element={<MerchantPricingPage />} />
               <Route path="pricing/:date" element={<MerchantPricingPage />} />
+              <Route path="connections" element={<MerchantConnectionsPage />} />
             </Route>
             {/* /courier/* is served by the Courier Portal routes above. */}
             <Route path="/admin-landing" element={<AdminLandingPage />} />

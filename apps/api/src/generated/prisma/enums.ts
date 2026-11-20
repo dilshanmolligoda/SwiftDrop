@@ -84,3 +84,12 @@ export const PackageSize = {
 } as const
 
 export type PackageSize = (typeof PackageSize)[keyof typeof PackageSize]
+
+
+export const WebhookDeliveryStatus = {
+  PENDING: 'PENDING',
+  DELIVERED: 'DELIVERED',
+  FAILED: 'FAILED'
+} as const
+
+export type WebhookDeliveryStatus = (typeof WebhookDeliveryStatus)[keyof typeof WebhookDeliveryStatus]

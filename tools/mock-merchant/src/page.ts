@@ -54,6 +54,10 @@ export function renderPage(): string {
       <label>Webhook signing secret <span id="secretState" class="muted"></span><input name="webhookSecret" type="password" autocomplete="off"></label>
       <div class="row"><button>Save</button><span id="settingsMsg" class="muted"></span></div>
     </form>
+    <div class="row" style="margin:12px 0">
+      <button type="button" id="testConnection">Test connection</button>
+      <span id="connectionState" class="muted">Checks the API key with SwiftDrop.</span>
+    </div>
     <p class="muted">Webhook URL to register in SwiftDrop: <code id="hookUrl"></code></p>
     <label class="toggle"><input type="checkbox" id="failMode"> Fail mode — answer every webhook with 500 to trigger retries</label>
   </section>
@@ -111,6 +115,13 @@ export function renderPage(): string {
     $('keyState').textContent = s.apiKey ? '(saved: ' + s.apiKey + ')' : '(not set)';
     $('secretState').textContent = s.webhookSecretSet ? '(saved)' : '(not set)';
     $('failMode').checked = s.failMode;
+    const c = state.connection;
+    if (c) {
+      $('connectionState').className = 'tag ' + (c.status === 200 ? 'ACCEPTED' : 'BAD_SIGNATURE');
+      $('connectionState').textContent = c.status === 200
+        ? 'Connected as ' + c.response.businessName + ' (key ' + c.response.apiKeyPrefix + '…)'
+        : 'Failed: ' + c.status + ' ' + (c.response && (c.response.message || c.response.error) || '');
+    }
     renderList($('orders'), state.orders,
       (o) => item(String(o.status), 's' + String(o.status)[0], o.merchantOrderRef + ' · ' + new Date(o.sentAt).toLocaleTimeString(), o.response),
       'No orders yet.');
@@ -129,6 +140,14 @@ export function renderPage(): string {
   });
 
   $('failMode').addEventListener('change', (e) => post('/settings', { failMode: e.target.checked }).then(refresh));
+
+  $('testConnection').addEventListener('click', async () => {
+    $('connectionState').className = 'muted';
+    $('connectionState').textContent = 'Checking…';
+    const res = await post('/test-connection', {});
+    if (res.status === 400) $('connectionState').textContent = res.body.error;
+    else refresh();
+  });
 
   document.forms.order.addEventListener('submit', async (e) => {
     e.preventDefault();

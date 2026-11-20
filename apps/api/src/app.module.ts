@@ -15,6 +15,7 @@ import { CourierModule } from './modules/courier/courier.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 import { MerchantDashboardModule } from './modules/merchant-dashboard/merchant-dashboard.module.js';
+import { MerchantIntegrationModule } from './modules/merchant-integration/merchant-integration.module.js';
 import { PricingModule } from './modules/pricing/pricing.module.js';
 import { ParcelsModule } from './modules/parcels/parcels.module.js';
 
@@ -30,6 +31,7 @@ import { ParcelsModule } from './modules/parcels/parcels.module.js';
     CourierModule,
     HealthModule,
     MerchantDashboardModule,
+    MerchantIntegrationModule,
     ParcelsModule,
     PricingModule,
     PrismaModule,

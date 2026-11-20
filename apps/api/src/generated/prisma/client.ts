@@ -65,6 +65,26 @@ export type DeliveryProof = Prisma.DeliveryProofModel
  */
 export type MerchantProfile = Prisma.MerchantProfileModel
 /**
+ * Model ApiKey
+ * 
+ */
+export type ApiKey = Prisma.ApiKeyModel
+/**
+ * Model WebhookEndpoint
+ * 
+ */
+export type WebhookEndpoint = Prisma.WebhookEndpointModel
+/**
+ * Model WebhookDelivery
+ * 
+ */
+export type WebhookDelivery = Prisma.WebhookDeliveryModel
+/**
+ * Model WebhookDeliveryAttempt
+ * 
+ */
+export type WebhookDeliveryAttempt = Prisma.WebhookDeliveryAttemptModel
+/**
  * Model CourierProfile
  * 
  */

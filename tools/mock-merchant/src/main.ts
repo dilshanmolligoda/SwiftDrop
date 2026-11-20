@@ -7,6 +7,7 @@ import {
 import { renderPage } from './page.js';
 import { verifySwiftDropSignature } from './signature.js';
 import {
+  connection,
   isDuplicate,
   publicState,
   recordOrder,
@@ -52,11 +53,37 @@ async function handle(req: IncomingMessage, res: ServerResponse) {
       return updateSettings(req, res);
     case 'POST /orders':
       return createOrder(req, res);
+    case 'POST /test-connection':
+      return testConnection(res);
     case 'POST /webhooks/swiftdrop':
       return receiveWebhook(req, res);
     default:
       throw new HttpError(404, 'Not found');
   }
+}
+
+/** Checks the saved API key against SwiftDrop's GET /merchant-api/me. */
+async function testConnection(res: ServerResponse) {
+  if (!settings.apiKey) {
+    throw new HttpError(400, 'Save a SwiftDrop API key in the settings first');
+  }
+
+  let status: number;
+  let response: unknown;
+  try {
+    const apiResponse = await fetch(`${settings.apiBaseUrl}/merchant-api/me`, {
+      headers: { 'X-API-Key': settings.apiKey },
+      signal: AbortSignal.timeout(API_TIMEOUT_MS),
+    });
+    status = apiResponse.status;
+    response = parseJson(await apiResponse.text());
+  } catch {
+    status = 502;
+    response = { error: `Could not reach SwiftDrop at ${settings.apiBaseUrl}` };
+  }
+
+  connection.last = { checkedAt: new Date().toISOString(), status, response };
+  sendJson(res, status, response);
 }
 
 /** SwiftDrop calls this on every status change of one of our parcels. */

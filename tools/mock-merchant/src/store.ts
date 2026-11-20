@@ -34,8 +34,16 @@ export const settings: Settings = {
   failMode: false,
 };
 
+export interface ConnectionCheck {
+  readonly checkedAt: string;
+  readonly status: number;
+  readonly response: unknown;
+}
+
 export const webhooks: ReceivedWebhook[] = [];
 export const orders: OrderAttempt[] = [];
+/** Result of the last "Test connection" call to SwiftDrop. */
+export const connection: { last: ConnectionCheck | null } = { last: null };
 
 export function recordWebhook(entry: ReceivedWebhook): void {
   webhooks.unshift(entry);
@@ -60,6 +68,7 @@ export function publicState() {
       webhookSecretSet: Boolean(settings.webhookSecret),
       failMode: settings.failMode,
     },
+    connection: connection.last,
     webhooks,
     orders,
   };
