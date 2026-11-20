@@ -47,6 +47,10 @@ export class ParcelsService {
     return this.parcelsRepository.findCustomerParcels(customerId);
   }
 
+  listForCustomerTracking(customerId: string) {
+    return this.parcelsRepository.findCustomerTrackingParcels(customerId);
+  }
+
   getMetrics(customerId: string): Promise<CustomerMetrics> {
     return this.parcelsRepository.getCustomerMetrics(customerId);
   }

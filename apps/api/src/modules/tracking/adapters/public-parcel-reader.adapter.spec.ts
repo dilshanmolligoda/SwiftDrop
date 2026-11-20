@@ -39,11 +39,11 @@ describe('PublicParcelReaderAdapter (isolated Prisma)', () => {
             updatedAt: true,
             statusHistory: {
               select: { status: true, createdAt: true },
-              orderBy: { createdAt: 'asc' },
+              orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
             },
             statusEvents: {
               select: { status: true, createdAt: true },
-              orderBy: { createdAt: 'asc' },
+              orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
             },
           },
         },
@@ -119,6 +119,29 @@ describe('PublicParcelReaderAdapter (isolated Prisma)', () => {
       'ASSIGNED',
       'PENDING',
     ]);
+  });
+
+  it('removes only exact mirrored events across sources and never publishes their private metadata', async () => {
+    const source = fixture();
+    findUnique.mockResolvedValue({
+      ...source,
+      statusHistory: [{ status: 'ASSIGNED', createdAt: time, note: 'PRIVATE' }],
+      statusEvents: [
+        {
+          status: 'ASSIGNED',
+          createdAt: time,
+          actorId: 'PRIVATE',
+          proofId: 'PRIVATE',
+        },
+        { status: 'ASSIGNED', createdAt: new Date('2026-11-01T00:00:00.001Z') },
+      ],
+    });
+    const result = await adapter.findPublicParcel(number);
+    expect(result?.history).toEqual([
+      { status: 'ASSIGNED', occurredAt: time.toISOString() },
+      { status: 'ASSIGNED', occurredAt: '2026-11-01T00:00:00.001Z' },
+    ]);
+    expect(JSON.stringify(result)).not.toContain('PRIVATE');
   });
 
   it('returns null for missing parcels and never queries legacy identifiers', async () => {

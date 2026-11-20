@@ -131,6 +131,33 @@ export class ParcelsRepository {
     };
   }
 
+  /** Tracking-only read contract; existing parcel endpoints retain their shape. */
+  findCustomerTrackingParcels(customerId: string) {
+    return this.prisma.parcel.findMany({
+      where: { customerId },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      select: {
+        id: true,
+        customerId: true,
+        trackingNumber: true,
+        status: true,
+        senderAddress: true,
+        recipientAddress: true,
+        createdAt: true,
+        updatedAt: true,
+        deliveredAt: true,
+        statusHistory: {
+          select: { id: true, status: true, createdAt: true },
+          orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+        },
+        statusEvents: {
+          select: { id: true, status: true, createdAt: true },
+          orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+        },
+      },
+    });
+  }
+
   async getCustomerMetrics(customerId: string): Promise<CustomerMetrics> {
     const now = new Date();
     const monthStart = new Date(

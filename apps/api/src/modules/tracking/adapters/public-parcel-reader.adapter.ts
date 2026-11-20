@@ -3,6 +3,7 @@ import { PrismaService } from '../../../infrastructure/prisma/prisma.service.js'
 import { isPublicTrackingNumber } from '../../parcels/parcel-tracking-number.js';
 import type { PublicTrackingResponse } from '../domain/parcel.types.js';
 import { PublicParcelReader } from '../ports/parcel-reader.port.js';
+import { mergeParcelEvents } from '../domain/parcel-events.js';
 
 @Injectable()
 export class PublicParcelReaderAdapter extends PublicParcelReader {
@@ -23,23 +24,19 @@ export class PublicParcelReaderAdapter extends PublicParcelReader {
         updatedAt: true,
         statusHistory: {
           select: { status: true, createdAt: true },
-          orderBy: { createdAt: 'asc' },
+          orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
         },
         statusEvents: {
           select: { status: true, createdAt: true },
-          orderBy: { createdAt: 'asc' },
+          orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
         },
       },
     });
     if (!parcel) return null;
-    // Both stores contain real events. Retain repeated statuses and timestamps;
-    // no pickup/delivery event is inferred from a current status or updatedAt.
-    const history = [...parcel.statusHistory, ...parcel.statusEvents]
-      .map((event) => ({
-        status: event.status,
-        occurredAt: event.createdAt.toISOString(),
-      }))
-      .sort((a, b) => a.occurredAt.localeCompare(b.occurredAt));
+    const history = mergeParcelEvents(
+      parcel.statusHistory,
+      parcel.statusEvents,
+    );
     return {
       trackingNumber: parcel.trackingNumber,
       status: parcel.status,

@@ -35,7 +35,7 @@ describe('Public tracking HTTP integration (isolated persistence)', () => {
   let app: INestApplication<App>;
   let jwt: JwtService;
   let findUnique: jest.Mock;
-  let listForCustomer: jest.Mock;
+  let listForCustomerTracking: jest.Mock;
   let findById: jest.Mock;
 
   function fixture(status: ParcelStatus = ParcelStatus.IN_TRANSIT) {
@@ -88,7 +88,7 @@ describe('Public tracking HTTP integration (isolated persistence)', () => {
 
   beforeEach(async () => {
     findUnique = jest.fn().mockResolvedValue(fixture());
-    listForCustomer = jest.fn().mockResolvedValue([]);
+    listForCustomerTracking = jest.fn().mockResolvedValue([]);
     findById = jest.fn().mockResolvedValue({
       id: 'approved-customer',
       isActive: true,
@@ -122,7 +122,7 @@ describe('Public tracking HTTP integration (isolated persistence)', () => {
       ],
     })
       .overrideProvider(ParcelsService)
-      .useValue({ listForCustomer })
+      .useValue({ listForCustomerTracking })
       .overrideProvider(PrismaService)
       .useValue({ parcel: { findUnique } })
       .compile();
@@ -172,7 +172,7 @@ describe('Public tracking HTTP integration (isolated persistence)', () => {
       /PRIVATE_|private-|customerId|costLkr|sender|recipient|email|note|proof|actor|location|Address/,
     );
     expectPrivacyHeaders(response);
-    expect(listForCustomer).not.toHaveBeenCalled();
+    expect(listForCustomerTracking).not.toHaveBeenCalled();
     expect(findById).not.toHaveBeenCalled();
     expect(findUnique).toHaveBeenCalledWith({
       where: { trackingNumber: TOKEN },
@@ -182,11 +182,11 @@ describe('Public tracking HTTP integration (isolated persistence)', () => {
         updatedAt: true,
         statusHistory: {
           select: { status: true, createdAt: true },
-          orderBy: { createdAt: 'asc' },
+          orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
         },
         statusEvents: {
           select: { status: true, createdAt: true },
-          orderBy: { createdAt: 'asc' },
+          orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
         },
       },
     });
@@ -219,7 +219,7 @@ describe('Public tracking HTTP integration (isolated persistence)', () => {
       .set('Cookie', `${AUTH_COOKIE_NAME}=${token}`)
       .expect(200);
     expect(findById).toHaveBeenCalled();
-    expect(listForCustomer).toHaveBeenCalledWith('approved-customer');
+    expect(listForCustomerTracking).toHaveBeenCalledWith('approved-customer');
   });
 
   it('keeps every private tracking/history endpoint authenticated', async () => {
@@ -231,7 +231,7 @@ describe('Public tracking HTTP integration (isolated persistence)', () => {
       await request(app.getHttpServer()).get(path).expect(401);
     }
     expect(findUnique).not.toHaveBeenCalled();
-    expect(listForCustomer).not.toHaveBeenCalled();
+    expect(listForCustomerTracking).not.toHaveBeenCalled();
   });
 
   it.each(Object.values(ParcelStatus))(

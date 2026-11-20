@@ -20,8 +20,9 @@ function formatTimestamp(value?: string): string | null {
 }
 
 function TrackingTimeline({ parcel }: { parcel: TrackingParcel | null }) {
+  const currentEventIndex = parcel?.history.findLastIndex(event => event.status === parcel.status) ?? -1
   const rows: { status: ParcelStatus; occurredAt?: string; current?: boolean }[] = parcel
-    ? parcel.history.map((event, index) => ({ ...event, current: index === parcel.history.length - 1 && event.status === parcel.status }))
+    ? parcel.history.map((event, index) => ({ ...event, current: index === currentEventIndex }))
     : TIMELINE_STAGES.map(status => ({ status }))
   if (parcel) {
     // A current status alone is not evidence that any previous stage happened.

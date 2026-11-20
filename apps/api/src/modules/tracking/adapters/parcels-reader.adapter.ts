@@ -18,7 +18,7 @@ export class ParcelsReaderAdapter extends CustomerParcelReader {
     const trackingNumber = normalizeTrackingNumber(number);
     // Interim implementation: query only this customer's records, never all users.
     // Replace with an exported indexed customerId+trackingNumber query at scale.
-    const records = await this.parcels.listForCustomer(customerId);
+    const records = await this.parcels.listForCustomerTracking(customerId);
     const parcel = records.find(
       (record) =>
         record.customerId === customerId &&
@@ -30,7 +30,7 @@ export class ParcelsReaderAdapter extends CustomerParcelReader {
   async listCustomerParcels(
     customerId: string,
   ): Promise<readonly ParcelReadRecord[]> {
-    const records = await this.parcels.listForCustomer(customerId);
+    const records = await this.parcels.listForCustomerTracking(customerId);
     if (records.some((record) => record.customerId !== customerId)) {
       throw new InternalServerErrorException(
         'Unable to read customer deliveries',

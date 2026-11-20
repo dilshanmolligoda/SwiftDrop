@@ -1,10 +1,11 @@
 import { InternalServerErrorException } from '@nestjs/common';
 import type { ParcelsService } from '../../parcels/parcels.service.js';
 import type { ParcelReadRecord } from '../domain/parcel.types.js';
+import { mergeParcelEvents } from '../domain/parcel-events.js';
 
 // Depend on the exported service contract, never import its repository.
 export type StoredCustomerParcel = Awaited<
-  ReturnType<ParcelsService['listForCustomer']>
+  ReturnType<ParcelsService['listForCustomerTracking']>
 >[number];
 
 function iso(date: Date): string {
@@ -17,23 +18,29 @@ function iso(date: Date): string {
 export function mapParcelRecord(
   parcel: StoredCustomerParcel,
 ): ParcelReadRecord {
-  if (!Array.isArray(parcel.statusHistory)) {
+  if (
+    !Array.isArray(parcel.statusHistory) ||
+    !Array.isArray(parcel.statusEvents)
+  ) {
     // Missing inclusion is an integration error, not confirmed empty history.
     throw new InternalServerErrorException(
       'Unable to read customer parcel history',
     );
   }
-  const history = parcel.statusHistory
-    .map((event) => ({
-      id: event.id,
-      status: event.status,
-      occurredAt: iso(event.createdAt),
-    }))
-    .sort(
-      (a, b) =>
-        a.occurredAt.localeCompare(b.occurredAt) ||
-        (a.id === b.id ? 0 : a.id < b.id ? -1 : 1),
-    );
+  const history = mergeParcelEvents(parcel.statusHistory, parcel.statusEvents);
+  // Prefer the explicit parcel column. For courier-written deliveries with no
+  // column timestamp, project the latest real DELIVERED courier event instead.
+  // This is a read projection, not a database backfill or a synthetic event.
+  const deliveredAt =
+    parcel.deliveredAt !== null
+      ? iso(parcel.deliveredAt)
+      : parcel.status === 'DELIVERED'
+        ? parcel.statusEvents
+            .filter((event) => event.status === 'DELIVERED')
+            .map((event) => iso(event.createdAt))
+            .sort()
+            .at(-1)
+        : undefined;
   return {
     id: parcel.id,
     customerId: parcel.customerId,
@@ -43,10 +50,8 @@ export function mapParcelRecord(
     destination: parcel.recipientAddress,
     createdAt: iso(parcel.createdAt),
     updatedAt: iso(parcel.updatedAt),
-    ...(parcel.deliveredAt === null
-      ? {}
-      : { deliveredAt: iso(parcel.deliveredAt) }),
+    ...(deliveredAt === undefined ? {} : { deliveredAt }),
     // Free-text notes and locations are intentionally not copied to responses.
-    history: history.map(({ status, occurredAt }) => ({ status, occurredAt })),
+    history,
   };
 }

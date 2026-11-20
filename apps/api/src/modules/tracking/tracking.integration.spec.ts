@@ -7,7 +7,6 @@ import request from 'supertest';
 import type { App } from 'supertest/types';
 import {
   ApprovalStatus,
-  PackageSize,
   ParcelStatus,
   Role,
 } from '../../generated/prisma/enums.js';
@@ -35,6 +34,10 @@ describe('Private tracking/history HTTP integration (isolated persistence)', () 
   let jwt: JwtService;
   let records: StoredCustomerParcel[];
   let parcels: {
+    listForCustomerTracking: jest.Mock<
+      Promise<StoredCustomerParcel[]>,
+      [string]
+    >;
     listForCustomer: jest.Mock<Promise<StoredCustomerParcel[]>, [string]>;
   };
   let users: { findById: jest.Mock };
@@ -49,27 +52,17 @@ describe('Private tracking/history HTTP integration (isolated persistence)', () 
       id: `${customerId === OWNER ? 'a' : 'b'}0000000-0000-4000-8000-${String(index).padStart(12, '0')}`,
       customerId,
       trackingNumber: `SD-${String(10000 + index)}`,
-      senderName: 'Private Sender',
       senderAddress: 'Private pickup address',
-      recipientName: 'Private Recipient',
       recipientAddress: 'Private destination address',
-      recipientPhone: 'Private Phone',
-      packageSize: PackageSize.SMALL,
-      weightKg: 1,
-      costLkr: 350,
       status,
-      failedDeliveryAttempts: status === ParcelStatus.FAILED ? 1 : 0,
-      failureReason:
-        status === ParcelStatus.FAILED ? 'Internal failure note' : null,
       deliveredAt: status === ParcelStatus.DELIVERED ? new Date() : null,
       createdAt,
       updatedAt: new Date('2026-01-02T00:00:00Z'),
+      statusEvents: [],
       statusHistory: [
         {
           id: `history-${index}`,
           status: ParcelStatus.PENDING,
-          location: 'Internal location',
-          note: 'Internal note',
           createdAt,
         },
       ],
@@ -78,6 +71,10 @@ describe('Private tracking/history HTTP integration (isolated persistence)', () 
 
   beforeAll(async () => {
     parcels = {
+      listForCustomerTracking: jest.fn<
+        Promise<StoredCustomerParcel[]>,
+        [string]
+      >(),
       listForCustomer: jest.fn<Promise<StoredCustomerParcel[]>, [string]>(),
     };
     users = { findById: jest.fn() };
@@ -138,6 +135,12 @@ describe('Private tracking/history HTTP integration (isolated persistence)', () 
       fixture(7, ParcelStatus.RETURNED),
       fixture(99, ParcelStatus.IN_TRANSIT, OTHER),
     ];
+    parcels.listForCustomerTracking.mockReset();
+    parcels.listForCustomerTracking.mockImplementation((customerId) =>
+      Promise.resolve(
+        records.filter((record) => record.customerId === customerId),
+      ),
+    );
     parcels.listForCustomer.mockReset();
     parcels.listForCustomer.mockImplementation((customerId) =>
       Promise.resolve(
@@ -193,7 +196,7 @@ describe('Private tracking/history HTTP integration (isolated persistence)', () 
       updatedAt: '2026-01-02T00:00:00.000Z',
       history: [{ status: 'PENDING', occurredAt: '2026-01-01T00:00:00.000Z' }],
     });
-    expect(parcels.listForCustomer.mock.calls).toEqual([[OWNER]]);
+    expect(parcels.listForCustomerTracking.mock.calls).toEqual([[OWNER]]);
     expect(response.text).not.toMatch(
       /Internal|Private Sender|Private Recipient|Private Phone|costLkr|customerId/,
     );
@@ -203,7 +206,7 @@ describe('Private tracking/history HTTP integration (isolated persistence)', () 
     'tracks %s unchanged and includes it in active history and summary',
     async (status) => {
       const parcel = fixture(8, status);
-      parcel.statusHistory = [{ ...parcel.statusHistory![0], status }];
+      parcel.statusHistory = [{ ...parcel.statusHistory[0], status }];
       records.push(parcel);
 
       const tracked = await get(
@@ -255,19 +258,22 @@ describe('Private tracking/history HTTP integration (isolated persistence)', () 
     const missing = await get(`${ROOT}/tracking/SD-99998`).expect(404);
     const other = await get(`${ROOT}/tracking/SD-10099`).expect(404);
     expect(missing.body as unknown).toEqual(other.body as unknown);
-    expect(parcels.listForCustomer.mock.calls).toEqual([[OWNER], [OWNER]]);
+    expect(parcels.listForCustomerTracking.mock.calls).toEqual([
+      [OWNER],
+      [OWNER],
+    ]);
   });
 
   it('does not accept an ownership override on tracking paths', async () => {
     await get(`${ROOT}/tracking/SD-10099?customerId=${OTHER}`).expect(404);
-    expect(parcels.listForCustomer.mock.calls).toEqual([[OWNER]]);
+    expect(parcels.listForCustomerTracking.mock.calls).toEqual([[OWNER]]);
   });
 
   it.each(['SD%2F10001', 'SD_10001', '---'])(
     'rejects invalid tracking input %s before the storage service',
     async (number) => {
       await get(`${ROOT}/tracking/${number}`).expect(400);
-      expect(parcels.listForCustomer.mock.calls).toHaveLength(0);
+      expect(parcels.listForCustomerTracking.mock.calls).toHaveLength(0);
     },
   );
 
@@ -386,7 +392,7 @@ describe('Private tracking/history HTTP integration (isolated persistence)', () 
     'rejects invalid history query %s before storage access',
     async (query) => {
       await get(`${ROOT}/deliveries?${query}`).expect(400);
-      expect(parcels.listForCustomer.mock.calls).toHaveLength(0);
+      expect(parcels.listForCustomerTracking.mock.calls).toHaveLength(0);
     },
   );
 
@@ -397,7 +403,7 @@ describe('Private tracking/history HTTP integration (isolated persistence)', () 
   ];
   it.each(privatePaths)('requires authentication for %s', async (path) => {
     await request(app.getHttpServer()).get(path).expect(401);
-    expect(parcels.listForCustomer.mock.calls).toHaveLength(0);
+    expect(parcels.listForCustomerTracking.mock.calls).toHaveLength(0);
   });
 
   it.each([Role.MERCHANT, Role.COURIER, Role.ADMIN, Role.DISPATCHER])(
@@ -409,7 +415,7 @@ describe('Private tracking/history HTTP integration (isolated persistence)', () 
           .set('Authorization', `Bearer ${token(role)}`)
           .expect(403);
       }
-      expect(parcels.listForCustomer.mock.calls).toHaveLength(0);
+      expect(parcels.listForCustomerTracking.mock.calls).toHaveLength(0);
     },
   );
 
@@ -422,7 +428,7 @@ describe('Private tracking/history HTTP integration (isolated persistence)', () 
         approvalStatus,
       });
       for (const path of privatePaths) await get(path).expect(403);
-      expect(parcels.listForCustomer.mock.calls).toHaveLength(0);
+      expect(parcels.listForCustomerTracking.mock.calls).toHaveLength(0);
     },
   );
 
@@ -443,7 +449,7 @@ describe('Private tracking/history HTTP integration (isolated persistence)', () 
       .get(`${ROOT}/deliveries`)
       .set('Authorization', 'Bearer forged')
       .expect(401);
-    expect(parcels.listForCustomer.mock.calls).toHaveLength(0);
+    expect(parcels.listForCustomerTracking.mock.calls).toHaveLength(0);
   });
 
   it('keeps legacy numbers private and does not register receipt downloads or streams', async () => {
