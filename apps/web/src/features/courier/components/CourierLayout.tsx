@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { CalendarDays, LayoutDashboard, LogOut, Menu, Package, X, type LucideIcon } from 'lucide-react'
+import { CalendarDays, LayoutDashboard, LogOut, Menu, Package, Settings, X, type LucideIcon } from 'lucide-react'
 import { useSession } from '../../../app/auth/session'
 import { SwiftDropLogo } from '../../auth/components/SwiftDropLogo'
 import { formatToday, getInitials } from '../utils/format'
@@ -15,11 +15,13 @@ interface NavItem {
 const NAV_ITEMS: readonly NavItem[] = [
   { label: 'Dashboard', to: '/courier/dashboard', icon: LayoutDashboard },
   { label: 'My deliveries', to: '/courier/deliveries', icon: Package },
+  { label: 'Settings', to: '/courier/settings', icon: Settings },
 ]
 
 function getPageTitle(pathname: string): string {
   if (/^\/courier\/deliveries\/[^/]+/.test(pathname)) return 'Delivery details'
   if (pathname.startsWith('/courier/deliveries')) return 'My deliveries'
+  if (pathname.startsWith('/courier/settings')) return 'Settings'
   return 'Dashboard'
 }
 
