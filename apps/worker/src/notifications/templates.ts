@@ -31,6 +31,13 @@ function copyFor(event: ParcelEventV1): Copy | null {
     };
   }
   switch (statusAfter(event)) {
+    case 'ASSIGNED':
+      return {
+        template: 'parcel-assigned',
+        subject: `Courier Assigned — Parcel ${event.trackingNumber}`,
+        headline: 'Courier assigned',
+        body: `A courier has been assigned to collect your parcel ${event.trackingNumber}.`,
+      };
     case 'PICKED_UP':
       return {
         template: 'parcel-picked-up',

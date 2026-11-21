@@ -80,5 +80,28 @@ export class NotificationConsumer implements ParcelEventConsumer {
         errorMessage: result.status === 'SENT' ? null : result.reason,
       });
     }
+
+    if (
+      event.eventType === 'parcel.status.changed' &&
+      event.newStatus === 'ASSIGNED' &&
+      event.courierId
+    ) {
+      if (
+        !(await this.repository.alreadyHandled(
+          event.eventId,
+          'IN_APP',
+          event.courierId,
+        ))
+      ) {
+        await this.repository.record({
+          eventId: event.eventId,
+          channel: 'IN_APP',
+          recipientUserId: event.courierId,
+          template: 'courier_new_assignment',
+          status: 'SENT',
+          errorMessage: null,
+        });
+      }
+    }
   }
 }

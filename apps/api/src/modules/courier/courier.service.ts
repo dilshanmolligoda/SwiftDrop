@@ -6,7 +6,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { createHash, randomUUID } from 'node:crypto';
-import { ParcelStatus } from '../../generated/prisma/enums.js';
+import {
+  ParcelStatus,
+  NotificationChannel,
+  NotificationStatus,
+} from '../../generated/prisma/enums.js';
 import { Prisma } from '../../generated/prisma/client.js';
 import { OutboxWriter } from '../../infrastructure/outbox/outbox.writer.js';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
@@ -496,6 +500,101 @@ export class CourierService {
         'Uploaded file is not a valid supported image',
       );
     }
+  }
+
+  async assignCourier(
+    parcelId: string,
+    courierId: string,
+    assignedById: string,
+  ) {
+    return this.prisma.$transaction(
+      async (tx) => {
+        const parcel = await tx.parcel.findUnique({
+          where: { id: parcelId },
+        });
+        if (!parcel) {
+          throw new NotFoundException('Parcel not found');
+        }
+
+        // End any existing active assignment for this parcel
+        await tx.deliveryAssignment.updateMany({
+          where: { parcelId, endedAt: null },
+          data: { endedAt: new Date() },
+        });
+
+        // Create new assignment
+        const assignment = await tx.deliveryAssignment.create({
+          data: {
+            id: randomUUID(),
+            parcelId,
+            courierId,
+            assignedById,
+            assignedAt: new Date(),
+          },
+        });
+
+        // Update parcel status to ASSIGNED
+        const updatedParcel = await tx.parcel.update({
+          where: { id: parcelId },
+          data: { status: ParcelStatus.ASSIGNED },
+        });
+
+        // Record status event
+        await tx.parcelStatusEvent.create({
+          data: {
+            id: randomUUID(),
+            parcelId,
+            assignmentId: assignment.id,
+            actorId: assignedById,
+            status: ParcelStatus.ASSIGNED,
+            note: 'Assigned to courier',
+          },
+        });
+
+        // Record outbox event
+        await this.outbox.recordParcelStatusChanged(tx, {
+          parcel: updatedParcel,
+          previousStatus: parcel.status,
+          newStatus: ParcelStatus.ASSIGNED,
+          failureReason: null,
+          courierId,
+        });
+
+        // In-app notifications
+        if ((tx as any).notification) {
+          // Customer notification
+          await (tx as any).notification.create({
+            data: {
+              eventId: randomUUID(),
+              channel: NotificationChannel.IN_APP,
+              recipientUserId: parcel.customerId,
+              template: 'parcel_assigned',
+              title: 'Courier assigned',
+              description: `Courier assigned: A courier has been assigned to collect your parcel ${parcel.trackingNumber}.`,
+              status: NotificationStatus.SENT,
+              sentAt: new Date(),
+            },
+          });
+
+          // Courier notification
+          await (tx as any).notification.create({
+            data: {
+              eventId: randomUUID(),
+              channel: NotificationChannel.IN_APP,
+              recipientUserId: courierId,
+              template: 'courier_new_assignment',
+              title: 'New delivery assigned',
+              description: `Parcel ${parcel.trackingNumber} was assigned to your route.`,
+              status: NotificationStatus.SENT,
+              sentAt: new Date(),
+            },
+          });
+        }
+
+        return assignment;
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+    );
   }
 
   private safeOriginalFilename(filename: string): string {

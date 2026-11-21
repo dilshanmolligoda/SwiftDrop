@@ -9,6 +9,7 @@ import type {
   SendResult,
 } from '../notifications/notification-channel.js';
 import type { NotificationRepository } from '../notifications/notification.repository.js';
+import { DEFAULT_NOTIFY_STATUSES } from '../config/worker.config.js';
 import { testWorkerConfig } from '../testing/worker-config.fixture.js';
 import { NotificationConsumer } from './notification.consumer.js';
 
@@ -168,6 +169,55 @@ describe('NotificationConsumer', () => {
       channel: 'EMAIL',
       recipientUserId: CUSTOMER.userId,
       template: 'parcel-booked',
+      status: 'SENT',
+      errorMessage: null,
+    });
+  });
+
+  it('notifies customer and courier when ASSIGNED is in notifyStatuses', async () => {
+    const customConfig = testWorkerConfig({
+      notifications: {
+        ...testWorkerConfig().notifications,
+        notifyStatuses: new Set([...DEFAULT_NOTIFY_STATUSES, 'ASSIGNED']),
+      },
+    });
+    const repository = {
+      findRecipient: jest.fn().mockResolvedValue(CUSTOMER),
+      alreadyHandled: jest.fn().mockResolvedValue(false),
+      record: jest.fn().mockResolvedValue(undefined),
+    };
+    const channels = [channel('EMAIL'), channel('SMS')];
+    const consumer = new NotificationConsumer(
+      repository as unknown as NotificationRepository,
+      channels,
+      customConfig,
+    );
+
+    const assignedEvent: ParcelStatusChangedV1 = {
+      ...EVENT,
+      newStatus: 'ASSIGNED',
+      courierId: 'courier-uuid-1',
+    };
+
+    await consumer.handle(assignedEvent);
+
+    expect(channels[0].send).toHaveBeenCalledWith(
+      CUSTOMER,
+      expect.objectContaining({ template: 'parcel-assigned' }),
+    );
+    expect(repository.record).toHaveBeenCalledWith({
+      eventId: assignedEvent.eventId,
+      channel: 'EMAIL',
+      recipientUserId: CUSTOMER.userId,
+      template: 'parcel-assigned',
+      status: 'SENT',
+      errorMessage: null,
+    });
+    expect(repository.record).toHaveBeenCalledWith({
+      eventId: assignedEvent.eventId,
+      channel: 'IN_APP',
+      recipientUserId: 'courier-uuid-1',
+      template: 'courier_new_assignment',
       status: 'SENT',
       errorMessage: null,
     });
