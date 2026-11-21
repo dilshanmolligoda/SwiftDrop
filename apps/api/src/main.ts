@@ -8,6 +8,10 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const config = app.get(ConfigService);
 
+  // Run onModuleDestroy hooks on SIGTERM/SIGINT (docker stop, Ctrl+C), so the
+  // outbox relay finishes its batch and connections close cleanly.
+  app.enableShutdownHooks();
+
   const prefix = config.get<string>('API_PREFIX', 'api');
   const version = config.get<string>('API_VERSION', '1');
   app.setGlobalPrefix(`${prefix}/v${version}`);

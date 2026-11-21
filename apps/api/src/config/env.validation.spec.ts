@@ -110,4 +110,82 @@ describe('validateEnv', () => {
     const config = { ...base, NODE_ENV: 'development', PORT: '4000' };
     expect(() => validateEnv(config)).not.toThrow();
   });
+
+  // ── Messaging (RabbitMQ + outbox relay) ────────────────────────────────
+
+  describe('messaging settings', () => {
+    const rabbit = 'amqp://swiftdrop:secret@rabbitmq:5672';
+
+    it('allows a missing RABBITMQ_URL outside production', () => {
+      expect(() =>
+        validateEnv({ ...base, NODE_ENV: 'development' }),
+      ).not.toThrow();
+    });
+
+    it('requires RABBITMQ_URL in production', () => {
+      expect(() => validateEnv({ ...base, NODE_ENV: 'production' })).toThrow(
+        /RABBITMQ_URL is required in production/,
+      );
+    });
+
+    it('accepts a valid amqp URL in production', () => {
+      expect(() =>
+        validateEnv({ ...base, NODE_ENV: 'production', RABBITMQ_URL: rabbit }),
+      ).not.toThrow();
+    });
+
+    it('rejects a non-AMQP URL', () => {
+      expect(() =>
+        validateEnv({ ...base, RABBITMQ_URL: 'http://rabbitmq:5672' }),
+      ).toThrow(/amqp:\/\/ or amqps:\/\//);
+    });
+
+    it('rejects a placeholder URL in production', () => {
+      expect(() =>
+        validateEnv({
+          ...base,
+          NODE_ENV: 'production',
+          RABBITMQ_URL: 'amqp://swiftdrop:<change-me>@rabbitmq:5672',
+        }),
+      ).toThrow(/placeholder/);
+    });
+
+    it('allows the example password locally, where the container uses it too', () => {
+      expect(() =>
+        validateEnv({
+          ...base,
+          NODE_ENV: 'development',
+          RABBITMQ_URL: 'amqp://swiftdrop:<change-me>@localhost:5672',
+        }),
+      ).not.toThrow();
+    });
+
+    it.each([
+      ['OUTBOX_BATCH_SIZE', '0'],
+      ['OUTBOX_BATCH_SIZE', '501'],
+      ['OUTBOX_POLL_INTERVAL_MS', '1.5'],
+      ['OUTBOX_PUBLISH_TIMEOUT_MS', 'abc'],
+    ])('rejects %s=%s', (key, value) => {
+      expect(() => validateEnv({ ...base, [key]: value })).toThrow(
+        new RegExp(key),
+      );
+    });
+
+    it('accepts valid outbox numbers', () => {
+      expect(() =>
+        validateEnv({
+          ...base,
+          OUTBOX_BATCH_SIZE: '50',
+          OUTBOX_POLL_INTERVAL_MS: 1000,
+          OUTBOX_PUBLISH_TIMEOUT_MS: '5000',
+        }),
+      ).not.toThrow();
+    });
+
+    it('rejects an OUTBOX_RELAY_ENABLED value other than true/false', () => {
+      expect(() =>
+        validateEnv({ ...base, OUTBOX_RELAY_ENABLED: 'yes' }),
+      ).toThrow(/OUTBOX_RELAY_ENABLED/);
+    });
+  });
 });

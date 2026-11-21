@@ -4,6 +4,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { validateEnv } from './config/env.validation.js';
+import { MessagingModule } from './infrastructure/messaging/messaging.module.js';
 import { PrismaModule } from './infrastructure/prisma/prisma.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard.js';
@@ -31,6 +32,7 @@ import { TrackingModule } from './modules/tracking/tracking.module.js';
     CourierModule,
     HealthModule,
     MerchantDashboardModule,
+    MessagingModule,
     ParcelsModule,
     PricingModule,
     PrismaModule,

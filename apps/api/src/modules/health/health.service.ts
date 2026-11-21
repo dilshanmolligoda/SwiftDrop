@@ -1,6 +1,10 @@
-import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleDestroy, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Pool } from 'pg';
+import {
+  MessagingStatus,
+  type MessagingState,
+} from '../../infrastructure/messaging/messaging-status.js';
 
 export type CheckStatus = 'up' | 'down';
 
@@ -8,7 +12,12 @@ export interface HealthReport {
   status: 'ok' | 'error';
   uptime: number;
   timestamp: string;
-  checks: { database: CheckStatus };
+  checks: { database: CheckStatus; messaging: MessagingState };
+  /**
+   * Events waiting to be published to RabbitMQ. Informational: RabbitMQ being
+   * down does not make the API unhealthy, because events wait in the outbox.
+   */
+  outbox: { pending: number | null; oldestPendingSeconds: number | null };
 }
 
 export interface DatabaseReport {
@@ -28,7 +37,10 @@ export class HealthService implements OnModuleDestroy {
   // Small dedicated pool so health checks never compete with request traffic
   private readonly pool: Pool;
 
-  constructor(config: ConfigService) {
+  constructor(
+    config: ConfigService,
+    @Optional() private readonly messaging?: MessagingStatus,
+  ) {
     this.pool = new Pool({
       connectionString: config.getOrThrow<string>('DATABASE_URL'),
       max: 1,
@@ -44,7 +56,14 @@ export class HealthService implements OnModuleDestroy {
       status: database === 'up' ? 'ok' : 'error',
       uptime: Math.round(process.uptime()),
       timestamp: new Date().toISOString(),
-      checks: { database },
+      checks: {
+        database,
+        messaging: this.messaging?.state() ?? 'disabled',
+      },
+      outbox:
+        database === 'up'
+          ? await this.outboxBacklog()
+          : { pending: null, oldestPendingSeconds: null },
     };
   }
 
@@ -108,6 +127,28 @@ export class HealthService implements OnModuleDestroy {
       applied: Number(result.rows[0].applied),
       latest: result.rows[0].latest,
     };
+  }
+
+  private async outboxBacklog(): Promise<HealthReport['outbox']> {
+    try {
+      const result = await this.pool.query<{
+        pending: string;
+        oldest: string | null;
+      }>(
+        `SELECT count(*) AS pending,
+                EXTRACT(EPOCH FROM now() - min("createdAt"))::int AS oldest
+           FROM "outbox_events"
+          WHERE "publishedAt" IS NULL`,
+      );
+      const row = result.rows[0];
+      return {
+        pending: Number(row.pending),
+        oldestPendingSeconds: row.oldest === null ? null : Number(row.oldest),
+      };
+    } catch {
+      // e.g. migration not applied yet
+      return { pending: null, oldestPendingSeconds: null };
+    }
   }
 
   private async pingDatabase(): Promise<CheckStatus> {

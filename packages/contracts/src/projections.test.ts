@@ -109,3 +109,51 @@ describe('queue names', () => {
     assert.throws(() => realtimeQueue(''));
   });
 });
+
+describe('parcelEventsTopology', () => {
+  it('binds both work queues to the exchange and dead-letters to their DLQ', async () => {
+    const { parcelEventsTopology, Queue } = await import('./messaging/topology.js');
+    const topology = parcelEventsTopology('custom.events');
+    assert.deepEqual(
+      topology.exchanges.map((e) => e.name),
+      ['custom.events'],
+    );
+    const byName = new Map(topology.queues.map((q) => [q.name, q]));
+    for (const [work, dlq] of [
+      [Queue.NOTIFICATIONS, Queue.NOTIFICATIONS_DEAD_LETTER],
+      [Queue.WEBHOOKS, Queue.WEBHOOKS_DEAD_LETTER],
+    ] as const) {
+      const queue = byName.get(work);
+      assert.ok(queue, work);
+      assert.equal(queue.options.durable, true);
+      assert.equal(queue.options.arguments['x-dead-letter-routing-key'], dlq);
+      assert.deepEqual(queue.bindings, [
+        { exchange: 'custom.events', pattern: 'parcel.#' },
+      ]);
+      assert.deepEqual(byName.get(dlq)?.bindings, []);
+    }
+  });
+});
+
+describe('applyTopology', () => {
+  it('declares exchanges before queues and binds each queue', async () => {
+    const { applyTopology, parcelEventsTopology } = await import(
+      './messaging/topology.js'
+    );
+    const calls: string[] = [];
+    await applyTopology(
+      {
+        assertExchange: async (name) => void calls.push(`exchange ${name}`),
+        assertQueue: async (name) => void calls.push(`queue ${name}`),
+        bindQueue: async (queue, source, pattern) =>
+          void calls.push(`bind ${queue} ${source} ${pattern}`),
+      },
+      parcelEventsTopology(),
+    );
+    assert.equal(calls[0], 'exchange parcel.events');
+    assert.ok(
+      calls.includes('bind webhooks.parcel-status parcel.events parcel.#'),
+    );
+    assert.equal(calls.filter((c) => c.startsWith('queue ')).length, 4);
+  });
+});

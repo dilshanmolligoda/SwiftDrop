@@ -10,6 +10,7 @@ import {
   DeliveryFailureReason,
 } from '../../generated/prisma/enums.js';
 import { Prisma } from '../../generated/prisma/client.js';
+import type { OutboxWriter } from '../../infrastructure/outbox/outbox.writer.js';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 import type { ObjectStorage } from '../../infrastructure/storage/storage.types.js';
 import { ListDeliveriesQueryDto } from './dto/list-deliveries-query.dto.js';
@@ -57,11 +58,15 @@ function createHarness() {
       .mockResolvedValue({ key: 'random-proof.png', provider: 'local' }),
     delete: jest.fn().mockResolvedValue(undefined),
   };
+  const outbox = {
+    recordParcelStatusChanged: jest.fn().mockResolvedValue('event-id'),
+  };
   const service = new CourierService(
     prismaMock as unknown as PrismaService,
     storage,
+    outbox as unknown as OutboxWriter,
   );
-  return { service, prismaMock, transactionClient, storage };
+  return { service, prismaMock, transactionClient, storage, outbox };
 }
 
 function activeAssignment(
@@ -262,6 +267,49 @@ describe('CourierService', () => {
         where: { id: PARCEL_ID, status: ParcelStatus.ASSIGNED },
         data: { status: ParcelStatus.PICKED_UP },
       });
+    });
+
+    it('records a status-changed event in the outbox with the same transaction', async () => {
+      const { service, transactionClient, outbox } = createHarness();
+      const assignment = activeAssignment(ParcelStatus.ASSIGNED);
+      transactionClient.deliveryAssignment.findFirst.mockResolvedValue(
+        assignment,
+      );
+      transactionClient.parcel.updateMany.mockResolvedValue({ count: 1 });
+      transactionClient.parcelStatusEvent.create.mockResolvedValue({
+        id: 'picked-up-event',
+      });
+
+      await service.updateDeliveryStatus(COURIER_ID, PARCEL_ID, {
+        status: ParcelStatus.PICKED_UP,
+      });
+
+      expect(outbox.recordParcelStatusChanged).toHaveBeenCalledTimes(1);
+      expect(outbox.recordParcelStatusChanged).toHaveBeenCalledWith(
+        transactionClient,
+        {
+          parcel: assignment.parcel,
+          previousStatus: ParcelStatus.ASSIGNED,
+          newStatus: ParcelStatus.PICKED_UP,
+          failureReason: undefined,
+          courierId: COURIER_ID,
+        },
+      );
+    });
+
+    it('records no event when the status update conflicts', async () => {
+      const { service, transactionClient, outbox } = createHarness();
+      transactionClient.deliveryAssignment.findFirst.mockResolvedValue(
+        activeAssignment(ParcelStatus.ASSIGNED),
+      );
+      transactionClient.parcel.updateMany.mockResolvedValue({ count: 0 });
+
+      await expect(
+        service.updateDeliveryStatus(COURIER_ID, PARCEL_ID, {
+          status: ParcelStatus.PICKED_UP,
+        }),
+      ).rejects.toThrow(ConflictException);
+      expect(outbox.recordParcelStatusChanged).not.toHaveBeenCalled();
     });
 
     it('requires proof before a delivered transition', async () => {
