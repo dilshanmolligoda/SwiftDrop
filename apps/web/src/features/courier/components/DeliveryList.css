@@ -90,6 +90,9 @@
 /* ---------------- Table ---------------- */
 
 .cp-table-wrap {
+  /* Contain absolutely positioned children (the sr-only caption) so a wide
+     table scrolls inside the card instead of widening the whole page. */
+  position: relative;
   overflow-x: auto;
 }
 

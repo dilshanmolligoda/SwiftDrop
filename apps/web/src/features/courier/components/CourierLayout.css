@@ -703,6 +703,27 @@
     padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
   }
 
+  /* Touch-friendly controls; 16px text stops iOS zooming into focused fields. */
+  .cp-btn {
+    min-height: 44px;
+  }
+
+  .cp-btn--sm {
+    min-height: 38px;
+  }
+
+  .cp-icon-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .cp-input,
+  .cp-select,
+  .cp-textarea {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
   .cp-bottom-nav {
     display: block;
     position: fixed;
