@@ -371,19 +371,21 @@ export const AdminUsersApprovalsPage: React.FC = () => {
             <span className={styles.paginationText}>
               Showing {filteredApplications.length} of {totalCount} applications
             </span>
-            <select
-              className={styles.pageSelect}
-              aria-label="Rows per page"
-              value={limit}
-              onChange={(e) => {
-                setLimit(Number(e.target.value))
+            <AdminFilterSelect
+              value={String(limit)}
+              onChange={(val) => {
+                setLimit(Number(val))
                 setPage(1)
               }}
-            >
-              <option value="5">5 per page</option>
-              <option value="10">10 per page</option>
-              <option value="20">20 per page</option>
-            </select>
+              ariaLabel="Rows per page"
+              direction="up"
+              compact
+              options={[
+                { value: '5', label: '5 per page' },
+                { value: '10', label: '10 per page' },
+                { value: '20', label: '20 per page' },
+              ]}
+            />
 
             <div className={styles.pagesList}>
               <button

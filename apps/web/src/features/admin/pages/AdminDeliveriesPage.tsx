@@ -42,7 +42,7 @@ function mapBackendStatusToDisplay(status: string): DeliveryStatus {
 function calculateWaitingTime(createdAt: string): string {
   const diffMs = Date.now() - new Date(createdAt).getTime()
   const diffMinutes = Math.floor(diffMs / (1000 * 60))
-  if (diffMinutes < 60) return `${diffMinutes}m`
+  if (diffMinutes < 60) return `${Math.max(1, diffMinutes)}m`
   const diffHours = Math.floor(diffMinutes / 60)
   if (diffHours < 24) return `${diffHours}h ${diffMinutes % 60}m`
   const diffDays = Math.floor(diffHours / 24)
@@ -445,19 +445,21 @@ export const AdminDeliveriesPage: React.FC = () => {
             <span className={styles.paginationText}>
               Showing {filteredDeliveries.length} of {totalCount} deliveries
             </span>
-            <select
-              className={styles.pageSelect}
-              aria-label="Rows per page"
-              value={limit}
-              onChange={(e) => {
-                setLimit(Number(e.target.value))
+            <AdminFilterSelect
+              value={String(limit)}
+              onChange={(val) => {
+                setLimit(Number(val))
                 setPage(1)
               }}
-            >
-              <option value="5">5 per page</option>
-              <option value="10">10 per page</option>
-              <option value="20">20 per page</option>
-            </select>
+              ariaLabel="Rows per page"
+              direction="up"
+              compact
+              options={[
+                { value: '5', label: '5 per page' },
+                { value: '10', label: '10 per page' },
+                { value: '20', label: '20 per page' },
+              ]}
+            />
 
             <div className={styles.pagesList}>
               <button

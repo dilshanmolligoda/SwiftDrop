@@ -13,6 +13,8 @@ export interface AdminFilterSelectProps {
   options: SelectOption[]
   ariaLabel: string
   className?: string
+  direction?: 'down' | 'up'
+  compact?: boolean
 }
 
 export const AdminFilterSelect: React.FC<AdminFilterSelectProps> = ({
@@ -21,6 +23,8 @@ export const AdminFilterSelect: React.FC<AdminFilterSelectProps> = ({
   options,
   ariaLabel,
   className,
+  direction = 'down',
+  compact = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -60,7 +64,7 @@ export const AdminFilterSelect: React.FC<AdminFilterSelectProps> = ({
     <div className={`${styles.selectContainer} ${className || ''}`} ref={containerRef}>
       <button
         type="button"
-        className={styles.triggerButton}
+        className={`${styles.triggerButton} ${compact ? styles.triggerButtonCompact : ''}`}
         onClick={() => setIsOpen((prev) => !prev)}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
@@ -69,7 +73,7 @@ export const AdminFilterSelect: React.FC<AdminFilterSelectProps> = ({
       >
         <span className={styles.triggerText}>{selectedOption ? selectedOption.label : ''}</span>
         <ChevronDown
-          size={16}
+          size={compact ? 14 : 16}
           className={`${styles.chevronIcon} ${isOpen ? styles.chevronOpen : ''}`}
           aria-hidden="true"
         />
@@ -78,7 +82,7 @@ export const AdminFilterSelect: React.FC<AdminFilterSelectProps> = ({
       {isOpen && (
         <ul
           id={listboxId}
-          className={styles.dropdownMenu}
+          className={`${styles.dropdownMenu} ${direction === 'up' ? styles.dropdownMenuUp : ''}`}
           role="listbox"
           aria-label={ariaLabel}
         >
@@ -88,13 +92,15 @@ export const AdminFilterSelect: React.FC<AdminFilterSelectProps> = ({
               <li key={option.value}>
                 <button
                   type="button"
-                  className={`${styles.optionItem} ${isSelected ? styles.optionSelected : ''}`}
+                  className={`${styles.optionItem} ${compact ? styles.optionItemCompact : ''} ${
+                    isSelected ? styles.optionSelected : ''
+                  }`}
                   onClick={() => handleSelect(option.value)}
                   role="option"
                   aria-selected={isSelected}
                 >
                   <span>{option.label}</span>
-                  {isSelected && <Check size={14} className={styles.checkIcon} aria-hidden="true" />}
+                  {isSelected && <Check size={compact ? 12 : 14} className={styles.checkIcon} aria-hidden="true" />}
                 </button>
               </li>
             )

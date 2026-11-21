@@ -1,7 +1,7 @@
 import { IsNotEmpty, IsUUID } from 'class-validator';
 
 export class AssignCourierDto {
-  @IsUUID('4', { message: 'courierId must be a valid UUIDv4' })
+  @IsUUID(undefined, { message: 'courierId must be a valid UUID' })
   @IsNotEmpty({ message: 'courierId is required' })
   courierId!: string;
 }

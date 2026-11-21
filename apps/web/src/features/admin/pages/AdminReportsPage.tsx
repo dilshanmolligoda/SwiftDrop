@@ -372,19 +372,21 @@ export const AdminReportsPage: React.FC = () => {
             <span style={{ fontSize: '13px', color: '#64748b', marginRight: '8px' }}>
               Rows:
             </span>
-            <select
-              className={styles.pageSelect}
-              aria-label="Rows per page"
-              value={limit}
-              onChange={(e) => {
-                setLimit(Number(e.target.value))
+            <AdminFilterSelect
+              value={String(limit)}
+              onChange={(val) => {
+                setLimit(Number(val))
                 setPage(1)
               }}
-            >
-              <option value="5">5</option>
-              <option value="10">10</option>
-              <option value="20">20</option>
-            </select>
+              ariaLabel="Rows per page"
+              direction="up"
+              compact
+              options={[
+                { value: '5', label: '5' },
+                { value: '10', label: '10' },
+                { value: '20', label: '20' },
+              ]}
+            />
 
             <button
               type="button"

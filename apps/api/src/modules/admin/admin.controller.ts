@@ -41,7 +41,7 @@ export class AdminController {
 
   @Get('applications/:id')
   getApplicationDetails(
-    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
   ) {
     return this.adminService.getApplicationDetails(id);
   }
@@ -49,7 +49,7 @@ export class AdminController {
   @Patch('applications/:id/approve')
   approveApplication(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
   ) {
     return this.adminService.approveApplication(user.id, id);
   }
@@ -57,7 +57,7 @@ export class AdminController {
   @Patch('applications/:id/reject')
   rejectApplication(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: RejectApplicationDto,
   ) {
     return this.adminService.rejectApplication(user.id, id, dto);
@@ -70,7 +70,7 @@ export class AdminController {
 
   @Get('couriers/:id')
   getCourierDetails(
-    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
   ) {
     return this.adminService.getCourierDetails(id);
   }
@@ -89,7 +89,7 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   assignCourier(
     @CurrentUser() user: AuthenticatedUser,
-    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: AssignCourierDto,
   ) {
     return this.adminService.assignCourier(user.id, id, dto);
