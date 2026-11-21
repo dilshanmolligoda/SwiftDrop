@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { X, Search, Clock, Loader2 } from 'lucide-react'
 import type { DeliveryItem } from '../types/admin-deliveries.types'
 import { adminApi, type AdminCourierItem } from '../api/admin-api'
+import { AdminFilterSelect } from './AdminFilterSelect'
 import styles from './AssignCourierDrawer.module.css'
 
 interface AvailableCourier {
@@ -34,6 +35,7 @@ export const AssignCourierDrawer: React.FC<AssignCourierDrawerProps> = ({
   const [isLoadingCouriers, setIsLoadingCouriers] = useState(false)
   const [selectedCourierId, setSelectedCourierId] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState('')
+  const [availabilityFilter, setAvailabilityFilter] = useState<'available' | 'all'>('available')
   const [note, setNote] = useState('')
 
   useEffect(() => {
@@ -97,12 +99,15 @@ export const AssignCourierDrawer: React.FC<AssignCourierDrawerProps> = ({
     return null
   }
 
-  const filteredCandidates = candidates.filter(
-    (c) =>
+  const filteredCandidates = candidates.filter((c) => {
+    const matchesSearch =
       c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.vehicleType.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.zones.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+      c.zones.toLowerCase().includes(searchQuery.toLowerCase())
+
+    const matchesAvailability = availabilityFilter === 'all' || c.isAvailable
+    return matchesSearch && matchesAvailability
+  })
 
   const selectedCandidate = candidates.find((c) => c.id === selectedCourierId)
 
@@ -202,10 +207,15 @@ export const AssignCourierDrawer: React.FC<AssignCourierDrawerProps> = ({
                 />
               </div>
 
-              <select className={styles.selectDropdown} aria-label="Availability filter">
-                <option value="available">Available couriers</option>
-                <option value="all">All couriers</option>
-              </select>
+              <AdminFilterSelect
+                value={availabilityFilter}
+                onChange={(val) => setAvailabilityFilter(val as 'available' | 'all')}
+                ariaLabel="Availability filter"
+                options={[
+                  { value: 'available', label: 'Available couriers' },
+                  { value: 'all', label: 'All couriers' },
+                ]}
+              />
             </div>
 
             <span className={styles.resultsMeta}>
