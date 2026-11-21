@@ -59,6 +59,9 @@
   margin: 0;
   font-family: var(--cp-font);
   letter-spacing: normal;
+  /* Override the global h1/h2 colour, which turns near-white under a dark
+     system theme; class rules on individual headings still win. */
+  color: inherit;
 }
 
 .courier-shell :where(a, button, input, select, textarea, [tabindex]):focus-visible {
