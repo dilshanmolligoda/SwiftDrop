@@ -23,8 +23,9 @@
   ],
   "scripts": {
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
-    "build": "npm run clean && tsc -p tsconfig.esm.json && tsc -p tsconfig.cjs.json && node scripts/write-module-markers.mjs",
-    "test": "tsc -p tsconfig.test.json && node --test \"dist/test/**/*.test.js\""
+    "build": "tsc -p tsconfig.esm.json && tsc -p tsconfig.cjs.json && node scripts/write-module-markers.mjs",
+    "test": "tsc -p tsconfig.test.json && node --test \"dist/test/**/*.test.js\"",
+    "rebuild": "npm run clean && npm run build"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

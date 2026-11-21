@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { LiveIndicator } from '../../../lib/realtime/LiveIndicator'
+import { useParcelRealtime } from '../../../lib/realtime/useParcelRealtime'
 import { AlertTriangle, Check, Circle, Package, RotateCcw, Search, Truck, X } from 'lucide-react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { env } from '../../../lib/env'
@@ -126,8 +128,16 @@ function CustomerTrackingContent({ onAccessError }: { onAccessError: (error: unk
     queryError = customerErrorMessage(error)
   }
   const loadTracking = useCallback((signal: AbortSignal) => getCustomerTracking(normalizedNumber, signal), [normalizedNumber])
-  const { data: parcel, loading, error, retry } = useCustomerRequest(loadTracking, onAccessError, Boolean(normalizedNumber))
-  const { data: summary, error: summaryError, retry: retrySummary } = useCustomerRequest(getCustomerSummary, onAccessError)
+  const { data: parcel, loading, error, retry, refresh } = useCustomerRequest(loadTracking, onAccessError, Boolean(normalizedNumber))
+  const { data: summary, error: summaryError, retry: retrySummary, refresh: refreshSummary } = useCustomerRequest(getCustomerSummary, onAccessError)
+  // Live updates: re-read in the background when this parcel changes (or after a reconnect).
+  const { state: liveState } = useParcelRealtime({
+    subscription: parcel ? { scope: 'parcel', parcelId: parcel.id } : null,
+    onChange: useCallback(() => {
+      refresh()
+      refreshSummary()
+    }, [refresh, refreshSummary]),
+  })
   const handleTrack = (number: string) => {
     const next = new URLSearchParams(params)
     next.set('trackingNumber', number)
@@ -164,6 +174,7 @@ function CustomerTrackingContent({ onAccessError }: { onAccessError: (error: unk
         <TrackingSearchForm key={queryNumber ?? ''} initialNumber={queryNumber ?? ''} onTrack={handleTrack} />
         <div className="customer-tracking-search-feedback" role="status" aria-atomic="true">{loading && 'Loading parcel tracking…'}</div>
         {(queryError || error) && <p className="customer-tracking-error" role="alert">{queryError || error} {error && <button className="customer-tracking-link customer-tracking-summary-retry" type="button" onClick={retry}>Try again</button>}</p>}
+        {parcel && <div className="customer-tracking-live"><LiveIndicator state={liveState} /></div>}
         <div aria-busy={loading}><ParcelDetails parcel={parcel} /></div>
       </div>
     </div>
