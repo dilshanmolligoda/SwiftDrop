@@ -7,6 +7,7 @@ import {
 import { renderPage } from './page.js';
 import { verifySwiftDropSignature } from './signature.js';
 import {
+  applyWebhook,
   isDuplicate,
   publicState,
   recordOrder,
@@ -63,6 +64,8 @@ async function handle(req: IncomingMessage, res: ServerResponse) {
 async function receiveWebhook(req: IncomingMessage, res: ServerResponse) {
   const rawBody = await readBody(req);
   const eventId = header(req, 'x-swiftdrop-event-id') ?? 'unknown';
+  const attemptHeader = Number(header(req, 'x-swiftdrop-delivery-attempt'));
+  const attempt = Number.isInteger(attemptHeader) ? attemptHeader : null;
   const payload = parseJson(rawBody);
 
   const reply = (status: number, result: WebhookResult) => {
@@ -71,6 +74,7 @@ async function receiveWebhook(req: IncomingMessage, res: ServerResponse) {
       eventId,
       result,
       respondedWith: status,
+      attempt,
       payload,
     });
     console.log(`[mock-merchant] webhook ${eventId} → ${result} (${status})`);
@@ -91,7 +95,8 @@ async function receiveWebhook(req: IncomingMessage, res: ServerResponse) {
   // Deliveries are at-least-once: acknowledge repeats but process them once.
   if (isDuplicate(eventId)) return reply(200, 'DUPLICATE');
 
-  return reply(200, 'ACCEPTED');
+  // Older than what we already applied (a late retry): acknowledge, don't apply.
+  return reply(200, applyWebhook(payload));
 }
 
 /** The store's checkout calling SwiftDrop to book a delivery. */

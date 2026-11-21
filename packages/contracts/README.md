@@ -8,9 +8,13 @@ src/
 ├── enums/       ParcelStatus, DeliveryFailureReason, Role (mirror the Prisma enums)
 ├── events/      ParcelCreatedV1, ParcelStatusChangedV1 + parseParcelEvent()
 ├── messaging/   RabbitMQ exchange, queue, routing-key and header names
-├── webhooks/    MerchantWebhookPayloadV1, WEBHOOK_HEADERS, toMerchantWebhookPayload()
-└── realtime/    WebSocket path, event names, rooms, update payloads
+├── webhooks/    MerchantWebhookPayloadV1, WEBHOOK_HEADERS, retry policy, URL check
+├── realtime/    WebSocket path, event names, rooms, update payloads
+└── node/        Node-only: webhook signing, secret encryption, private-address guard
 ```
+
+`@swiftdrop/contracts/node` uses `node:crypto` / `node:net` — import it from the API and
+worker only, never from the web app.
 
 ## Use it
 

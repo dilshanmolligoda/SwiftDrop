@@ -44,6 +44,7 @@ import AdminLandingPage from './features/admin/pages/AdminLandingPage';
 import MerchantTrackParcelPage from './features/merchant/pages/MerchantTrackParcelPage';
 import MerchantPricingPage from './features/merchant/pages/MerchantPricingPage';
 import MerchantSettingsPage from './features/merchant/pages/MerchantSettingsPage';
+import MerchantWebhookPage from './features/merchant/pages/MerchantWebhookPage';
 import './features/merchant/components/MerchantTypography.css';
 
 createRoot(document.getElementById('root')!).render(
@@ -196,6 +197,7 @@ createRoot(document.getElementById('root')!).render(
               <Route path="track/:trackingNumber" element={<MerchantTrackParcelPage />} />
               <Route path="pricing" element={<MerchantPricingPage />} />
               <Route path="pricing/:date" element={<MerchantPricingPage />} />
+              <Route path="connections" element={<MerchantWebhookPage />} />
               <Route path="settings" element={<MerchantSettingsPage />} />
             </Route>
             {/* /courier/* is served by the Courier Portal routes above. */}

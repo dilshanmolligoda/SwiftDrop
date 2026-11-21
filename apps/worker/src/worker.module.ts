@@ -3,6 +3,13 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { validateEnv } from './config/env.validation.js';
 import { loadWorkerConfig, WORKER_CONFIG } from './config/worker.config.js';
 import { NotificationConsumer } from './consumers/notification.consumer.js';
+import { EmailChannel } from './notifications/email.channel.js';
+import { MockSmsChannel } from './notifications/mock-sms.channel.js';
+import {
+  NOTIFICATION_CHANNELS,
+  type NotificationChannel,
+} from './notifications/notification-channel.js';
+import { NotificationRepository } from './notifications/notification.repository.js';
 import { WebhookConsumer } from './consumers/webhook.consumer.js';
 import { HealthServer } from './health/health.server.js';
 import { ProcessedEventsStore } from './idempotency/processed-events.store.js';
@@ -13,6 +20,8 @@ import {
   type ParcelEventConsumer,
 } from './messaging/parcel-event-consumer.js';
 import { RabbitMqConnection } from './messaging/rabbitmq.connection.js';
+import { WorkerPublisher } from './messaging/worker-publisher.js';
+import { WebhookDeliveryRepository } from './webhooks/webhook-delivery.repository.js';
 
 @Module({
   imports: [
@@ -32,6 +41,17 @@ import { RabbitMqConnection } from './messaging/rabbitmq.connection.js';
     PrismaService,
     RabbitMqConnection,
     ProcessedEventsStore,
+    WorkerPublisher,
+    WebhookDeliveryRepository,
+    EmailChannel,
+    MockSmsChannel,
+    {
+      // Notification channels (Strategy). Add a real SMS adapter here later.
+      provide: NOTIFICATION_CHANNELS,
+      inject: [EmailChannel, MockSmsChannel],
+      useFactory: (...channels: NotificationChannel[]) => channels,
+    },
+    NotificationRepository,
     NotificationConsumer,
     WebhookConsumer,
     {

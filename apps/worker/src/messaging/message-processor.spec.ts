@@ -9,6 +9,7 @@ import {
 } from './message-processor.js';
 import {
   PermanentFailure,
+  type HandleResult,
   type ParcelEventConsumer,
 } from './parcel-event-consumer.js';
 
@@ -33,7 +34,7 @@ const message = (body: unknown = EVENT) => ({
 });
 
 function setup() {
-  const handle = jest.fn<Promise<void>, [ParcelEventV1]>(() =>
+  const handle = jest.fn<Promise<HandleResult>, [ParcelEventV1]>(() =>
     Promise.resolve(),
   );
   const consumer: ParcelEventConsumer = {
@@ -64,6 +65,17 @@ describe('processMessage', () => {
       EVENT.eventId,
       'worker.notifications',
     );
+  });
+
+  it('acks a deferred event without marking it processed', async () => {
+    const { consumer, handle, store } = setup();
+    handle.mockResolvedValue('deferred');
+
+    await expect(processMessage(message(), consumer, store)).resolves.toEqual({
+      action: 'ack',
+      detail: 'deferred',
+    });
+    expect(store.markProcessed).not.toHaveBeenCalled();
   });
 
   it('acknowledges a duplicate without handling it again', async () => {
@@ -179,6 +191,20 @@ describe('error reasons', () => {
     await expect(processMessage(message(), consumer, store)).resolves.toEqual({
       action: 'retry',
       reason: 'Invalid `prisma.x()` invocation:',
+    });
+  });
+
+  it('uses the first inner error of an empty AggregateError', async () => {
+    const { consumer, handle, store } = setup();
+    handle.mockRejectedValue(
+      new AggregateError([
+        new Error('connect ECONNREFUSED 127.0.0.1:1025'),
+        new Error('connect ECONNREFUSED ::1:1025'),
+      ]),
+    );
+    await expect(processMessage(message(), consumer, store)).resolves.toEqual({
+      action: 'retry',
+      reason: 'connect ECONNREFUSED 127.0.0.1:1025',
     });
   });
 });
