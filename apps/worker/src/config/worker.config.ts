@@ -1,6 +1,10 @@
 import { hostname } from 'node:os';
 import type { ConfigService } from '@nestjs/config';
-import { PARCEL_EVENTS_EXCHANGE } from '@swiftdrop/contracts';
+import {
+  isParcelStatus,
+  PARCEL_EVENTS_EXCHANGE,
+  type ParcelStatus,
+} from '@swiftdrop/contracts';
 import { parseEncryptionKey } from '@swiftdrop/contracts/node';
 
 export const WORKER_CONFIG = Symbol('WORKER_CONFIG');
@@ -15,7 +19,33 @@ export interface WorkerConfig {
   readonly healthPort: number;
   readonly instanceId: string;
   readonly webhooks: WebhookConfig;
+  readonly notifications: NotificationsConfig;
 }
+
+export interface NotificationsConfig {
+  readonly email: {
+    readonly enabled: boolean;
+    readonly host: string;
+    readonly port: number;
+    readonly user: string | undefined;
+    readonly password: string | undefined;
+    readonly from: string;
+  };
+  /** 'mock' logs + records; 'none' skips SMS. */
+  readonly smsProvider: 'mock' | 'none';
+  /** Base URL of the web app, used in email links. */
+  readonly webAppUrl: string;
+  /** Status changes customers are told about. */
+  readonly notifyStatuses: ReadonlySet<ParcelStatus>;
+}
+
+export const DEFAULT_NOTIFY_STATUSES: readonly ParcelStatus[] = [
+  'PICKED_UP',
+  'OUT_FOR_DELIVERY',
+  'DELIVERED',
+  'FAILED',
+  'RETURNED',
+];
 
 export interface WebhookConfig {
   readonly timeoutMs: number;
@@ -41,6 +71,7 @@ export const NUMERIC_SETTINGS = {
   WEBHOOK_TIMEOUT_MS: { fallback: 5000, max: 60_000 },
   WEBHOOK_MAX_ATTEMPTS: { fallback: 6, max: 20 },
   WEBHOOK_BACKOFF_BASE_MS: { fallback: 30_000, max: 3_600_000 },
+  SMTP_PORT: { fallback: 1025, max: 65_535 },
 } as const;
 
 export function loadWorkerConfig(config: ConfigService): WorkerConfig {
@@ -71,7 +102,37 @@ export function loadWorkerConfig(config: ConfigService): WorkerConfig {
         config.get<string>('WEBHOOK_SECRET_ENCRYPTION_KEY'),
       ),
     },
+    notifications: {
+      email: {
+        enabled: config.get<string>('NOTIFY_EMAIL_ENABLED') !== 'false',
+        host: config.get<string>('SMTP_HOST')?.trim() || 'localhost',
+        port: numeric(config, 'SMTP_PORT'),
+        user: config.get<string>('SMTP_USER')?.trim() || undefined,
+        password: config.get<string>('SMTP_PASSWORD') || undefined,
+        from:
+          config.get<string>('SMTP_FROM')?.trim() ||
+          'SwiftDrop <no-reply@swiftdrop.local>',
+      },
+      smsProvider:
+        config.get<string>('SMS_PROVIDER')?.trim() === 'none' ? 'none' : 'mock',
+      webAppUrl:
+        config.get<string>('WEB_APP_URL')?.trim() || 'http://localhost:5173',
+      notifyStatuses: parseStatusList(config.get<string>('NOTIFY_STATUSES')),
+    },
   };
+}
+
+/** Comma-separated ParcelStatus values; empty → the defaults. */
+export function parseStatusList(
+  raw: string | undefined,
+): ReadonlySet<ParcelStatus> {
+  const values = (raw ?? '')
+    .split(',')
+    .map((s) => s.trim().toUpperCase())
+    .filter(Boolean);
+  return new Set(
+    values.length > 0 ? values.filter(isParcelStatus) : DEFAULT_NOTIFY_STATUSES,
+  );
 }
 
 export function parseHostList(raw: string | undefined): ReadonlySet<string> {

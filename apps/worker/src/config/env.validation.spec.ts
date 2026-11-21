@@ -1,4 +1,5 @@
 import { validateEnv } from './env.validation.js';
+import { parseStatusList } from './worker.config.js';
 
 describe('validateEnv (worker)', () => {
   const base = {
@@ -75,6 +76,7 @@ describe('validateEnv (worker webhooks)', () => {
         ...base,
         NODE_ENV: 'production',
         WEBHOOK_SECRET_ENCRYPTION_KEY: key,
+        SMTP_HOST: 'smtp.example.com',
       }),
     ).not.toThrow();
   });
@@ -98,5 +100,54 @@ describe('validateEnv (worker webhooks)', () => {
     expect(() => validateEnv({ ...base, [name]: value })).toThrow(
       new RegExp(name),
     );
+  });
+});
+
+describe('validateEnv (worker notifications)', () => {
+  const base = {
+    DATABASE_URL: 'postgresql://user:pass@localhost:5432/db',
+    RABBITMQ_URL: 'amqp://swiftdrop:secret@localhost:5672',
+  };
+
+  it.each([
+    ['SMS_PROVIDER', 'twilio'],
+    ['NOTIFY_EMAIL_ENABLED', 'yes'],
+    ['NOTIFY_STATUSES', 'DELIVERED,LOST'],
+    ['SMTP_PORT', '0'],
+  ])('rejects %s=%s', (name, value) => {
+    expect(() => validateEnv({ ...base, [name]: value })).toThrow(
+      new RegExp(name),
+    );
+  });
+
+  it('requires SMTP_HOST in production unless email is off', () => {
+    const production = {
+      ...base,
+      NODE_ENV: 'production',
+      WEBHOOK_SECRET_ENCRYPTION_KEY: Buffer.alloc(32, 1).toString('base64'),
+    };
+    expect(() => validateEnv(production)).toThrow(/SMTP_HOST/);
+    expect(() =>
+      validateEnv({ ...production, NOTIFY_EMAIL_ENABLED: 'false' }),
+    ).not.toThrow();
+    expect(() =>
+      validateEnv({ ...production, SMTP_HOST: 'smtp.example.com' }),
+    ).not.toThrow();
+  });
+});
+
+describe('parseStatusList', () => {
+  it('uses the defaults when empty and normalises case', () => {
+    expect([...parseStatusList(undefined)]).toEqual([
+      'PICKED_UP',
+      'OUT_FOR_DELIVERY',
+      'DELIVERED',
+      'FAILED',
+      'RETURNED',
+    ]);
+    expect([...parseStatusList(' delivered , failed ')]).toEqual([
+      'DELIVERED',
+      'FAILED',
+    ]);
   });
 });

@@ -31,6 +31,7 @@
     "@swiftdrop/contracts": "*",
     "amqp-connection-manager": "^5.0.1",
     "amqplib": "^2.4.0",
+    "nodemailer": "^10.6.1",
     "pg": "^8.23.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
@@ -42,6 +43,7 @@
     "@nestjs/testing": "^11.0.1",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.0.0",
+    "@types/nodemailer": "^8.0.2",
     "@types/pg": "^8.23.1",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
@@ -83,7 +85,7 @@
       "^(\\.{1,2}/.*)\\.js$": "$1"
     },
     "transformIgnorePatterns": [
-      "node_modules/(?!(@nestjs/config|promise-breaker)/)"
+      "node_modules/(?!(@nestjs/config|promise-breaker|nodemailer)/)"
     ]
   }
 }

@@ -1,4 +1,5 @@
 import { parseEncryptionKey } from '@swiftdrop/contracts/node';
+import { isParcelStatus } from '@swiftdrop/contracts';
 import { NUMERIC_SETTINGS } from './worker.config.js';
 
 /** The worker only reacts to RabbitMQ events, so it cannot run without both. */
@@ -33,6 +34,7 @@ export function validateEnv(config: Record<string, unknown>) {
   }
 
   validateWebhookEnv(config);
+  validateNotificationEnv(config);
 
   return config;
 }
@@ -67,6 +69,36 @@ function validateWebhookEnv(config: Record<string, unknown>) {
     } catch (error: unknown) {
       throw new Error(
         error instanceof Error ? error.message : 'Invalid encryption key',
+      );
+    }
+  }
+}
+
+function validateNotificationEnv(config: Record<string, unknown>) {
+  const sms = config.SMS_PROVIDER;
+  if (sms !== undefined && sms !== '' && sms !== 'mock' && sms !== 'none') {
+    throw new Error('SMS_PROVIDER must be "mock" or "none".');
+  }
+  const email = config.NOTIFY_EMAIL_ENABLED;
+  if (email !== undefined && email !== 'true' && email !== 'false') {
+    throw new Error('NOTIFY_EMAIL_ENABLED must be "true" or "false".');
+  }
+  if (
+    config.NODE_ENV === 'production' &&
+    email !== 'false' &&
+    !(typeof config.SMTP_HOST === 'string' && config.SMTP_HOST.trim())
+  ) {
+    throw new Error(
+      'SMTP_HOST is required in production (or set NOTIFY_EMAIL_ENABLED=false).',
+    );
+  }
+  if (typeof config.NOTIFY_STATUSES === 'string') {
+    const unknown = config.NOTIFY_STATUSES.split(',')
+      .map((s) => s.trim().toUpperCase())
+      .filter((s) => s && !isParcelStatus(s));
+    if (unknown.length > 0) {
+      throw new Error(
+        `NOTIFY_STATUSES has unknown parcel statuses: ${unknown.join(', ')}`,
       );
     }
   }

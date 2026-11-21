@@ -193,4 +193,18 @@ describe('error reasons', () => {
       reason: 'Invalid `prisma.x()` invocation:',
     });
   });
+
+  it('uses the first inner error of an empty AggregateError', async () => {
+    const { consumer, handle, store } = setup();
+    handle.mockRejectedValue(
+      new AggregateError([
+        new Error('connect ECONNREFUSED 127.0.0.1:1025'),
+        new Error('connect ECONNREFUSED ::1:1025'),
+      ]),
+    );
+    await expect(processMessage(message(), consumer, store)).resolves.toEqual({
+      action: 'retry',
+      reason: 'connect ECONNREFUSED 127.0.0.1:1025',
+    });
+  });
 });

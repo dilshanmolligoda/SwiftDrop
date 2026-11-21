@@ -6,6 +6,7 @@ import {
 } from '@swiftdrop/contracts/node';
 import type { WorkerConfig } from '../config/worker.config.js';
 import { PermanentFailure } from '../messaging/parcel-event-consumer.js';
+import { testWorkerConfig } from '../testing/worker-config.fixture.js';
 import type { WorkerPublisher } from '../messaging/worker-publisher.js';
 import type { WebhookDeliveryRepository } from '../webhooks/webhook-delivery.repository.js';
 import {
@@ -41,24 +42,7 @@ const EVENT: ParcelStatusChangedV1 = {
 function config(
   overrides: Partial<WorkerConfig['webhooks']> = {},
 ): WorkerConfig {
-  return {
-    rabbitmqUrl: 'amqp://x',
-    exchange: 'parcel.events',
-    prefetch: 10,
-    retryDelayMs: 5000,
-    healthPort: 4010,
-    instanceId: 'test',
-    webhooks: {
-      timeoutMs: 5000,
-      maxAttempts: 6,
-      backoffBaseMs: 30_000,
-      requireHttps: false,
-      allowPrivateTargets: false,
-      privateHostAllowlist: new Set(),
-      encryptionKey: KEY,
-      ...overrides,
-    },
-  };
+  return testWorkerConfig({ webhooks: { encryptionKey: KEY, ...overrides } });
 }
 
 function setup(

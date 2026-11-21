@@ -111,6 +111,15 @@ export function attemptOf(headers: Readonly<Record<string, unknown>>): number {
 
 /** First non-empty line of an error message (Prisma errors start with a newline). */
 function describeError(error: unknown): string {
+  // Node reports e.g. a refused connection as an AggregateError with an empty
+  // message (it tries IPv4 and IPv6); the first inner error says what happened.
+  if (
+    error instanceof AggregateError &&
+    !error.message &&
+    error.errors.length > 0
+  ) {
+    return describeError(error.errors[0]);
+  }
   const text = error instanceof Error ? error.message : String(error);
   const line = text
     .split('\n')
