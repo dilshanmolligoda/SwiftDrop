@@ -23,6 +23,7 @@ import { CourierLayout } from './features/courier/components/CourierLayout.tsx'
 import { CourierDashboardPage } from './features/courier/pages/CourierDashboardPage.tsx'
 import { MyDeliveriesPage as CourierMyDeliveriesPage } from './features/courier/pages/MyDeliveriesPage.tsx'
 import { DeliveryDetailsPage } from './features/courier/pages/DeliveryDetailsPage.tsx'
+import { CourierSettingsPage } from './features/courier/pages/CourierSettingsPage.tsx'
 import { HelpSupportPage } from './features/customer/pages/HelpSupportPage.tsx'
 import { NotificationsPage } from './features/customer/pages/NotificationsPage.tsx'
 import CustomerDashboard from './features/customer/pages/CustomerDashboard.tsx'
@@ -117,6 +118,7 @@ createRoot(document.getElementById('root')!).render(
               <Route path="dashboard" element={<CourierDashboardPage />} />
               <Route path="deliveries" element={<CourierMyDeliveriesPage />} />
               <Route path="deliveries/:parcelId" element={<DeliveryDetailsPage />} />
+              <Route path="settings" element={<CourierSettingsPage />} />
               <Route path="*" element={<Navigate to="/courier/dashboard" replace />} />
             </Route>
             <Route
