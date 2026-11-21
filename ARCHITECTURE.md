@@ -420,7 +420,8 @@ model owner).
 | `POST /parcels` | customer | Create delivery |
 | `GET /parcels/me` · `GET /parcels/{id}` · `GET /parcels/{id}/receipt` | customer | History, details, PDF receipt |
 | `GET /tracking/{trackingNumber}` · WebSocket `/api/v1/realtime` | public | Public tracking + live updates |
-| `POST /merchants/register` · `POST /merchants/me/api-keys` · `PUT /merchants/me/webhook` | merchant | Onboarding |
+| `POST /merchants/register` · `POST /merchants/me/api-keys` | merchant | Onboarding |
+| `GET` · `PUT` · `DELETE /merchant/webhook` · `POST /merchant/webhook/rotate-secret` · `GET /merchant/webhook/deliveries` | merchant | Webhook URL, signing secret (shown once), delivery log |
 | `POST /merchant-api/orders` · `GET /merchant-api/orders/{id}` | API key | Merchant integration |
 | `GET /courier/deliveries/today` · `POST /courier/deliveries/{id}/status` | courier | Courier app |
 | `GET /dispatch/parcels/unassigned` · `POST /dispatch/assignments` · `GET /dispatch/workloads` | admin | Dispatching |

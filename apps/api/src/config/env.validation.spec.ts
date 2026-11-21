@@ -130,7 +130,12 @@ describe('validateEnv', () => {
 
     it('accepts a valid amqp URL in production', () => {
       expect(() =>
-        validateEnv({ ...base, NODE_ENV: 'production', RABBITMQ_URL: rabbit }),
+        validateEnv({
+          ...base,
+          NODE_ENV: 'production',
+          RABBITMQ_URL: rabbit,
+          WEBHOOK_SECRET_ENCRYPTION_KEY: Buffer.alloc(32, 1).toString('base64'),
+        }),
       ).not.toThrow();
     });
 
@@ -186,6 +191,48 @@ describe('validateEnv', () => {
       expect(() =>
         validateEnv({ ...base, OUTBOX_RELAY_ENABLED: 'yes' }),
       ).toThrow(/OUTBOX_RELAY_ENABLED/);
+    });
+  });
+
+  // ── Merchant webhooks ──────────────────────────────────────────────────
+
+  describe('webhook settings', () => {
+    const production = {
+      ...base,
+      NODE_ENV: 'production',
+      RABBITMQ_URL: 'amqp://swiftdrop:secret@rabbitmq:5672',
+    };
+    const key = Buffer.alloc(32, 5).toString('base64');
+
+    it('requires a 32-byte encryption key in production', () => {
+      expect(() => validateEnv(production)).toThrow(
+        /WEBHOOK_SECRET_ENCRYPTION_KEY/,
+      );
+      expect(() =>
+        validateEnv({
+          ...production,
+          WEBHOOK_SECRET_ENCRYPTION_KEY: '<change-me-32-bytes-base64>',
+        }),
+      ).toThrow(/32 bytes/);
+      expect(() =>
+        validateEnv({ ...production, WEBHOOK_SECRET_ENCRYPTION_KEY: key }),
+      ).not.toThrow();
+    });
+
+    it('does not require the key in development', () => {
+      expect(() =>
+        validateEnv({ ...base, NODE_ENV: 'development' }),
+      ).not.toThrow();
+    });
+
+    it('refuses WEBHOOK_ALLOW_PRIVATE_TARGETS=true in production', () => {
+      expect(() =>
+        validateEnv({
+          ...production,
+          WEBHOOK_SECRET_ENCRYPTION_KEY: key,
+          WEBHOOK_ALLOW_PRIVATE_TARGETS: 'true',
+        }),
+      ).toThrow(/not allowed in production/);
     });
   });
 });
