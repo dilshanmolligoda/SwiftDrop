@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { OutboxWriter } from '../../infrastructure/outbox/outbox.writer.js';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 import { ParcelStatus, PackageSize } from '../../generated/prisma/enums.js';
 
@@ -37,7 +38,10 @@ export interface CustomerMetrics {
 
 @Injectable()
 export class ParcelsRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly outbox: OutboxWriter,
+  ) {}
 
   async createParcel(data: {
     trackingNumber: string;
@@ -52,31 +56,39 @@ export class ParcelsRepository {
     costLkr: number;
     note?: string;
   }): Promise<CustomerParcelRecord> {
-    const parcel = await this.prisma.parcel.create({
-      data: {
-        trackingNumber: data.trackingNumber,
-        customerId: data.customerId,
-        senderName: data.senderName,
-        senderAddress: data.senderAddress,
-        recipientName: data.recipientName,
-        recipientAddress: data.recipientAddress,
-        recipientPhone: data.recipientPhone,
-        packageSize: data.packageSize,
-        weightKg: data.weightKg,
-        costLkr: data.costLkr,
-        status: ParcelStatus.PENDING,
-        statusHistory: {
-          create: {
-            status: ParcelStatus.PENDING,
-            note: data.note ?? 'Delivery request created by customer.',
+    // Same transaction: the parcel.created event exists only if the parcel does.
+    const parcel = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.parcel.create({
+        data: {
+          trackingNumber: data.trackingNumber,
+          customerId: data.customerId,
+          senderName: data.senderName,
+          senderAddress: data.senderAddress,
+          recipientName: data.recipientName,
+          recipientAddress: data.recipientAddress,
+          recipientPhone: data.recipientPhone,
+          packageSize: data.packageSize,
+          weightKg: data.weightKg,
+          costLkr: data.costLkr,
+          status: ParcelStatus.PENDING,
+          statusHistory: {
+            create: {
+              status: ParcelStatus.PENDING,
+              note: data.note ?? 'Delivery request created by customer.',
+            },
           },
         },
-      },
-      include: {
-        statusHistory: {
-          orderBy: { createdAt: 'asc' },
+        include: {
+          statusHistory: {
+            orderBy: { createdAt: 'asc' },
+          },
         },
-      },
+      });
+      await this.outbox.recordParcelCreated(tx, {
+        parcel: created,
+        status: ParcelStatus.PENDING,
+      });
+      return created;
     });
 
     return {
