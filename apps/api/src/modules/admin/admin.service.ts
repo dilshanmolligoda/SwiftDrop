@@ -473,11 +473,25 @@ export class AdminService {
         select: {
           id: true,
           trackingNumber: true,
+          senderName: true,
+          senderAddress: true,
           recipientName: true,
           recipientAddress: true,
           recipientPhone: true,
+          packageSize: true,
+          weightKg: true,
+          costLkr: true,
           status: true,
+          failureReason: true,
+          failedDeliveryAttempts: true,
+          deliveredAt: true,
           createdAt: true,
+          merchantOrder: {
+            select: {
+              reference: true,
+              source: true,
+            },
+          },
           assignments: {
             where: { endedAt: null },
             orderBy: { assignedAt: 'desc' },
@@ -499,17 +513,18 @@ export class AdminService {
       this.prisma.parcel.count({ where }),
     ]);
 
-    const formatted = parcels.map(({ assignments, ...parcel }) => ({
+    const formatted = parcels.map(({ assignments, merchantOrder, ...parcel }) => ({
       ...parcel,
-      senderName: 'Central Warehouse',
-      senderAddress: 'SwiftDrop Hub, Colombo',
-      packageSize: 'MEDIUM',
-      weightKg: '1.00',
-      costLkr: '350.00',
-      failureReason: null,
-      failedDeliveryAttempts: 0,
-      deliveredAt: null,
+      senderName: parcel.senderName || 'Central Warehouse',
+      senderAddress: parcel.senderAddress || 'SwiftDrop Hub, Colombo',
+      packageSize: parcel.packageSize ? String(parcel.packageSize) : 'MEDIUM',
+      weightKg: parcel.weightKg ? String(parcel.weightKg) : '1.00',
+      costLkr: parcel.costLkr ? String(parcel.costLkr) : '350.00',
+      failureReason: parcel.failureReason ?? null,
+      failedDeliveryAttempts: parcel.failedDeliveryAttempts ?? 0,
+      deliveredAt: parcel.deliveredAt ? parcel.deliveredAt.toISOString() : null,
       activeAssignment: assignments[0] ?? null,
+      orderReference: merchantOrder?.reference ?? null,
     }));
 
     return {
@@ -536,21 +551,39 @@ export class AdminService {
       select: {
         id: true,
         trackingNumber: true,
+        senderName: true,
+        senderAddress: true,
         recipientName: true,
         recipientAddress: true,
         recipientPhone: true,
+        packageSize: true,
+        weightKg: true,
+        costLkr: true,
         status: true,
         createdAt: true,
+        merchantOrder: {
+          select: {
+            reference: true,
+            source: true,
+          },
+        },
       },
     });
 
     return parcels.map((p) => ({
-      ...p,
-      senderName: 'Central Warehouse',
-      senderAddress: 'SwiftDrop Hub, Colombo',
-      packageSize: 'MEDIUM',
-      weightKg: '1.00',
-      costLkr: '350.00',
+      id: p.id,
+      trackingNumber: p.trackingNumber,
+      senderName: p.senderName || 'Central Warehouse',
+      senderAddress: p.senderAddress || 'SwiftDrop Hub, Colombo',
+      recipientName: p.recipientName,
+      recipientAddress: p.recipientAddress,
+      recipientPhone: p.recipientPhone,
+      packageSize: p.packageSize ? String(p.packageSize) : 'MEDIUM',
+      weightKg: p.weightKg ? String(p.weightKg) : '1.00',
+      costLkr: p.costLkr ? String(p.costLkr) : '350.00',
+      status: p.status,
+      createdAt: p.createdAt,
+      orderReference: p.merchantOrder?.reference ?? null,
     }));
   }
 
@@ -746,6 +779,8 @@ export class AdminService {
           recipientName: true,
           recipientAddress: true,
           status: true,
+          failureReason: true,
+          deliveredAt: true,
           updatedAt: true,
           assignments: {
             where: { endedAt: null },
@@ -779,8 +814,10 @@ export class AdminService {
       recipientAddress: parcel.recipientAddress,
       courierName: parcel.assignments[0]?.courier.fullName ?? 'Unassigned',
       status: parcel.status,
-      failureReason: parcel.status === ParcelStatus.FAILED ? 'Failed attempt' : null,
-      completedAt: parcel.updatedAt,
+      failureReason:
+        parcel.failureReason ||
+        (parcel.status === ParcelStatus.FAILED ? 'Delivery attempt failed' : null),
+      completedAt: parcel.deliveredAt ?? parcel.updatedAt,
     }));
 
     return {

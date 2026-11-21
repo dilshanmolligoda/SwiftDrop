@@ -317,10 +317,32 @@
   padding: 32px;
 }
 
+.trackingCell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .trackingNo {
   font-weight: 600;
   color: #111827;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.orderRefBadge {
+  display: inline-block;
+  padding: 1px 6px;
+  background-color: #f1f5f9;
+  color: #475569;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.recipientSubtext {
+  font-size: 0.75rem;
+  color: #64748b;
 }
 
 .routeText {

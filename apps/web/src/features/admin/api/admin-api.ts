@@ -27,6 +27,7 @@ export interface AdminUnassignedParcel {
   costLkr: string | number
   status: string
   createdAt: string
+  orderReference?: string | null
 }
 
 export interface AssignCourierPayload {
@@ -120,6 +121,7 @@ export interface AdminDeliveryItem {
   failedDeliveryAttempts: number
   deliveredAt: string | null
   createdAt: string
+  orderReference?: string | null
   activeAssignment: {
     id: string
     assignedAt: string

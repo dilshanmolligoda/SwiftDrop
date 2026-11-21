@@ -382,7 +382,13 @@ export const AdminDashboardPage: React.FC = () => {
                 parcels.map((parcel) => (
                   <tr key={parcel.id}>
                     <td>
-                      <span className={styles.trackingNo}>{parcel.trackingNumber}</span>
+                      <div className={styles.trackingCell}>
+                        <span className={styles.trackingNo}>{parcel.trackingNumber}</span>
+                        {parcel.orderReference && (
+                          <span className={styles.orderRefBadge}>Ref: {parcel.orderReference}</span>
+                        )}
+                        <span className={styles.recipientSubtext}>{parcel.recipientName}</span>
+                      </div>
                     </td>
                     <td>
                       <span className={styles.routeText}>

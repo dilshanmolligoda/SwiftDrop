@@ -283,6 +283,24 @@
   color: #64748b;
 }
 
+.orderRefBadge {
+  display: inline-block;
+  padding: 1px 6px;
+  background-color: #f1f5f9;
+  color: #475569;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.failureReasonText {
+  display: block;
+  font-size: 0.725rem;
+  color: #dc2626;
+  margin-top: 2px;
+}
+
 .routeText {
   font-size: 0.85rem;
   color: #334155;

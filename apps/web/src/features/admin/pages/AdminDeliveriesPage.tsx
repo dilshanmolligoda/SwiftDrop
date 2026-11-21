@@ -374,6 +374,9 @@ export const AdminDeliveriesPage: React.FC = () => {
                       <td>
                         <div className={styles.trackingCell}>
                           <span className={styles.trackingNo}>{item.trackingNumber}</span>
+                          {item.orderReference && (
+                            <span className={styles.orderRefBadge}>Ref: {item.orderReference}</span>
+                          )}
                           <span className={styles.recipientText}>{item.recipientName}</span>
                         </div>
                       </td>
@@ -389,7 +392,12 @@ export const AdminDeliveriesPage: React.FC = () => {
                           {item.weightKg} kg • {item.packageSize}
                         </span>
                       </td>
-                      <td>{renderStatusBadge(displayStatus)}</td>
+                      <td>
+                        {renderStatusBadge(displayStatus)}
+                        {item.failureReason && displayStatus === 'Failed attempt' && (
+                          <span className={styles.failureReasonText}>{item.failureReason}</span>
+                        )}
+                      </td>
                       <td>
                         {courier ? (
                           <span className={styles.courierText}>{courier.fullName}</span>
