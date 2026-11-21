@@ -1,4 +1,8 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service.js';
 import { UsersRepository } from './repositories/users.repository.js';
@@ -23,6 +27,7 @@ describe('UsersService', () => {
     createMerchant: jest.Mock;
     createCourier: jest.Mock;
     updatePassword: jest.Mock;
+    updateProfile: jest.Mock;
   };
   let passwordService: {
     verify: jest.Mock;
@@ -30,6 +35,7 @@ describe('UsersService', () => {
   };
   let emailService: {
     sendPasswordChangedSettingsEmail: jest.Mock;
+    sendProfileUpdatedEmail: jest.Mock;
   };
   let prismaService: {
     notification: { create: jest.Mock };
@@ -66,6 +72,7 @@ describe('UsersService', () => {
       createMerchant: jest.fn(),
       createCourier: jest.fn(),
       updatePassword: jest.fn(),
+      updateProfile: jest.fn(),
     };
     passwordService = {
       verify: jest.fn(),
@@ -73,6 +80,7 @@ describe('UsersService', () => {
     };
     emailService = {
       sendPasswordChangedSettingsEmail: jest.fn().mockResolvedValue(undefined),
+      sendProfileUpdatedEmail: jest.fn().mockResolvedValue(undefined),
     };
     prismaService = {
       notification: {
@@ -322,6 +330,106 @@ describe('UsersService', () => {
           newPassword: 'NewValidPassword123!',
         }),
       ).rejects.toThrow(new NotFoundException('User not found'));
+    });
+  });
+
+  describe('updateProfile (Scenario 06)', () => {
+    it('dispatches emails to both old and new addresses and records in-app notification when email is changed', async () => {
+      repository.findById.mockResolvedValue(mockUser);
+      repository.findByEmail.mockResolvedValue(null);
+      repository.updateProfile.mockResolvedValue({
+        ...mockUser,
+        email: 'newemail@example.com',
+      });
+
+      const result = await service.updateProfile(mockUser.id, {
+        email: 'newemail@example.com',
+      });
+
+      expect(result.message).toBe('Profile updated successfully');
+      expect(result.user.email).toBe('newemail@example.com');
+      expect(repository.updateProfile).toHaveBeenCalledWith(mockUser.id, {
+        email: 'newemail@example.com',
+      });
+
+      // Email sent to both old and new addresses
+      expect(emailService.sendProfileUpdatedEmail).toHaveBeenCalledWith(
+        'user@example.com',
+        expect.objectContaining({ emailChanged: true, newEmail: 'newemail@example.com' }),
+        'Jane Doe',
+      );
+      expect(emailService.sendProfileUpdatedEmail).toHaveBeenCalledWith(
+        'newemail@example.com',
+        expect.objectContaining({ emailChanged: true, newEmail: 'newemail@example.com' }),
+        'Jane Doe',
+      );
+
+      // In-app notification recorded
+      expect(prismaService.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            recipientUserId: mockUser.id,
+            channel: NotificationChannel.IN_APP,
+            template: 'profile_updated',
+            title: 'Profile updated',
+            description: 'Your contact details were successfully updated.',
+            status: NotificationStatus.SENT,
+          }),
+        }),
+      );
+    });
+
+    it('dispatches notification email and records in-app notification when phone number is changed', async () => {
+      repository.findById.mockResolvedValue(mockUser);
+      repository.updateProfile.mockResolvedValue({
+        ...mockUser,
+        phoneNumber: '+94779876543',
+      });
+
+      const result = await service.updateProfile(mockUser.id, {
+        phoneNumber: '+94779876543',
+      });
+
+      expect(result.message).toBe('Profile updated successfully');
+      expect(result.user.phoneNumber).toBe('+94779876543');
+      expect(emailService.sendProfileUpdatedEmail).toHaveBeenCalledWith(
+        'user@example.com',
+        expect.objectContaining({ phoneChanged: true, newPhone: '+94779876543' }),
+        'Jane Doe',
+      );
+      expect(prismaService.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            recipientUserId: mockUser.id,
+            channel: NotificationChannel.IN_APP,
+            title: 'Profile updated',
+          }),
+        }),
+      );
+    });
+
+    it('throws ConflictException if new email is already used by another account', async () => {
+      repository.findById.mockResolvedValue(mockUser);
+      repository.findByEmail.mockResolvedValue({
+        ...mockUser,
+        id: 'other-user-uuid',
+        email: 'existing@example.com',
+      });
+
+      await expect(
+        service.updateProfile(mockUser.id, { email: 'existing@example.com' }),
+      ).rejects.toThrow(ConflictException);
+
+      expect(repository.updateProfile).not.toHaveBeenCalled();
+      expect(emailService.sendProfileUpdatedEmail).not.toHaveBeenCalled();
+    });
+
+    it('throws NotFoundException if user does not exist', async () => {
+      repository.findById.mockResolvedValue(null);
+
+      await expect(
+        service.updateProfile('missing-user', { fullName: 'New Name' }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });

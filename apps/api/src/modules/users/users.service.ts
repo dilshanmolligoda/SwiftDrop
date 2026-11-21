@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   Logger,
   NotFoundException,
@@ -16,6 +17,7 @@ import { PasswordService } from '../auth/password.service.js';
 import { EmailService } from '../email/email.service.js';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
+import { UpdateProfileDto } from './dto/update-profile.dto.js';
 import {
   NotificationChannel,
   NotificationStatus,
@@ -180,5 +182,113 @@ export class UsersService {
     }
 
     return { message: 'Your password was successfully updated' };
+  }
+
+  async updateProfile(
+    userId: string,
+    dto: UpdateProfileDto,
+  ): Promise<{ message: string; user: Omit<User, 'passwordHash'> }> {
+    const currentUser = await this.usersRepository.findById(userId);
+    if (!currentUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    const emailChanged =
+      Boolean(dto.email) &&
+      dto.email!.trim().toLowerCase() !== currentUser.email.toLowerCase();
+    const phoneChanged =
+      Boolean(dto.phoneNumber) &&
+      dto.phoneNumber!.trim() !== (currentUser.phoneNumber ?? '');
+    const fullNameChanged =
+      Boolean(dto.fullName) &&
+      dto.fullName!.trim() !== currentUser.fullName;
+
+    if (emailChanged) {
+      const existing = await this.usersRepository.findByEmail(dto.email!);
+      if (existing && existing.id !== userId) {
+        throw new ConflictException(
+          'Email address is already in use by another account',
+        );
+      }
+    }
+
+    const updatedUser = await this.usersRepository.updateProfile(userId, {
+      fullName: dto.fullName,
+      email: dto.email,
+      phoneNumber: dto.phoneNumber,
+    });
+
+    if (emailChanged || phoneChanged || fullNameChanged) {
+      const changes = {
+        emailChanged,
+        newEmail: dto.email ? dto.email.trim().toLowerCase() : undefined,
+        phoneChanged,
+        newPhone: dto.phoneNumber ? dto.phoneNumber.trim() : undefined,
+        fullNameChanged,
+        newFullName: dto.fullName ? dto.fullName.trim() : undefined,
+      };
+
+      if (this.emailService) {
+        try {
+          await this.emailService.sendProfileUpdatedEmail(
+            currentUser.email,
+            changes,
+            updatedUser.fullName,
+          );
+
+          if (emailChanged && dto.email) {
+            await this.emailService.sendProfileUpdatedEmail(
+              dto.email.trim().toLowerCase(),
+              changes,
+              updatedUser.fullName,
+            );
+          }
+        } catch (emailErr) {
+          this.logger.error(
+            `Failed to send profile update email for user ${userId}: ${(emailErr as Error).message}`,
+          );
+        }
+      }
+
+      if (this.prisma) {
+        try {
+          await this.prisma.notification.create({
+            data: {
+              eventId: randomUUID(),
+              channel: NotificationChannel.IN_APP,
+              recipientUserId: userId,
+              template: 'profile_updated',
+              title: 'Profile updated',
+              description: 'Your contact details were successfully updated.',
+              status: NotificationStatus.SENT,
+              sentAt: new Date(),
+            },
+          });
+
+          await this.prisma.notification.create({
+            data: {
+              eventId: randomUUID(),
+              channel: NotificationChannel.EMAIL,
+              recipientUserId: userId,
+              template: 'profile_updated',
+              title: 'Profile updated',
+              description: 'Your contact details were successfully updated.',
+              status: NotificationStatus.SENT,
+              sentAt: new Date(),
+            },
+          });
+        } catch (notifErr) {
+          this.logger.error(
+            `Failed to record notification for profile update of user ${userId}: ${(notifErr as Error).message}`,
+          );
+        }
+      }
+    }
+
+    const { passwordHash: _, ...safeUser } = updatedUser;
+    return {
+      message: 'Profile updated successfully',
+      user: safeUser,
+    };
   }
 }

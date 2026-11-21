@@ -187,6 +187,44 @@ export class EmailService {
     });
   }
 
+  async sendProfileUpdatedEmail(
+    to: string,
+    changes: {
+      emailChanged?: boolean;
+      newEmail?: string;
+      phoneChanged?: boolean;
+      newPhone?: string;
+      fullNameChanged?: boolean;
+      newFullName?: string;
+    },
+    fullName?: string,
+  ): Promise<void> {
+    const timeFormatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Colombo',
+      dateStyle: 'full',
+      timeStyle: 'medium',
+    });
+    const formattedTimestamp = `${timeFormatter.format(new Date())} (Asia/Colombo)`;
+    const resetUrl = `${this.webAppUrl.replace(/\/+$/, '')}/forgot-password`;
+    const subject = 'SwiftDrop: Profile contact details updated';
+    const html = this.renderProfileUpdatedHtml(fullName, changes, formattedTimestamp, resetUrl);
+
+    const greeting = fullName ? `Hello ${fullName},` : 'Hello,';
+    const updatedFieldsList: string[] = [];
+    if (changes.emailChanged && changes.newEmail) updatedFieldsList.push(`Email address updated to: ${changes.newEmail}`);
+    if (changes.phoneChanged && changes.newPhone) updatedFieldsList.push(`Phone number updated to: ${changes.newPhone}`);
+    if (changes.fullNameChanged && changes.newFullName) updatedFieldsList.push(`Full name updated to: ${changes.newFullName}`);
+
+    const text = `${greeting}\n\nYour SwiftDrop profile contact details were updated on ${formattedTimestamp}.\n\nChanges:\n${updatedFieldsList.map((f) => `- ${f}`).join('\n')}\n\nSecurity Notice:\nIf you did not authorize this change, please reset your password immediately or contact customer support.\n\nBest regards,\nThe SwiftDrop Security Team`;
+
+    await this.sendMail({
+      to,
+      subject,
+      html,
+      text,
+    });
+  }
+
   private renderCustomerWelcomeHtml(
     fullName: string,
     loginUrl: string,
@@ -1005,6 +1043,100 @@ export class EmailService {
             <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 24px 32px; text-align: center; font-size: 12px; color: #64748b; line-height: 1.5;">
               SwiftDrop - Fast &amp; Reliable Parcel Delivery<br>
               Automated Account Notification
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+  }
+
+  private renderProfileUpdatedHtml(
+    fullName: string | undefined,
+    changes: {
+      emailChanged?: boolean;
+      newEmail?: string;
+      phoneChanged?: boolean;
+      newPhone?: string;
+      fullNameChanged?: boolean;
+      newFullName?: string;
+    },
+    timestamp: string,
+    resetUrl: string,
+  ): string {
+    const greeting = fullName ? `Hello ${fullName},` : 'Hello,';
+    const updatedItemsHtml: string[] = [];
+    if (changes.emailChanged && changes.newEmail) {
+      updatedItemsHtml.push(`<div style="margin-bottom: 8px;"><strong>Email:</strong> ${changes.newEmail}</div>`);
+    }
+    if (changes.phoneChanged && changes.newPhone) {
+      updatedItemsHtml.push(`<div style="margin-bottom: 8px;"><strong>Phone Number:</strong> ${changes.newPhone}</div>`);
+    }
+    if (changes.fullNameChanged && changes.newFullName) {
+      updatedItemsHtml.push(`<div style="margin-bottom: 8px;"><strong>Full Name:</strong> ${changes.newFullName}</div>`);
+    }
+
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile Contact Details Updated</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; color: #1e293b; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f1f5f9; padding: 40px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); padding: 36px 32px; text-align: center;">
+              <h1 style="color: #ffffff; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin: 0;">SwiftDrop</h1>
+              <div style="color: #93c5fd; font-size: 14px; font-weight: 500; margin-top: 6px;">Smart Courier &amp; Logistics Management</div>
+            </td>
+          </tr>
+          <!-- Body Content -->
+          <tr>
+            <td style="padding: 40px 36px;">
+              <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 16px;">Profile Details Updated</h2>
+              <p style="font-size: 15px; line-height: 1.6; color: #475569; margin-bottom: 16px;">${greeting}</p>
+              <p style="font-size: 15px; line-height: 1.6; color: #475569; margin-bottom: 24px;">
+                Your SwiftDrop profile contact details were updated on ${timestamp}.
+              </p>
+              
+              <!-- Updated Fields Box -->
+              <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #2563eb; border-radius: 8px; padding: 18px 20px; margin-bottom: 24px; font-size: 14px; color: #334155;">
+                <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 10px;">Updated Information</div>
+                ${updatedItemsHtml.join('')}
+              </div>
+
+              <!-- Security Notice -->
+              <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 18px 20px; margin-bottom: 28px;">
+                <div style="font-size: 14px; font-weight: 700; color: #991b1b; margin-bottom: 6px;">Did you not authorize this change?</div>
+                <div style="font-size: 13px; color: #b91c1c; line-height: 1.5;">
+                  If you did not make this change, please reset your password immediately or contact our support team to secure your account.
+                </div>
+              </div>
+
+              <!-- Call to Action -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 24px 0 16px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${resetUrl}" target="_blank" style="background-color: #dc2626; color: #ffffff !important; display: inline-block; font-size: 15px; font-weight: 600; padding: 14px 32px; text-decoration: none; border-radius: 8px;">
+                      Reset Password
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 24px 32px; text-align: center; font-size: 12px; color: #64748b; line-height: 1.5;">
+              SwiftDrop - Fast &amp; Reliable Parcel Delivery<br>
+              Automated Security Notification
             </td>
           </tr>
         </table>

@@ -8,11 +8,13 @@ describe('UsersController', () => {
   let controller: UsersController;
   let usersService: {
     changePassword: jest.Mock;
+    updateProfile: jest.Mock;
   };
 
   beforeEach(async () => {
     usersService = {
       changePassword: jest.fn(),
+      updateProfile: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -51,6 +53,28 @@ describe('UsersController', () => {
       dto,
       'Chrome-Test-Agent',
     );
+    expect(result).toEqual(expectedResult);
+  });
+
+  it('delegates updateProfile to UsersService with user id and dto', async () => {
+    const user = {
+      id: 'user-id-123',
+      email: 'user@example.com',
+      role: Role.CUSTOMER,
+    };
+    const dto = {
+      fullName: 'Updated Name',
+      phoneNumber: '+94779998877',
+    };
+    const expectedResult = {
+      message: 'Profile updated successfully',
+      user: { id: 'user-id-123', email: 'user@example.com', fullName: 'Updated Name', phoneNumber: '+94779998877' } as any,
+    };
+    usersService.updateProfile.mockResolvedValue(expectedResult);
+
+    const result = await controller.updateProfile(user, dto);
+
+    expect(usersService.updateProfile).toHaveBeenCalledWith('user-id-123', dto);
     expect(result).toEqual(expectedResult);
   });
 });

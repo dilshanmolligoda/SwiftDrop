@@ -9,6 +9,7 @@ import {
 import type { Request } from 'express';
 import { UsersService } from './users.service.js';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
+import { UpdateProfileDto } from './dto/update-profile.dto.js';
 import {
   CurrentUser,
   type AuthenticatedUser,
@@ -18,6 +19,16 @@ import { AllowUnapproved } from '../auth/decorators/allow-unapproved.decorator.j
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  @AllowUnapproved()
+  @Patch('me')
+  @HttpCode(HttpStatus.OK)
+  async updateProfile(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: UpdateProfileDto,
+  ) {
+    return this.usersService.updateProfile(user.id, dto);
+  }
 
   @AllowUnapproved()
   @Patch('me/password')
