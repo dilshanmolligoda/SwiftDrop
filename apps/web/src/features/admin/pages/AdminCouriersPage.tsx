@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import type { CourierDetailItem } from '../types/admin-couriers.types'
 import { CourierDetailsDrawer } from '../components/CourierDetailsDrawer'
+import { AdminFilterSelect } from '../components/AdminFilterSelect'
 import { adminApi, type AdminCourierItem, type AdminDashboardKpis } from '../api/admin-api'
 import styles from './AdminCouriersPage.module.css'
 
@@ -220,30 +221,30 @@ export const AdminCouriersPage: React.FC = () => {
           </div>
 
           <div className={styles.dropdownGroup}>
-            <select
-              className={styles.filterSelect}
+            <AdminFilterSelect
               value={availabilityFilter}
-              onChange={(e) =>
-                setAvailabilityFilter(e.target.value as 'all' | 'available' | 'unavailable')
+              onChange={(val) =>
+                setAvailabilityFilter(val as 'all' | 'available' | 'unavailable')
               }
-              aria-label="Filter availability"
-            >
-              <option value="all">All availability</option>
-              <option value="available">Available</option>
-              <option value="unavailable">Unavailable</option>
-            </select>
+              ariaLabel="Filter availability"
+              options={[
+                { value: 'all', label: 'All availability' },
+                { value: 'available', label: 'Available' },
+                { value: 'unavailable', label: 'Unavailable' },
+              ]}
+            />
 
-            <select
-              className={styles.filterSelect}
+            <AdminFilterSelect
               value={vehicleFilter}
-              onChange={(e) => setVehicleFilter(e.target.value)}
-              aria-label="Filter vehicles"
-            >
-              <option value="all">All vehicles</option>
-              <option value="Motorbike">Motorbike</option>
-              <option value="Three-wheeler">Three-wheeler</option>
-              <option value="Van">Van</option>
-            </select>
+              onChange={setVehicleFilter}
+              ariaLabel="Filter vehicles"
+              options={[
+                { value: 'all', label: 'All vehicles' },
+                { value: 'Motorbike', label: 'Motorbike' },
+                { value: 'Three-wheeler', label: 'Three-wheeler' },
+                { value: 'Van', label: 'Van' },
+              ]}
+            />
           </div>
         </div>
 

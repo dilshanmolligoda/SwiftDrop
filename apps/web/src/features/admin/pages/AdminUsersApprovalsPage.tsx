@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import type { ApplicationItem, ApplicationType } from '../types/admin-users.types'
 import { adminApi, type AdminApplicationItem, type AdminDashboardKpis } from '../api/admin-api'
+import { AdminFilterSelect } from '../components/AdminFilterSelect'
 import styles from './AdminUsersApprovalsPage.module.css'
 
 type TabOption = 'pending' | 'customers' | 'merchants' | 'couriers'
@@ -255,16 +256,16 @@ export const AdminUsersApprovalsPage: React.FC = () => {
           </div>
 
           <div className={styles.dropdownGroup}>
-            <select
-              className={styles.filterSelect}
+            <AdminFilterSelect
               value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value as 'all' | ApplicationType)}
-              aria-label="Filter application type"
-            >
-              <option value="all">All application types</option>
-              <option value="Merchant">Merchant</option>
-              <option value="Courier">Courier</option>
-            </select>
+              onChange={(val) => setTypeFilter(val as 'all' | ApplicationType)}
+              ariaLabel="Filter application type"
+              options={[
+                { value: 'all', label: 'All application types' },
+                { value: 'Merchant', label: 'Merchant' },
+                { value: 'Courier', label: 'Courier' },
+              ]}
+            />
           </div>
         </div>
 

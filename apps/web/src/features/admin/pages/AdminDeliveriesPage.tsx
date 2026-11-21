@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import type { DeliveryItem, DeliveryStatus } from '../types/admin-deliveries.types'
 import { AssignCourierDrawer } from '../components/AssignCourierDrawer'
+import { AdminFilterSelect } from '../components/AdminFilterSelect'
 import { adminApi, type AdminDeliveryItem, type AdminDashboardKpis } from '../api/admin-api'
 import styles from './AdminDeliveriesPage.module.css'
 
@@ -318,19 +319,19 @@ export const AdminDeliveriesPage: React.FC = () => {
           </div>
 
           <div className={styles.dropdownGroup}>
-            <select
-              className={styles.filterSelect}
+            <AdminFilterSelect
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              aria-label="Filter by status"
-            >
-              <option value="all">All statuses</option>
-              <option value="Failed attempt">Failed attempt</option>
-              <option value="New delivery">New delivery</option>
-              <option value="Out for delivery">Out for delivery</option>
-              <option value="In transit">In transit</option>
-              <option value="Delivered">Delivered</option>
-            </select>
+              onChange={setStatusFilter}
+              ariaLabel="Filter by status"
+              options={[
+                { value: 'all', label: 'All statuses' },
+                { value: 'Failed attempt', label: 'Failed attempt' },
+                { value: 'New delivery', label: 'New delivery' },
+                { value: 'Out for delivery', label: 'Out for delivery' },
+                { value: 'In transit', label: 'In transit' },
+                { value: 'Delivered', label: 'Delivered' },
+              ]}
+            />
           </div>
         </div>
 

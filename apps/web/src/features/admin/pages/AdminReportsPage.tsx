@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import type { DeliveryOutcome } from '../types/admin-reports.types'
 import { adminApi, type AdminReportsLogItem } from '../api/admin-api'
+import { AdminFilterSelect } from '../components/AdminFilterSelect'
 import styles from './AdminReportsPage.module.css'
 
 type ReportTab = 'log' | 'summary' | 'reasons'
@@ -267,19 +268,19 @@ export const AdminReportsPage: React.FC = () => {
           </div>
 
           <div className={styles.rightFilters}>
-            <select
-              className={styles.filterSelect}
+            <AdminFilterSelect
               value={outcomeFilter}
-              onChange={(e) => {
-                setOutcomeFilter(e.target.value as 'all' | DeliveryOutcome)
+              onChange={(val) => {
+                setOutcomeFilter(val as 'all' | DeliveryOutcome)
                 setPage(1)
               }}
-              aria-label="Filter outcome"
-            >
-              <option value="all">All outcomes</option>
-              <option value="Delivered">Delivered</option>
-              <option value="Failed">Failed</option>
-            </select>
+              ariaLabel="Filter outcome"
+              options={[
+                { value: 'all', label: 'All outcomes' },
+                { value: 'Delivered', label: 'Delivered' },
+                { value: 'Failed', label: 'Failed' },
+              ]}
+            />
           </div>
         </div>
 
