@@ -42,6 +42,27 @@ export class NotificationConsumer implements ParcelEventConsumer {
       event.eventType === 'parcel.status.changed' &&
       !notifications.notifyStatuses.has(statusAfter(event))
     ) {
+      if (event.newStatus === 'IN_TRANSIT') {
+        const recipient = await this.repository.findRecipient(event.parcelId);
+        if (recipient) {
+          if (
+            !(await this.repository.alreadyHandled(
+              event.eventId,
+              'IN_APP',
+              recipient.userId,
+            ))
+          ) {
+            await this.repository.record({
+              eventId: event.eventId,
+              channel: 'IN_APP',
+              recipientUserId: recipient.userId,
+              template: 'parcel_in_transit',
+              status: 'SENT',
+              errorMessage: null,
+            });
+          }
+        }
+      }
       return;
     }
 

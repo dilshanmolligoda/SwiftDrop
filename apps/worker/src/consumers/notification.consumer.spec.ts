@@ -249,4 +249,27 @@ describe('NotificationConsumer', () => {
       errorMessage: null,
     });
   });
+
+  it('records an IN_APP notification for customer when status is IN_TRANSIT', async () => {
+    const { consumer, repository, channels } = setup();
+    const inTransitEvent: ParcelStatusChangedV1 = {
+      ...EVENT,
+      previousStatus: 'PICKED_UP',
+      newStatus: 'IN_TRANSIT',
+    };
+
+    await consumer.handle(inTransitEvent);
+
+    // No email is sent for in-transit
+    expect(channels[0].send).not.toHaveBeenCalled();
+    // In-app notification is recorded
+    expect(repository.record).toHaveBeenCalledWith({
+      eventId: inTransitEvent.eventId,
+      channel: 'IN_APP',
+      recipientUserId: CUSTOMER.userId,
+      template: 'parcel_in_transit',
+      status: 'SENT',
+      errorMessage: null,
+    });
+  });
 });

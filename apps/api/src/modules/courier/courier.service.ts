@@ -469,6 +469,24 @@ export class CourierService {
           },
         });
       }
+
+      if (
+        dto.status === ParcelStatus.IN_TRANSIT &&
+        assignment.parcel.customerId
+      ) {
+        await (tx as any).notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.IN_APP,
+            recipientUserId: assignment.parcel.customerId,
+            template: 'parcel_in_transit',
+            title: 'Parcel in transit',
+            description: `Parcel ${assignment.parcel.trackingNumber ?? ''} is in transit between delivery hubs.`.trim(),
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+      }
     }
 
     return { parcelId, status: dto.status, event, duplicate: false };
