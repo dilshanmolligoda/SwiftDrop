@@ -42,6 +42,7 @@ export function validateEnv(config: Record<string, unknown>) {
   }
 
   validateMessagingEnv(config);
+  validateWebhookEnv(config);
 
   return config;
 }
@@ -88,5 +89,39 @@ function validateMessagingEnv(config: Record<string, unknown>) {
   const relay = config.OUTBOX_RELAY_ENABLED;
   if (relay !== undefined && relay !== 'true' && relay !== 'false') {
     throw new Error('OUTBOX_RELAY_ENABLED must be "true" or "false".');
+  }
+}
+
+/**
+ * Merchant webhook settings, shared with apps/worker. In production a missing
+ * key would make every webhook set-up fail, so the API refuses to start.
+ */
+function validateWebhookEnv(config: Record<string, unknown>) {
+  const production = config.NODE_ENV === 'production';
+  const allowPrivate = config.WEBHOOK_ALLOW_PRIVATE_TARGETS;
+
+  if (
+    allowPrivate !== undefined &&
+    allowPrivate !== 'true' &&
+    allowPrivate !== 'false'
+  ) {
+    throw new Error('WEBHOOK_ALLOW_PRIVATE_TARGETS must be "true" or "false".');
+  }
+  if (production && allowPrivate === 'true') {
+    throw new Error(
+      'WEBHOOK_ALLOW_PRIVATE_TARGETS=true is not allowed in production; ' +
+        'list specific hosts in WEBHOOK_PRIVATE_HOST_ALLOWLIST instead.',
+    );
+  }
+  if (production) {
+    const key =
+      typeof config.WEBHOOK_SECRET_ENCRYPTION_KEY === 'string'
+        ? config.WEBHOOK_SECRET_ENCRYPTION_KEY.trim()
+        : '';
+    if (Buffer.from(key, 'base64').length !== 32) {
+      throw new Error(
+        'WEBHOOK_SECRET_ENCRYPTION_KEY must be 32 bytes, base64-encoded, in production.',
+      );
+    }
   }
 }

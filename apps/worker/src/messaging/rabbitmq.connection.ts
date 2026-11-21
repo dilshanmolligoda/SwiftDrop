@@ -5,7 +5,11 @@ import {
   type ChannelWrapper,
 } from 'amqp-connection-manager';
 import type { ConfirmChannel } from 'amqplib';
-import { applyTopology, parcelEventsTopology } from '@swiftdrop/contracts';
+import {
+  applyTopology,
+  parcelEventsTopology,
+  type QueueDeclaration,
+} from '@swiftdrop/contracts';
 import { WORKER_CONFIG, type WorkerConfig } from '../config/worker.config.js';
 
 /**
@@ -20,8 +24,19 @@ export class RabbitMqConnection implements OnModuleDestroy {
 
   constructor(@Inject(WORKER_CONFIG) private readonly config: WorkerConfig) {}
 
-  createChannel(name: string): ChannelWrapper {
-    const topology = parcelEventsTopology(this.config.exchange);
+  /**
+   * @param extraQueues declared after the shared topology, before the channel
+   *   is used — on every (re)connect.
+   */
+  createChannel(
+    name: string,
+    extraQueues: readonly QueueDeclaration[] = [],
+  ): ChannelWrapper {
+    const shared = parcelEventsTopology(this.config.exchange);
+    const topology = {
+      exchanges: shared.exchanges,
+      queues: [...shared.queues, ...extraQueues],
+    };
     return this.connect().createChannel({
       name,
       confirm: true,

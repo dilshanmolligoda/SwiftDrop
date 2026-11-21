@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
+import { LiveIndicator } from '../../../lib/realtime/LiveIndicator'
+import { useParcelRealtime } from '../../../lib/realtime/useParcelRealtime'
 import { STATUS_DETAILS } from '../tracking/customerTrackingApi'
 import {
   getPublicTracking, normalizePublicTrackingNumber, PublicTrackingError,
@@ -60,6 +62,23 @@ export const PublicTrackingPage = () => {
       if (!controller.signal.aborted) setLoading(false)
     }
   }
+
+  // Live updates: when the shown parcel changes, re-read it in the background.
+  // A failed background read (e.g. rate limit) keeps the current result.
+  const refreshQuietly = useCallback(() => {
+    const number = lastNumber.current
+    if (!number) return
+    const controller = new AbortController()
+    activeRequest.current?.abort()
+    activeRequest.current = controller
+    getPublicTracking(number, controller.signal)
+      .then(parcel => { if (!controller.signal.aborted) setResult(parcel) })
+      .catch(() => undefined)
+  }, [])
+  const { state: liveState } = useParcelRealtime({
+    subscription: result ? { scope: 'public', trackingNumber: result.trackingNumber } : null,
+    onChange: refreshQuietly,
+  })
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault()
@@ -150,6 +169,7 @@ export const PublicTrackingPage = () => {
               <div className="tracking-card__result-heading">
                 <h2 id="public-tracking-result-title" className="tracking-card__number">{result.trackingNumber}</h2>
                 <span className={`tracking-card__badge tracking-card__badge--${STATUS_DETAILS[result.status].tone}`}>{STATUS_DETAILS[result.status].label}</span>
+                <LiveIndicator state={liveState} />
               </div>
               {result.updatedAt && <p className="tracking-card__updated">Last updated: <time dateTime={result.updatedAt}>{formatTimestamp(result.updatedAt)} (Sri Lanka time)</time></p>}
               <h3 className="tracking-card__events-title">Recorded events</h3>

@@ -179,6 +179,8 @@ export function useCustomerRequest<T>(
   enabled = true,
 ) {
   const [attempt, setAttempt] = useState(0)
+  // true while a refresh() runs: the previous data stays on screen meanwhile.
+  const [refreshing, setRefreshing] = useState(false)
   const [completed, setCompleted] = useState<{
     load: typeof load; attempt: number; data: T | null; error: string
   } | null>(null)
@@ -200,10 +202,19 @@ export function useCustomerRequest<T>(
   }, [load, onAccessError, enabled, attempt])
 
   const current = enabled && completed?.load === load && completed.attempt === attempt ? completed : null
+  const previous = enabled && refreshing && !current && completed?.load === load ? completed : null
   return {
-    data: current?.data ?? null,
+    data: current?.data ?? previous?.data ?? null,
     error: current?.error ?? '',
-    loading: enabled && !current,
-    retry: () => setAttempt(value => value + 1),
+    loading: enabled && !current && !previous,
+    retry: () => {
+      setRefreshing(false)
+      setAttempt(value => value + 1)
+    },
+    /** Re-reads in the background (e.g. after a live update) without a loading state. */
+    refresh: () => {
+      setRefreshing(true)
+      setAttempt(value => value + 1)
+    },
   }
 }

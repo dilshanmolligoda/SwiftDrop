@@ -4,7 +4,11 @@ import type {
   ParcelCreatedV1,
   ParcelStatusChangedV1,
 } from './events/parcel-events.js';
-import { realtimeQueue, webhookRetryQueue } from './messaging/topology.js';
+import {
+  realtimeQueue,
+  webhookRetryQueue,
+  webhookRetryQueueDeclaration,
+} from './messaging/topology.js';
 import {
   isNewerUpdate,
   toPublicRealtimeParcelUpdate,
@@ -99,7 +103,13 @@ describe('real-time projections', () => {
 
 describe('queue names', () => {
   it('builds retry and realtime queue names', () => {
-    assert.equal(webhookRetryQueue(2), 'webhooks.retry.2');
+    assert.equal(webhookRetryQueue(30000), 'webhooks.retry.30000ms');
+    const declaration = webhookRetryQueueDeclaration(30000);
+    assert.equal(declaration.options.arguments['x-message-ttl'], 30000);
+    assert.equal(
+      declaration.options.arguments['x-dead-letter-routing-key'],
+      'webhooks.parcel-status',
+    );
     assert.equal(realtimeQueue('api-1'), 'realtime.api-1');
   });
 
@@ -112,7 +122,8 @@ describe('queue names', () => {
 
 describe('parcelEventsTopology', () => {
   it('binds both work queues to the exchange and dead-letters to their DLQ', async () => {
-    const { parcelEventsTopology, Queue } = await import('./messaging/topology.js');
+    const { parcelEventsTopology, Queue } =
+      await import('./messaging/topology.js');
     const topology = parcelEventsTopology('custom.events');
     assert.deepEqual(
       topology.exchanges.map((e) => e.name),
@@ -137,9 +148,8 @@ describe('parcelEventsTopology', () => {
 
 describe('applyTopology', () => {
   it('declares exchanges before queues and binds each queue', async () => {
-    const { applyTopology, parcelEventsTopology } = await import(
-      './messaging/topology.js'
-    );
+    const { applyTopology, parcelEventsTopology } =
+      await import('./messaging/topology.js');
     const calls: string[] = [];
     await applyTopology(
       {

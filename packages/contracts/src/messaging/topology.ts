@@ -9,7 +9,7 @@ import { ParcelEventType } from '../events/parcel-events.js';
  *                         ──parcel.#──► webhooks.parcel-status ──────► worker
  *                         ──parcel.#──► realtime.{instanceId} ───────► each api
  *
- *   webhooks.retry.N  — delay queue; on TTL expiry dead-letters back to webhooks.parcel-status
+ *   webhooks.retry.{delay}ms — delay queue; on TTL expiry dead-letters back to webhooks.parcel-status
  *   *.dead-letter     — messages that gave up, kept for inspection / manual replay
  *
  * Consumers acknowledge (and ignore) event types they don't handle.
@@ -33,12 +33,37 @@ export const Queue = {
 } as const;
 export type Queue = (typeof Queue)[keyof typeof Queue];
 
-/** Delay queue holding a webhook message before its next attempt. */
-export function webhookRetryQueue(failedAttempt: number): string {
-  if (!Number.isInteger(failedAttempt) || failedAttempt < 1) {
-    throw new Error('failedAttempt must be a positive integer');
+/**
+ * Delay queue that holds a webhook message for `delayMs`, then dead-letters it
+ * back to the webhooks queue for the next attempt.
+ *
+ * Named by delay, not attempt number: a queue's TTL can't change once it
+ * exists, so changing WEBHOOK_BACKOFF_BASE_MS simply uses new queues.
+ */
+export function webhookRetryQueue(delayMs: number): string {
+  if (!Number.isInteger(delayMs) || delayMs < 1) {
+    throw new Error('delayMs must be a positive integer');
   }
-  return `webhooks.retry.${failedAttempt}`;
+  return `webhooks.retry.${delayMs}ms`;
+}
+
+/** Declaration for the delay queue returned by webhookRetryQueue(delayMs). */
+export function webhookRetryQueueDeclaration(
+  delayMs: number,
+): QueueDeclaration {
+  return {
+    name: webhookRetryQueue(delayMs),
+    options: {
+      durable: true,
+      arguments: {
+        'x-queue-type': 'quorum',
+        'x-message-ttl': delayMs,
+        'x-dead-letter-exchange': '',
+        'x-dead-letter-routing-key': Queue.WEBHOOKS,
+      },
+    },
+    bindings: [],
+  };
 }
 
 /** Per-API-instance queue feeding that instance's WebSocket clients. */
@@ -51,7 +76,7 @@ export function realtimeQueue(instanceId: string): string {
 
 /** AMQP message headers SwiftDrop sets (in addition to messageId = eventId). */
 export const MessageHeader = {
-  /** 1-based attempt number of the next webhook delivery. */
+  /** 1-based number of the webhook delivery attempt this message is for. */
   ATTEMPT: 'x-swiftdrop-attempt',
   /** Why a message was dead-lettered, for people inspecting the DLQ. */
   DEAD_LETTER_REASON: 'x-swiftdrop-dead-letter-reason',

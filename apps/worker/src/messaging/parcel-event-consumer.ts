@@ -16,11 +16,18 @@ export interface DeliveryInfo {
  * `handle` must be idempotent: if the worker dies after the work but before
  * the event is marked processed, the same event arrives again.
  */
+/**
+ * `'deferred'`: the consumer has scheduled a later attempt itself (e.g. a
+ * webhook retry queue), so the event must NOT be marked processed yet —
+ * otherwise the scheduled attempt would be skipped as a duplicate.
+ */
+export type HandleResult = void | 'deferred';
+
 export interface ParcelEventConsumer {
   readonly queue: Queue;
   /** Stored in processed_events; must be unique per consumer. */
   readonly name: ConsumerName;
-  handle(event: ParcelEventV1, delivery: DeliveryInfo): Promise<void>;
+  handle(event: ParcelEventV1, delivery: DeliveryInfo): Promise<HandleResult>;
 }
 
 /**

@@ -239,7 +239,7 @@ export default function MerchantDashboard() {
     }
   }
 
-  const handleNavigation = (action: 'dashboard' | 'orders' | 'track' | 'pricing' | 'settings' | 'coming-soon', label: string) => {
+  const handleNavigation = (action: 'dashboard' | 'orders' | 'track' | 'pricing' | 'connections' | 'settings' | 'coming-soon', label: string) => {
     if (action === 'orders') {
       navigate('/merchant/orders')
       return
@@ -250,6 +250,10 @@ export default function MerchantDashboard() {
     }
     if (action === 'pricing') {
       navigate('/merchant/pricing')
+      return
+    }
+    if (action === 'connections') {
+      navigate('/merchant/connections')
       return
     }
     if (action === 'settings') {

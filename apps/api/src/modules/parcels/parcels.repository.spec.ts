@@ -1,17 +1,27 @@
 import { Prisma } from '../../generated/prisma/client.js';
+import type { OutboxWriter } from '../../infrastructure/outbox/outbox.writer.js';
 import type { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 import { ParcelsRepository } from './parcels.repository.js';
 
 describe('ParcelsRepository tracking read boundary (isolated Prisma)', () => {
   let findMany: jest.Mock;
   let create: jest.Mock;
+  let recordParcelCreated: jest.Mock;
   let repository: ParcelsRepository;
   beforeEach(() => {
     findMany = jest.fn().mockResolvedValue([]);
     create = jest.fn();
-    repository = new ParcelsRepository({
-      parcel: { findMany, create },
-    } as unknown as PrismaService);
+    recordParcelCreated = jest.fn().mockResolvedValue('event-id');
+    const prisma = { parcel: { findMany, create } };
+    repository = new ParcelsRepository(
+      {
+        ...prisma,
+        $transaction: jest.fn((fn: (tx: unknown) => Promise<unknown>) =>
+          fn(prisma),
+        ),
+      } as unknown as PrismaService,
+      { recordParcelCreated } as unknown as OutboxWriter,
+    );
   });
 
   it('reads tracking events only for the authenticated customer, without actor/proof/note fields', async () => {
@@ -91,5 +101,31 @@ describe('ParcelsRepository tracking read boundary (isolated Prisma)', () => {
         },
       },
     ]);
+  });
+
+  it('records a parcel.created event in the same transaction', async () => {
+    const row = {
+      id: 'parcel-1',
+      trackingNumber: 'SD-0123456789ABCDEFFEDCBA9876543210',
+      weightKg: new Prisma.Decimal(1),
+      costLkr: new Prisma.Decimal(350),
+    };
+    create.mockResolvedValue(row);
+    await repository.createParcel({
+      trackingNumber: row.trackingNumber,
+      customerId: 'owner',
+      senderName: 'Sender',
+      senderAddress: 'Pickup',
+      recipientName: 'Recipient',
+      recipientAddress: 'Destination',
+      recipientPhone: 'Phone',
+      packageSize: 'SMALL',
+      weightKg: 1,
+      costLkr: 350,
+    });
+    expect(recordParcelCreated).toHaveBeenCalledWith(
+      expect.objectContaining({ parcel: { findMany, create } }),
+      { parcel: row, status: 'PENDING' },
+    );
   });
 });

@@ -166,6 +166,12 @@
   margin: 10px 0 0;
 }
 
+.customer-tracking-live {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
 .customer-tracking-search-feedback {
   color: #0d5e36;
   overflow-wrap: anywhere;

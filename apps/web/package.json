@@ -4,17 +4,21 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "predev": "npm run build -w @swiftdrop/contracts",
     "dev": "vite",
+    "prebuild": "npm run build -w @swiftdrop/contracts",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "lint:check": "oxlint",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@swiftdrop/contracts": "*",
     "lucide-react": "^1.66.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "react-router-dom": "^7.18.5"
+    "react-router-dom": "^7.18.5",
+    "socket.io-client": "^4.8.4"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
