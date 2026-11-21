@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { CalendarDays, LayoutDashboard, LogOut, Menu, Package, X, type LucideIcon } from 'lucide-react'
 import { useSession } from '../../../app/auth/session'
+import { SwiftDropLogo } from '../../auth/components/SwiftDropLogo'
 import { formatToday, getInitials } from '../utils/format'
 import './CourierLayout.css'
 
@@ -20,16 +21,6 @@ function getPageTitle(pathname: string): string {
   if (/^\/courier\/deliveries\/[^/]+/.test(pathname)) return 'Delivery details'
   if (pathname.startsWith('/courier/deliveries')) return 'My deliveries'
   return 'Dashboard'
-}
-
-function CourierLogo() {
-  return (
-    <svg width="30" height="30" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-      <rect width="32" height="32" rx="9" fill="#1d4ed8" />
-      <path d="M16 6.5 24.5 11v10L16 25.5 7.5 21V11L16 6.5Z" stroke="#fff" strokeWidth="1.8" strokeLinejoin="round" />
-      <path d="M7.5 11 16 15.5 24.5 11M16 15.5v10" stroke="#fff" strokeWidth="1.8" strokeLinejoin="round" />
-    </svg>
-  )
 }
 
 /** Shell for every /courier page: sidebar navigation, top bar and page outlet. */
@@ -71,11 +62,8 @@ export function CourierLayout() {
       >
         <div className="cp-sidebar__header">
           <NavLink to="/courier/dashboard" className="cp-sidebar__brand" onClick={closeDrawer}>
-            <CourierLogo />
-            <span className="cp-sidebar__brand-text">
-              <span className="cp-sidebar__brand-name">SwiftDrop</span>
-              <span className="cp-sidebar__brand-tag">Courier portal</span>
-            </span>
+            <SwiftDropLogo size={26} />
+            <span className="cp-sidebar__brand-tag">Courier portal</span>
           </NavLink>
           <button
             type="button"

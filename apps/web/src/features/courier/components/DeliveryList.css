@@ -114,7 +114,7 @@
 
 .cp-table td {
   padding: 13px 16px;
-  border-bottom: 1px solid #eef2f6;
+  border-bottom: 1px solid #f3f4f6;
   color: var(--cp-text-secondary);
   vertical-align: middle;
 }
@@ -134,7 +134,7 @@
 }
 
 .cp-table tbody tr:hover td {
-  background: #f8fbff;
+  background: var(--cp-primary-soft);
 }
 
 .cp-table__tracking {
@@ -211,7 +211,7 @@
 .cp-delivery-card:hover,
 .cp-delivery-card:focus-visible {
   border-color: var(--cp-primary-border);
-  background: #f8fbff;
+  background: var(--cp-primary-soft);
 }
 
 .cp-delivery-card__top {

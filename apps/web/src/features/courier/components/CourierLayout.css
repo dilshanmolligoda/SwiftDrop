@@ -4,19 +4,23 @@
  * ============================================================= */
 
 .courier-shell {
-  --cp-primary: #1d4ed8;
-  --cp-primary-hover: #1e40af;
-  --cp-primary-soft: #eff6ff;
-  --cp-primary-border: #bfdbfe;
-  --cp-focus: #93c5fd;
-  --cp-bg: #f4f7fb;
+  /* SwiftDrop brand green, taken from the login page (LoginPage.css). */
+  --cp-primary: #0e5330;
+  --cp-primary-hover: #093c23;
+  --cp-primary-soft: #f0fdf4;
+  --cp-primary-soft-hover: #dcfce7;
+  --cp-primary-border: #bbf7d0;
+  --cp-primary-ink: #093c23;
+  --cp-focus: rgba(14, 83, 48, 0.45);
+  --cp-focus-ring: 0 0 0 3px rgba(14, 83, 48, 0.15);
+  --cp-bg: #f3f4f6;
   --cp-surface: #ffffff;
-  --cp-surface-muted: #f8fafc;
-  --cp-border: #e2e8f0;
-  --cp-border-strong: #cbd5e1;
-  --cp-text: #0f172a;
-  --cp-text-secondary: #334155;
-  --cp-text-muted: #64748b;
+  --cp-surface-muted: #f9fafb;
+  --cp-border: #e5e7eb;
+  --cp-border-strong: #d1d5db;
+  --cp-text: #111827;
+  --cp-text-secondary: #374151;
+  --cp-text-muted: #6b7280;
   --cp-success: #15803d;
   --cp-success-soft: #f0fdf4;
   --cp-success-border: #bbf7d0;
@@ -105,27 +109,19 @@
 
 .cp-sidebar__brand {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
   color: var(--cp-text);
   text-decoration: none;
 }
 
-.cp-sidebar__brand-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.15;
-}
-
-.cp-sidebar__brand-name {
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.3px;
-}
-
 .cp-sidebar__brand-tag {
-  font-size: 12px;
-  font-weight: 600;
+  margin-left: 36px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--cp-primary);
 }
 
@@ -250,7 +246,7 @@
   position: fixed;
   inset: 0;
   z-index: 45;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(17, 24, 39, 0.45);
 }
 
 /* ---------------- Main column ---------------- */
@@ -388,7 +384,7 @@
 }
 
 .cp-btn--soft:hover:not(:disabled) {
-  background: #dbeafe;
+  background: var(--cp-primary-soft-hover);
   border-color: var(--cp-primary-border);
 }
 
@@ -496,7 +492,7 @@
   border: 1px solid var(--cp-primary-border);
   border-radius: var(--cp-radius-sm);
   background: var(--cp-primary-soft);
-  color: #1e3a8a;
+  color: var(--cp-primary-ink);
   font-size: 14px;
 }
 
@@ -587,7 +583,7 @@
 .cp-select:focus,
 .cp-textarea:focus {
   border-color: var(--cp-primary);
-  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15);
+  box-shadow: var(--cp-focus-ring);
   outline: none;
 }
 

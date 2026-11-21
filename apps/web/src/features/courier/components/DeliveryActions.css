@@ -265,7 +265,7 @@
   padding: 24px 16px;
   border: 2px dashed var(--cp-primary-border);
   border-radius: var(--cp-radius);
-  background: #f8fbff;
+  background: var(--cp-primary-soft);
   text-align: center;
   cursor: pointer;
   transition: border-color 0.15s, background-color 0.15s;
@@ -335,7 +335,7 @@
   flex-shrink: 0;
   border-radius: var(--cp-radius-sm);
   object-fit: cover;
-  background: #e2e8f0;
+  background: #e5e7eb;
 }
 
 .cp-proof__image--placeholder {
@@ -383,7 +383,7 @@
   flex: 1;
   height: 8px;
   border-radius: 999px;
-  background: #dbeafe;
+  background: var(--cp-primary-soft-hover);
   overflow: hidden;
 }
 
