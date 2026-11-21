@@ -1,0 +1,87 @@
+{
+  "name": "worker",
+  "version": "0.0.1",
+  "description": "SwiftDrop event consumers: notifications and merchant webhooks (RabbitMQ)",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "prebuild": "npm run build -w @swiftdrop/contracts",
+    "build": "nest build",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "prestart": "npm run build -w @swiftdrop/contracts",
+    "start": "nest start",
+    "prestart:dev": "npm run build -w @swiftdrop/contracts",
+    "start:dev": "nest start --watch",
+    "start:prod": "node dist/main",
+    "lint": "eslint \"src/**/*.ts\" --fix",
+    "lint:check": "eslint \"src/**/*.ts\"",
+    "pretest": "npm run build -w @swiftdrop/contracts",
+    "test": "jest",
+    "pretest:cov": "npm run build -w @swiftdrop/contracts",
+    "test:cov": "jest --coverage"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.0.1",
+    "@nestjs/config": "^12.0.1",
+    "@nestjs/core": "^11.0.1",
+    "@prisma/adapter-pg": "^7.10.1",
+    "@prisma/client": "^7.10.1",
+    "@swiftdrop/contracts": "*",
+    "amqp-connection-manager": "^5.0.1",
+    "amqplib": "^2.4.0",
+    "pg": "^8.23.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "@nestjs/cli": "^11.0.0",
+    "@nestjs/schematics": "^11.0.0",
+    "@nestjs/testing": "^11.0.1",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.0.0",
+    "@types/pg": "^8.23.1",
+    "eslint": "^9.18.0",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-prettier": "^5.2.2",
+    "globals": "^17.0.0",
+    "jest": "^30.0.0",
+    "prettier": "^3.4.2",
+    "source-map-support": "^0.5.21",
+    "ts-jest": "^29.2.5",
+    "ts-loader": "^9.5.2",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.20.0"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
+    "rootDir": "src",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+.(t|j)s$": [
+        "ts-jest",
+        {
+          "tsconfig": {
+            "allowJs": true
+          }
+        }
+      ]
+    },
+    "collectCoverageFrom": [
+      "**/*.(t|j)s",
+      "!generated/**"
+    ],
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    },
+    "transformIgnorePatterns": [
+      "node_modules/(?!(@nestjs/config|promise-breaker)/)"
+    ]
+  }
+}

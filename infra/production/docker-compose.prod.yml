@@ -83,6 +83,27 @@ services:
       start_period: 20s
     logging: *logging
 
+  # RabbitMQ consumers: notifications + merchant webhooks. Scale with
+  # `--scale worker=2` (competing consumers); no ports exposed.
+  worker:
+    image: ghcr.io/dilshanmolligoda/swiftdrop-worker:${TAG:-main}
+    env_file: .env
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4010/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    logging: *logging
+
   web:
     image: ghcr.io/dilshanmolligoda/swiftdrop-web:${TAG:-main}
     restart: always

@@ -9,6 +9,14 @@ generator client {
   moduleFormat = "cjs"
 }
 
+// Same client for the event worker (apps/worker), which reads parcels and
+// writes notification / webhook delivery rows. One `prisma generate` updates both.
+generator worker {
+  provider     = "prisma-client"
+  output       = "../../worker/src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
 datasource db {
   provider = "postgresql"
 }
