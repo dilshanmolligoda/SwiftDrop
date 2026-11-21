@@ -451,6 +451,26 @@ export class CourierService {
       courierId,
     });
 
+    if ((tx as any).notification) {
+      if (
+        dto.status === ParcelStatus.PICKED_UP &&
+        assignment.parcel.customerId
+      ) {
+        await (tx as any).notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.IN_APP,
+            recipientUserId: assignment.parcel.customerId,
+            template: 'parcel_picked_up',
+            title: 'Parcel picked up',
+            description: `${assignment.parcel.trackingNumber ?? ''} is on its way to the sorting facility.`.trim(),
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+      }
+    }
+
     return { parcelId, status: dto.status, event, duplicate: false };
   }
 

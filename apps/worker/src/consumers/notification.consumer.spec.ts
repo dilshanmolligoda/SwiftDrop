@@ -222,4 +222,31 @@ describe('NotificationConsumer', () => {
       errorMessage: null,
     });
   });
+
+  it('notifies customer when parcel is PICKED_UP', async () => {
+    const { consumer, repository, channels } = setup();
+    const pickedUpEvent: ParcelStatusChangedV1 = {
+      ...EVENT,
+      previousStatus: 'ASSIGNED',
+      newStatus: 'PICKED_UP',
+    };
+
+    await consumer.handle(pickedUpEvent);
+
+    expect(channels[0].send).toHaveBeenCalledWith(
+      CUSTOMER,
+      expect.objectContaining({
+        template: 'parcel-picked-up',
+        subject: `Parcel Picked Up — ${pickedUpEvent.trackingNumber}`,
+      }),
+    );
+    expect(repository.record).toHaveBeenCalledWith({
+      eventId: pickedUpEvent.eventId,
+      channel: 'EMAIL',
+      recipientUserId: CUSTOMER.userId,
+      template: 'parcel-picked-up',
+      status: 'SENT',
+      errorMessage: null,
+    });
+  });
 });

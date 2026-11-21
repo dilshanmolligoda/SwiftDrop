@@ -87,7 +87,12 @@ function activeAssignment(
     courierId: COURIER_ID,
     endedAt: null,
     assignedAt: new Date('2026-11-03T14:00:00.000Z'),
-    parcel: { id: PARCEL_ID, status },
+    parcel: {
+      id: PARCEL_ID,
+      status,
+      customerId: 'customer-123',
+      trackingNumber: 'SD-001',
+    },
   };
 }
 

@@ -41,9 +41,9 @@ function copyFor(event: ParcelEventV1): Copy | null {
     case 'PICKED_UP':
       return {
         template: 'parcel-picked-up',
-        subject: 'Your parcel has been picked up',
-        headline: 'Picked up',
-        body: 'A SwiftDrop courier has collected your parcel.',
+        subject: `Parcel Picked Up — ${event.trackingNumber}`,
+        headline: 'Parcel picked up',
+        body: 'Your parcel has been collected by our courier and is now on its way to the distribution hub.',
       };
     case 'IN_TRANSIT':
       return {
