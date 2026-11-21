@@ -297,6 +297,8 @@ export const NotificationScalarFieldEnum = {
   channel: 'channel',
   recipientUserId: 'recipientUserId',
   template: 'template',
+  title: 'title',
+  description: 'description',
   status: 'status',
   errorMessage: 'errorMessage',
   createdAt: 'createdAt',

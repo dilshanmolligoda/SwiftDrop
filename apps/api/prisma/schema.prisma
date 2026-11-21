@@ -402,6 +402,8 @@ model Notification {
   channel         NotificationChannel
   recipientUserId String              @db.Uuid
   template        String              @db.VarChar(64)
+  title           String?             @db.VarChar(128)
+  description     String?             @db.Text
   status          NotificationStatus
   errorMessage    String?             @db.VarChar(500)
   createdAt       DateTime            @default(now()) @db.Timestamptz(3)

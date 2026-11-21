@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import type { SignOptions } from 'jsonwebtoken';
 import { UsersModule } from '../users/users.module.js';
+import { EmailModule } from '../email/email.module.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { GoogleAuthService } from './google-auth.service.js';
@@ -16,6 +17,7 @@ import { CsrfGuard } from './guards/csrf.guard.js';
   imports: [
     ConfigModule,
     UsersModule,
+    EmailModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

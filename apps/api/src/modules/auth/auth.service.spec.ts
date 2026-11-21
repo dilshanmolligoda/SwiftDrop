@@ -9,10 +9,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService, parseTtlToSeconds } from './auth.service.js';
 import { PasswordService } from './password.service.js';
 import { UsersService } from '../users/users.service.js';
+import { EmailService } from '../email/email.service.js';
+import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 import {
   Role,
   ApprovalStatus,
   VehicleType,
+  NotificationChannel,
+  NotificationStatus,
 } from '../../generated/prisma/enums.js';
 import type { User } from '../../generated/prisma/client.js';
 
@@ -28,6 +32,13 @@ describe('AuthService', () => {
   let passwordService: { verify: jest.Mock; hash: jest.Mock };
   let jwtService: { signAsync: jest.Mock };
   let configService: { getOrThrow: jest.Mock; get: jest.Mock };
+  let emailService: {
+    sendCustomerWelcomeEmail: jest.Mock;
+    sendWelcomeEmail: jest.Mock;
+  };
+  let prismaService: {
+    notification: { create: jest.Mock };
+  };
 
   const validUser: User = {
     id: '11111111-1111-1111-1111-111111111111',
@@ -56,6 +67,15 @@ describe('AuthService', () => {
     jwtService = {
       signAsync: jest.fn(),
     };
+    emailService = {
+      sendCustomerWelcomeEmail: jest.fn().mockResolvedValue(undefined),
+      sendWelcomeEmail: jest.fn().mockResolvedValue(undefined),
+    };
+    prismaService = {
+      notification: {
+        create: jest.fn().mockResolvedValue({ id: 'notif-uuid' }),
+      },
+    };
     configService = {
       getOrThrow: jest.fn().mockImplementation((key: string) => {
         if (key === 'JWT_ACCESS_SECRET') return 'test-access-secret';
@@ -76,6 +96,8 @@ describe('AuthService', () => {
         { provide: PasswordService, useValue: passwordService },
         { provide: JwtService, useValue: jwtService },
         { provide: ConfigService, useValue: configService },
+        { provide: EmailService, useValue: emailService },
+        { provide: PrismaService, useValue: prismaService },
       ],
     }).compile();
 
@@ -286,6 +308,80 @@ describe('AuthService', () => {
       expect(result.user.approvalStatus).toBe(ApprovalStatus.APPROVED);
       expect(result.user.role).toBe(Role.CUSTOMER);
       expect(result.accessToken).toBe('signed-customer-token');
+      expect(emailService.sendCustomerWelcomeEmail).toHaveBeenCalledWith(
+        'newcustomer@example.com',
+        'New Customer',
+      );
+      expect(prismaService.notification.create).toHaveBeenCalled();
+      const firstCall = prismaService.notification.create.mock.calls[0] as [
+        {
+          data: {
+            channel: string;
+            recipientUserId: string;
+            template: string;
+            title: string;
+            description: string;
+            status: string;
+          };
+        },
+      ];
+      expect(firstCall[0].data.channel).toBe(NotificationChannel.EMAIL);
+      expect(firstCall[0].data.recipientUserId).toBe('new-customer-uuid');
+      expect(firstCall[0].data.template).toBe('customer_welcome');
+      expect(firstCall[0].data.title).toBe('Welcome to SwiftDrop!');
+      expect(firstCall[0].data.description).toBe(
+        'Your customer account is active. Start by booking your first delivery.',
+      );
+      expect(firstCall[0].data.status).toBe(NotificationStatus.SENT);
+    });
+
+    it('triggers a welcome email via EmailService and inserts in-app notification upon registration', async () => {
+      usersService.findByEmail.mockResolvedValue(null);
+      passwordService.hash.mockResolvedValue('$2b$12$hashedRegisteredPassword');
+      jwtService.signAsync.mockResolvedValue('signed-customer-token');
+
+      const createdUser: User = {
+        ...validUser,
+        id: 'customer-welcome-uuid',
+        email: 'welcome.test@example.com',
+        fullName: 'Jane Doe',
+        role: Role.CUSTOMER,
+        approvalStatus: ApprovalStatus.APPROVED,
+      };
+      usersService.createCustomer.mockResolvedValue(createdUser);
+
+      await authService.registerCustomer({
+        fullName: 'Jane Doe',
+        email: 'welcome.test@example.com',
+        phoneNumber: '0779998888',
+        password: 'securePassword123!',
+      });
+
+      expect(emailService.sendCustomerWelcomeEmail).toHaveBeenCalledWith(
+        'welcome.test@example.com',
+        'Jane Doe',
+      );
+      expect(prismaService.notification.create).toHaveBeenCalled();
+      const lastCall = prismaService.notification.create.mock.calls[0] as [
+        {
+          data: {
+            channel: string;
+            recipientUserId: string;
+            template: string;
+            title: string;
+            description: string;
+            status: string;
+          };
+        },
+      ];
+      expect(lastCall[0].data.channel).toBe(NotificationChannel.EMAIL);
+      expect(lastCall[0].data.recipientUserId).toBe('customer-welcome-uuid');
+      expect(lastCall[0].data.template).toBe('customer_welcome');
+      expect(lastCall[0].data.title).toBe('Welcome to SwiftDrop!');
+      expect(lastCall[0].data.description).toBe(
+        'Your customer account is active. Start by booking your first delivery.',
+      );
+      expect(lastCall[0].data.status).toBe(NotificationStatus.SENT);
     });
 
     it('throws ConflictException when email is already registered', async () => {

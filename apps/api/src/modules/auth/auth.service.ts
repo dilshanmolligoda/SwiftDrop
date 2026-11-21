@@ -2,11 +2,16 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  Logger,
+  Optional,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { randomUUID } from 'node:crypto';
 import { UsersService } from '../users/users.service.js';
+import { EmailService } from '../email/email.service.js';
+import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 import { PasswordService } from './password.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegisterCustomerDto } from './dto/register-customer.dto.js';
@@ -17,6 +22,8 @@ import {
   Role,
   ApprovalStatus,
   VehicleType,
+  NotificationChannel,
+  NotificationStatus,
 } from '../../generated/prisma/enums.js';
 import type { JwtPayload } from './guards/jwt-auth.guard.js';
 import type { GoogleUserIdentity } from './google-auth.service.js';
@@ -86,11 +93,15 @@ export function parseTtlToSeconds(ttl: string | number): number {
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly usersService: UsersService,
     private readonly passwordService: PasswordService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    @Optional() private readonly emailService?: EmailService,
+    @Optional() private readonly prisma?: PrismaService,
   ) {}
 
   async createAuthSession(user: {
@@ -193,6 +204,53 @@ export class AuthService {
         phoneNumber: normalizedPhone,
         passwordHash,
       });
+
+      if (this.emailService) {
+        try {
+          await this.emailService.sendCustomerWelcomeEmail(
+            user.email,
+            user.fullName,
+          );
+
+          if (this.prisma) {
+            await this.prisma.notification.create({
+              data: {
+                eventId: randomUUID(),
+                channel: NotificationChannel.EMAIL,
+                recipientUserId: user.id,
+                template: 'customer_welcome',
+                title: 'Welcome to SwiftDrop!',
+                description:
+                  'Your customer account is active. Start by booking your first delivery.',
+                status: NotificationStatus.SENT,
+                sentAt: new Date(),
+              },
+            });
+          }
+        } catch (emailError) {
+          this.logger.error(
+            `Failed to dispatch welcome email or record notification for ${user.email}: ${(emailError as Error).message}`,
+            (emailError as Error).stack,
+          );
+          if (this.prisma) {
+            await this.prisma.notification
+              .create({
+                data: {
+                  eventId: randomUUID(),
+                  channel: NotificationChannel.EMAIL,
+                  recipientUserId: user.id,
+                  template: 'customer_welcome',
+                  title: 'Welcome to SwiftDrop!',
+                  description:
+                    'Your customer account is active. Start by booking your first delivery.',
+                  status: NotificationStatus.FAILED,
+                  errorMessage: (emailError as Error).message,
+                },
+              })
+              .catch(() => undefined);
+          }
+        }
+      }
 
       return this.createAuthSession({
         id: user.id,
