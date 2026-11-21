@@ -72,6 +72,19 @@ export class RabbitMqPublisher extends MessagingStatus {
     );
   }
 
+  /**
+   * Another channel on the same connection, e.g. for the realtime fan-out
+   * consumer. `setup` runs on every (re)connect. Null when messaging is off.
+   */
+  openChannel(
+    name: string,
+    setup: (channel: ConfirmChannel) => Promise<void>,
+  ): ChannelWrapper | null {
+    this.start();
+    if (!this.connection) return null;
+    return this.connection.createChannel({ name, json: false, setup });
+  }
+
   state(): MessagingState {
     if (!this.config.enabled) return 'disabled';
     return this.connection?.isConnected() ? 'up' : 'down';

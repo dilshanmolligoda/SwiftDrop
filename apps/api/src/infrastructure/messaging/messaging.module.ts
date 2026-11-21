@@ -21,6 +21,7 @@ import { RabbitMqPublisher } from './rabbitmq.publisher.js';
     { provide: MessagingStatus, useExisting: RabbitMqPublisher },
     OutboxRelay,
   ],
-  exports: [MessagingStatus],
+  // RabbitMqPublisher + config: for other consumers on the same connection (realtime fan-out).
+  exports: [MessagingStatus, RabbitMqPublisher, MESSAGING_CONFIG],
 })
 export class MessagingModule {}
