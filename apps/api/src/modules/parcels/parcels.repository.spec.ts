@@ -128,4 +128,53 @@ describe('ParcelsRepository tracking read boundary (isolated Prisma)', () => {
       { parcel: row, status: 'PENDING' },
     );
   });
+
+  it('creates an in-app notification for the customer when notification client is present', async () => {
+    const row = {
+      id: 'parcel-1',
+      trackingNumber: 'SD-CONFIRMED123',
+      weightKg: new Prisma.Decimal(1),
+      costLkr: new Prisma.Decimal(350),
+    };
+    create.mockResolvedValue(row);
+    const notificationCreate = jest.fn().mockResolvedValue({});
+    const customPrisma = {
+      parcel: { findMany, create },
+      notification: { create: notificationCreate },
+      $transaction: jest.fn((fn: (tx: unknown) => Promise<unknown>) =>
+        fn({
+          parcel: { findMany, create },
+          notification: { create: notificationCreate },
+        }),
+      ),
+    };
+    const repo = new ParcelsRepository(
+      customPrisma as unknown as PrismaService,
+      { recordParcelCreated } as unknown as OutboxWriter,
+    );
+
+    await repo.createParcel({
+      trackingNumber: row.trackingNumber,
+      customerId: 'customer-123',
+      senderName: 'Sender',
+      senderAddress: 'Pickup',
+      recipientName: 'Recipient',
+      recipientAddress: 'Destination',
+      recipientPhone: 'Phone',
+      packageSize: 'SMALL',
+      weightKg: 1,
+      costLkr: 350,
+    });
+
+    expect(notificationCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        channel: 'IN_APP',
+        recipientUserId: 'customer-123',
+        template: 'parcel_created',
+        title: 'Delivery created',
+        description: 'Your delivery request SD-CONFIRMED123 has been confirmed.',
+        status: 'SENT',
+      }),
+    });
+  });
 });

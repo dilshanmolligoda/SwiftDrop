@@ -1,7 +1,13 @@
+import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { OutboxWriter } from '../../infrastructure/outbox/outbox.writer.js';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
-import { ParcelStatus, PackageSize } from '../../generated/prisma/enums.js';
+import {
+  ParcelStatus,
+  PackageSize,
+  NotificationChannel,
+  NotificationStatus,
+} from '../../generated/prisma/enums.js';
 
 export interface CustomerParcelRecord {
   id: string;
@@ -88,6 +94,22 @@ export class ParcelsRepository {
         parcel: created,
         status: ParcelStatus.PENDING,
       });
+
+      if ((tx as any).notification) {
+        await (tx as any).notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.IN_APP,
+            recipientUserId: data.customerId,
+            template: 'parcel_created',
+            title: 'Delivery created',
+            description: `Your delivery request ${data.trackingNumber} has been confirmed.`,
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+      }
+
       return created;
     });
 

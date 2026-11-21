@@ -1,4 +1,7 @@
-import type { ParcelStatusChangedV1 } from '@swiftdrop/contracts';
+import type {
+  ParcelCreatedV1,
+  ParcelStatusChangedV1,
+} from '@swiftdrop/contracts';
 import type {
   NotificationChannel,
   Recipient,
@@ -138,5 +141,35 @@ describe('NotificationConsumer', () => {
 
     expect(email.send).not.toHaveBeenCalled();
     expect(sms.send).toHaveBeenCalledTimes(1);
+  });
+
+  it('handles parcel.created event and sends booking confirmation email', async () => {
+    const { consumer, repository, channels } = setup();
+    const createdEvent: ParcelCreatedV1 = {
+      eventId: '7f1c2c8e-1b2a-4c3d-9e8f-0a1b2c3d4e5a',
+      eventType: 'parcel.created',
+      version: 1,
+      occurredAt: '2026-11-21T08:30:00.000Z',
+      parcelId: '0b6a3f0e-7d2c-4f1a-8e9b-1c2d3e4f5a6b',
+      trackingNumber: 'SD-0123456789ABCDEF0123456789ABCDEF',
+      customerId: CUSTOMER.userId,
+      merchantId: null,
+      status: 'PENDING',
+    };
+
+    await consumer.handle(createdEvent);
+
+    expect(channels[0].send).toHaveBeenCalledWith(
+      CUSTOMER,
+      expect.objectContaining({ template: 'parcel-booked' }),
+    );
+    expect(repository.record).toHaveBeenCalledWith({
+      eventId: createdEvent.eventId,
+      channel: 'EMAIL',
+      recipientUserId: CUSTOMER.userId,
+      template: 'parcel-booked',
+      status: 'SENT',
+      errorMessage: null,
+    });
   });
 });
