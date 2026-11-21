@@ -75,7 +75,7 @@ export class EmailService {
     const loginUrl = `${this.webAppUrl.replace(/\/+$/, '')}/login`;
     const subject = 'Welcome to SwiftDrop — Fast & Reliable Parcel Delivery';
     const html = this.renderCustomerWelcomeHtml(fullName, loginUrl);
-    const text = `Hello ${fullName},\n\nWelcome to SwiftDrop — Fast & Reliable Parcel Delivery!\n\nHere is what you can do with your new customer account:\n• Live Tracking: Real-time parcel status and tracking timeline.\n• Instant Fee Estimation: Calculate upfront, transparent shipping rates.\n• Easy Parcel Booking: Schedule doorstep pickups and deliveries anytime.\n\nStart now by logging in to your account:\n${loginUrl}\n\nBest regards,\nThe SwiftDrop Team`;
+    const text = `Hello ${fullName},\n\nWelcome to SwiftDrop — Fast & Reliable Parcel Delivery!\n\nHere is what you can do with your new customer account:\n- Live Tracking: Real-time parcel status and tracking timeline.\n- Instant Fee Estimation: Calculate upfront, transparent shipping rates.\n- Easy Parcel Booking: Schedule doorstep pickups and deliveries anytime.\n\nStart now by logging in to your account:\n${loginUrl}\n\nBest regards,\nThe SwiftDrop Team`;
 
     await this.sendMail({
       to,
@@ -245,19 +245,19 @@ export class EmailService {
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                       <tr>
                         <td valign="top" style="padding-bottom: 14px;">
-                          <div style="font-size: 14px; font-weight: 700; color: #0f172a;">📍 Live Tracking</div>
+                          <div style="font-size: 14px; font-weight: 700; color: #0f172a;">Live Tracking</div>
                           <div style="font-size: 13px; color: #64748b; margin-top: 2px;">Track your package status in real time with interactive timeline updates.</div>
                         </td>
                       </tr>
                       <tr>
                         <td valign="top" style="padding-bottom: 14px;">
-                          <div style="font-size: 14px; font-weight: 700; color: #0f172a;">💰 Instant Fee Estimation</div>
+                          <div style="font-size: 14px; font-weight: 700; color: #0f172a;">Instant Fee Estimation</div>
                           <div style="font-size: 13px; color: #64748b; margin-top: 2px;">Preview delivery fees transparently based on distance, weight, and size.</div>
                         </td>
                       </tr>
                       <tr>
                         <td valign="top">
-                          <div style="font-size: 14px; font-weight: 700; color: #0f172a;">📦 Seamless Parcel Booking</div>
+                          <div style="font-size: 14px; font-weight: 700; color: #0f172a;">Seamless Parcel Booking</div>
                           <div style="font-size: 13px; color: #64748b; margin-top: 2px;">Book doorstep pickups and deliveries with dedicated courier dispatch.</div>
                         </td>
                       </tr>
@@ -271,7 +271,7 @@ export class EmailService {
                 <tr>
                   <td align="center">
                     <a href="${loginUrl}" target="_blank" style="background-color: #2563eb; color: #ffffff !important; display: inline-block; font-size: 15px; font-weight: 600; padding: 14px 32px; text-decoration: none; border-radius: 8px;">
-                      Log In to Your Account &rarr;
+                      Log In to Your Account
                     </a>
                   </td>
                 </tr>
@@ -286,7 +286,7 @@ export class EmailService {
           <!-- Footer -->
           <tr>
             <td class="footer" style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 24px 32px; text-align: center; font-size: 12px; color: #64748b; line-height: 1.5;">
-              SwiftDrop &bull; Fast &amp; Reliable Parcel Delivery<br>
+              SwiftDrop - Fast &amp; Reliable Parcel Delivery<br>
               If you didn't create an account, you can safely ignore this email.
             </td>
           </tr>

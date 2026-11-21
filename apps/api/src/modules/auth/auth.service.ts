@@ -226,6 +226,20 @@ export class AuthService {
                 sentAt: new Date(),
               },
             });
+
+            await this.prisma.notification.create({
+              data: {
+                eventId: randomUUID(),
+                channel: NotificationChannel.IN_APP,
+                recipientUserId: user.id,
+                template: 'customer_welcome',
+                title: 'Welcome to SwiftDrop!',
+                description:
+                  'Your customer account is active. Start by booking your first delivery.',
+                status: NotificationStatus.SENT,
+                sentAt: new Date(),
+              },
+            });
           }
         } catch (emailError) {
           this.logger.error(
@@ -245,6 +259,22 @@ export class AuthService {
                     'Your customer account is active. Start by booking your first delivery.',
                   status: NotificationStatus.FAILED,
                   errorMessage: (emailError as Error).message,
+                },
+              })
+              .catch(() => undefined);
+
+            await this.prisma.notification
+              .create({
+                data: {
+                  eventId: randomUUID(),
+                  channel: NotificationChannel.IN_APP,
+                  recipientUserId: user.id,
+                  template: 'customer_welcome',
+                  title: 'Welcome to SwiftDrop!',
+                  description:
+                    'Your customer account is active. Start by booking your first delivery.',
+                  status: NotificationStatus.SENT,
+                  sentAt: new Date(),
                 },
               })
               .catch(() => undefined);

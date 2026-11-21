@@ -312,8 +312,8 @@ describe('AuthService', () => {
         'newcustomer@example.com',
         'New Customer',
       );
-      expect(prismaService.notification.create).toHaveBeenCalled();
-      const firstCall = prismaService.notification.create.mock.calls[0] as [
+      expect(prismaService.notification.create).toHaveBeenCalledTimes(2);
+      const emailCall = prismaService.notification.create.mock.calls[0] as [
         {
           data: {
             channel: string;
@@ -325,14 +325,35 @@ describe('AuthService', () => {
           };
         },
       ];
-      expect(firstCall[0].data.channel).toBe(NotificationChannel.EMAIL);
-      expect(firstCall[0].data.recipientUserId).toBe('new-customer-uuid');
-      expect(firstCall[0].data.template).toBe('customer_welcome');
-      expect(firstCall[0].data.title).toBe('Welcome to SwiftDrop!');
-      expect(firstCall[0].data.description).toBe(
+      expect(emailCall[0].data.channel).toBe(NotificationChannel.EMAIL);
+      expect(emailCall[0].data.recipientUserId).toBe('new-customer-uuid');
+      expect(emailCall[0].data.template).toBe('customer_welcome');
+      expect(emailCall[0].data.title).toBe('Welcome to SwiftDrop!');
+      expect(emailCall[0].data.description).toBe(
         'Your customer account is active. Start by booking your first delivery.',
       );
-      expect(firstCall[0].data.status).toBe(NotificationStatus.SENT);
+      expect(emailCall[0].data.status).toBe(NotificationStatus.SENT);
+
+      const inAppCall = prismaService.notification.create.mock.calls[1] as [
+        {
+          data: {
+            channel: string;
+            recipientUserId: string;
+            template: string;
+            title: string;
+            description: string;
+            status: string;
+          };
+        },
+      ];
+      expect(inAppCall[0].data.channel).toBe(NotificationChannel.IN_APP);
+      expect(inAppCall[0].data.recipientUserId).toBe('new-customer-uuid');
+      expect(inAppCall[0].data.template).toBe('customer_welcome');
+      expect(inAppCall[0].data.title).toBe('Welcome to SwiftDrop!');
+      expect(inAppCall[0].data.description).toBe(
+        'Your customer account is active. Start by booking your first delivery.',
+      );
+      expect(inAppCall[0].data.status).toBe(NotificationStatus.SENT);
     });
 
     it('triggers a welcome email via EmailService and inserts in-app notification upon registration', async () => {
@@ -361,8 +382,9 @@ describe('AuthService', () => {
         'welcome.test@example.com',
         'Jane Doe',
       );
-      expect(prismaService.notification.create).toHaveBeenCalled();
-      const lastCall = prismaService.notification.create.mock.calls[0] as [
+      expect(prismaService.notification.create).toHaveBeenCalledTimes(2);
+      const emailNotifCall = prismaService.notification.create.mock
+        .calls[0] as [
         {
           data: {
             channel: string;
@@ -374,14 +396,40 @@ describe('AuthService', () => {
           };
         },
       ];
-      expect(lastCall[0].data.channel).toBe(NotificationChannel.EMAIL);
-      expect(lastCall[0].data.recipientUserId).toBe('customer-welcome-uuid');
-      expect(lastCall[0].data.template).toBe('customer_welcome');
-      expect(lastCall[0].data.title).toBe('Welcome to SwiftDrop!');
-      expect(lastCall[0].data.description).toBe(
+      expect(emailNotifCall[0].data.channel).toBe(NotificationChannel.EMAIL);
+      expect(emailNotifCall[0].data.recipientUserId).toBe(
+        'customer-welcome-uuid',
+      );
+      expect(emailNotifCall[0].data.template).toBe('customer_welcome');
+      expect(emailNotifCall[0].data.title).toBe('Welcome to SwiftDrop!');
+      expect(emailNotifCall[0].data.description).toBe(
         'Your customer account is active. Start by booking your first delivery.',
       );
-      expect(lastCall[0].data.status).toBe(NotificationStatus.SENT);
+      expect(emailNotifCall[0].data.status).toBe(NotificationStatus.SENT);
+
+      const inAppNotifCall = prismaService.notification.create.mock
+        .calls[1] as [
+        {
+          data: {
+            channel: string;
+            recipientUserId: string;
+            template: string;
+            title: string;
+            description: string;
+            status: string;
+          };
+        },
+      ];
+      expect(inAppNotifCall[0].data.channel).toBe(NotificationChannel.IN_APP);
+      expect(inAppNotifCall[0].data.recipientUserId).toBe(
+        'customer-welcome-uuid',
+      );
+      expect(inAppNotifCall[0].data.template).toBe('customer_welcome');
+      expect(inAppNotifCall[0].data.title).toBe('Welcome to SwiftDrop!');
+      expect(inAppNotifCall[0].data.description).toBe(
+        'Your customer account is active. Start by booking your first delivery.',
+      );
+      expect(inAppNotifCall[0].data.status).toBe(NotificationStatus.SENT);
     });
 
     it('throws ConflictException when email is already registered', async () => {

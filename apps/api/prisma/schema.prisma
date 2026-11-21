@@ -421,6 +421,7 @@ model WebhookDelivery {
 enum NotificationChannel {
   EMAIL
   SMS
+  IN_APP
 }
 
 enum NotificationStatus {
