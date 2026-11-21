@@ -487,6 +487,24 @@ export class CourierService {
           },
         });
       }
+
+      if (
+        dto.status === ParcelStatus.OUT_FOR_DELIVERY &&
+        assignment.parcel.customerId
+      ) {
+        await (tx as any).notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.IN_APP,
+            recipientUserId: assignment.parcel.customerId,
+            template: 'parcel_out_for_delivery',
+            title: 'Out for delivery',
+            description: `Out for delivery: ${assignment.parcel.trackingNumber ?? ''} is scheduled to arrive today.`.trim(),
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+      }
     }
 
     return { parcelId, status: dto.status, event, duplicate: false };
