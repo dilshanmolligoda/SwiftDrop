@@ -5,6 +5,16 @@
   color-scheme: light;
 }
 
+/* The global `code` style (index.css) switches to light text in dark mode,
+   which made the signing secret unreadable on this light page. */
+.page code {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #f2f4f7;
+  color: #101828;
+  font-size: 0.8125rem;
+}
+
 .heading {
   display: flex;
   align-items: flex-end;
@@ -166,8 +176,11 @@
 .secret code {
   flex: 1 1 auto;
   padding: 8px 10px;
+  border: 1px solid #fedf89;
   border-radius: 6px;
   background: #fff;
+  color: #101828;
+  user-select: all;
   font-size: 0.8125rem;
   overflow-wrap: anywhere;
 }
