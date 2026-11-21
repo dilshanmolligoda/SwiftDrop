@@ -42,6 +42,11 @@ COPY --from=build /repo/apps/api/prisma ./apps/api/prisma
 # Prisma 7 reads the datasource URL from this file — `prisma migrate deploy` needs it
 COPY --from=build /repo/apps/api/prisma.config.ts ./apps/api/
 
+# The seed runs from TypeScript source (ts-node), so it needs the generated
+# Prisma client source and tsconfig — `prisma db seed` fails without them
+COPY --from=build /repo/apps/api/src/generated ./apps/api/src/generated
+COPY --from=build /repo/apps/api/tsconfig.json ./apps/api/
+
 # Run as the non-root "node" user that ships with the image
 RUN mkdir -p /app/uploads && chown -R node:node /app/uploads
 USER node

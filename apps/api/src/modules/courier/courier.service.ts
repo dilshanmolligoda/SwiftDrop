@@ -8,6 +8,7 @@ import {
 import { createHash, randomUUID } from 'node:crypto';
 import { ParcelStatus } from '../../generated/prisma/enums.js';
 import { Prisma } from '../../generated/prisma/client.js';
+import { OutboxWriter } from '../../infrastructure/outbox/outbox.writer.js';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 import {
   OBJECT_STORAGE,
@@ -51,6 +52,7 @@ export class CourierService {
   constructor(
     private readonly prisma: PrismaService,
     @Inject(OBJECT_STORAGE) private readonly storage: ObjectStorage,
+    private readonly outbox: OutboxWriter,
   ) {}
 
   async getDashboard(courierId: string, now = new Date()) {
@@ -434,6 +436,15 @@ export class CourierService {
         failureReason:
           dto.status === ParcelStatus.FAILED ? dto.failureReason : null,
       },
+    });
+
+    // Same transaction: the event exists only if this status change commits.
+    await this.outbox.recordParcelStatusChanged(tx, {
+      parcel: assignment.parcel,
+      previousStatus: currentStatus,
+      newStatus: dto.status,
+      failureReason: dto.failureReason,
+      courierId,
     });
 
     return { parcelId, status: dto.status, event, duplicate: false };

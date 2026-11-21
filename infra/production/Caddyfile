@@ -1,0 +1,23 @@
+{$SITE_ADDRESS} {
+	encode gzip
+	handle /api/* {
+		reverse_proxy api:4000
+	}
+	handle {
+		reverse_proxy web:80
+	}
+}
+
+{$SITE_ADDRESS}:8443 {
+	basic_auth {
+		{$ADMIN_USER} {$ADMIN_PASSWORD_HASH}
+	}
+	reverse_proxy mock-merchant:5000
+}
+
+{$SITE_ADDRESS}:8025 {
+	basic_auth {
+		{$ADMIN_USER} {$ADMIN_PASSWORD_HASH}
+	}
+	reverse_proxy mailpit:8025
+}

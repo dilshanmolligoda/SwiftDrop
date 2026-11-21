@@ -26,6 +26,7 @@ describe('ParcelsService', () => {
     const mockRepository = {
       createParcel: jest.fn(),
       findCustomerParcels: jest.fn(),
+      findCustomerTrackingParcels: jest.fn(),
       findCustomerParcelById: jest.fn(),
       getCustomerMetrics: jest.fn(),
     };
@@ -98,7 +99,7 @@ describe('ParcelsService', () => {
           customerId: mockUser.id,
           senderName: mockUser.email,
           costLkr: 350,
-          trackingNumber: expect.stringMatching(/^SD-\d{5}$/),
+          trackingNumber: expect.stringMatching(/^SD-[A-F0-9]{32}$/),
         }),
       );
       expect(result).toEqual(mockCreated);
@@ -136,6 +137,17 @@ describe('ParcelsService', () => {
       expect(result).toHaveLength(1);
       expect(result[0].trackingNumber).toBe('SD-24819');
     });
+  });
+
+  it('delegates the tracking snapshot to a separate customer-scoped read contract', async () => {
+    repository.findCustomerTrackingParcels.mockResolvedValue([]);
+    await expect(service.listForCustomerTracking(mockUser.id)).resolves.toEqual(
+      [],
+    );
+    expect(repository.findCustomerTrackingParcels).toHaveBeenCalledWith(
+      mockUser.id,
+    );
+    expect(repository.findCustomerParcels).not.toHaveBeenCalled();
   });
 
   describe('getMetrics', () => {

@@ -15,6 +15,9 @@ import { CustomerDeliveryProvider } from './features/customer/context/CustomerDe
 import { CustomerLayout } from './features/customer/components/CustomerLayout.tsx'
 import { SettingsPage } from './features/customer/pages/SettingsPage.tsx'
 import { AddressBookPage } from './features/customer/pages/AddressBookPage.tsx'
+import { PublicTrackingPage } from './features/customer/pages/PublicTrackingPage.tsx'
+import { CustomerTrackingPage } from './features/customer/pages/CustomerTrackingPage.tsx'
+import { DeliveryHistoryPage } from './features/customer/pages/DeliveryHistoryPage.tsx'
 import { RequireRole } from './app/auth/RequireRole.tsx'
 import { CourierLayout } from './features/courier/components/CourierLayout.tsx'
 import { CourierDashboardPage } from './features/courier/pages/CourierDashboardPage.tsx'
@@ -48,6 +51,23 @@ createRoot(document.getElementById('root')!).render(
           <Routes>
             <Route path="/" element={<LoginPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/track" element={<PublicTrackingPage />} />
+            <Route
+              path="/customer/deliveries"
+              element={
+                <CustomerLayout>
+                  <DeliveryHistoryPage />
+                </CustomerLayout>
+              }
+            />
+            <Route
+              path="/customer/tracking"
+              element={
+                <CustomerLayout>
+                  <CustomerTrackingPage />
+                </CustomerLayout>
+              }
+            />
             <Route path="/register" element={<RegisterRoleSelectPage />} />
             <Route path="/register/customer" element={<RegisterCustomerPage />} />
             <Route path="/register/merchant" element={<RegisterMerchantPage />} />
@@ -149,14 +169,6 @@ createRoot(document.getElementById('root')!).render(
               element={
                 <CustomerLayout>
                   <CustomerDashboard />
-                </CustomerLayout>
-              }
-            />
-            <Route
-              path="/customer/deliveries"
-              element={
-                <CustomerLayout>
-                  <CustomerMyDeliveriesPage />
                 </CustomerLayout>
               }
             />

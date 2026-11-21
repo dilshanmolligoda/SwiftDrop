@@ -1,0 +1,152 @@
+# SwiftDrop production (single server). Uses images built by the CD workflow.
+# On the server:  docker compose -f docker-compose.prod.yml up -d
+#
+# RabbitMQ and Mailpit run now (idle) so features that start using them
+# work on the next deploy without server changes. They have no `ports:` —
+# only other containers can reach them. Mailpit's UI is behind Caddy (:8025).
+name: swiftdrop
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: ${TZ:-Asia/Colombo}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    logging: *logging
+
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    hostname: rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 20s
+    logging: *logging
+
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: always
+    logging: *logging
+
+  migrate:
+    image: ghcr.io/dilshanmolligoda/swiftdrop-api:${TAG:-main}
+    env_file: .env
+    command: ["npx", "-w", "apps/api", "prisma", "migrate", "deploy"]
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    logging: *logging
+
+  api:
+    image: ghcr.io/dilshanmolligoda/swiftdrop-api:${TAG:-main}
+    env_file: .env
+    restart: always
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4000/api/v1/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    logging: *logging
+
+  # RabbitMQ consumers: notifications + merchant webhooks. Scale with
+  # `--scale worker=2` (competing consumers); no ports exposed.
+  worker:
+    image: ghcr.io/dilshanmolligoda/swiftdrop-worker:${TAG:-main}
+    env_file: .env
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4010/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    logging: *logging
+
+  web:
+    image: ghcr.io/dilshanmolligoda/swiftdrop-web:${TAG:-main}
+    restart: always
+    depends_on:
+      - api
+    logging: *logging
+
+  mock-merchant:
+    image: ghcr.io/dilshanmolligoda/swiftdrop-mock-merchant:${TAG:-main}
+    restart: always
+    environment:
+      MOCK_MERCHANT_PORT: "5000"
+      SWIFTDROP_API_URL: http://api:4000/api/v1
+    depends_on:
+      - api
+    logging: *logging
+
+  caddy:
+    image: caddy:2-alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8443:8443"
+      - "8025:8025"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS}
+      ADMIN_USER: ${ADMIN_USER}
+      ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - api
+      - web
+      - mock-merchant
+      - mailpit
+    logging: *logging
+
+volumes:
+  postgres-data:
+  rabbitmq-data:
+  uploads:
+  caddy-data:
+  caddy-config:

@@ -26,6 +26,8 @@ jobs:
             dockerfile: apps/api/Dockerfile
           - name: web
             dockerfile: apps/web/Dockerfile
+          - name: worker
+            dockerfile: apps/worker/Dockerfile
           - name: mock-merchant
             dockerfile: tools/mock-merchant/Dockerfile
     steps:
