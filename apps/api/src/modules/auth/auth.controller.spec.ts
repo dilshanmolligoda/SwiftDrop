@@ -28,6 +28,7 @@ describe('AuthController', () => {
     getProfile: jest.Mock;
     getApplicationStatus: jest.Mock;
     forgotPassword: jest.Mock;
+    resetPassword: jest.Mock;
   };
   let configService: { get: jest.Mock };
 
@@ -40,6 +41,7 @@ describe('AuthController', () => {
       getProfile: jest.fn(),
       getApplicationStatus: jest.fn(),
       forgotPassword: jest.fn(),
+      resetPassword: jest.fn(),
     };
     configService = {
       get: jest
@@ -143,6 +145,22 @@ describe('AuthController', () => {
     const result = await controller.forgotPassword(dto);
 
     expect(authService.forgotPassword).toHaveBeenCalledWith(dto);
+    expect(result).toEqual(expectedResponse);
+  });
+
+  it('delegates resetPassword to AuthService.resetPassword and returns success message', async () => {
+    const expectedResponse = {
+      message: 'Password has been reset successfully',
+    };
+    authService.resetPassword.mockResolvedValue(expectedResponse);
+
+    const dto = {
+      token: 'valid-reset-token',
+      newPassword: 'NewValidPassword123!',
+    };
+    const result = await controller.resetPassword(dto);
+
+    expect(authService.resetPassword).toHaveBeenCalledWith(dto);
     expect(result).toEqual(expectedResponse);
   });
 

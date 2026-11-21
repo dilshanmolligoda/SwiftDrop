@@ -109,6 +109,34 @@ export class EmailService {
     });
   }
 
+  async sendPasswordResetConfirmationEmail(
+    to: string,
+    fullName?: string,
+  ): Promise<void> {
+    const timeFormatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Colombo',
+      dateStyle: 'full',
+      timeStyle: 'medium',
+    });
+    const formattedTimestamp = `${timeFormatter.format(new Date())} (Asia/Colombo)`;
+    const supportUrl = `${this.webAppUrl.replace(/\/+$/, '')}/support`;
+    const subject = 'Security Alert: Your SwiftDrop password was reset';
+    const html = this.renderPasswordResetConfirmationHtml(
+      fullName,
+      formattedTimestamp,
+      supportUrl,
+    );
+    const greeting = fullName ? `Hello ${fullName},` : 'Hello,';
+    const text = `${greeting}\n\nThis is a security alert to confirm that the password for your SwiftDrop account was successfully reset on ${formattedTimestamp}.\n\nIf you performed this password reset, no further action is required.\n\nIMPORTANT SECURITY NOTICE:\nIf you did not authorize this change, please contact SwiftDrop security immediately at security@swiftdrop.local or visit:\n${supportUrl}\n\nBest regards,\nThe SwiftDrop Security Team`;
+
+    await this.sendMail({
+      to,
+      subject,
+      html,
+      text,
+    });
+  }
+
   private renderCustomerWelcomeHtml(
     fullName: string,
     loginUrl: string,
@@ -486,6 +514,198 @@ export class EmailService {
             <td class="footer" style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 24px 32px; text-align: center; font-size: 12px; color: #64748b; line-height: 1.5;">
               SwiftDrop - Fast &amp; Reliable Parcel Delivery<br>
               If you have any questions, please contact our support team.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+  }
+
+  private renderPasswordResetConfirmationHtml(
+    fullName: string | undefined,
+    timestamp: string,
+    supportUrl: string,
+  ): string {
+    const greeting = fullName ? `Hello, ${fullName}!` : 'Hello!';
+
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Security Alert: Your SwiftDrop password was reset</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f1f5f9;
+      color: #1e293b;
+      -webkit-font-smoothing: antialiased;
+    }
+    table {
+      border-collapse: collapse;
+    }
+    .container {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    }
+    .header {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+      padding: 36px 32px;
+      text-align: center;
+    }
+    .brand-title {
+      color: #ffffff;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin: 0;
+    }
+    .brand-subtitle {
+      color: #93c5fd;
+      font-size: 14px;
+      font-weight: 500;
+      margin-top: 6px;
+    }
+    .content {
+      padding: 36px 32px;
+    }
+    .greeting {
+      font-size: 20px;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0 0 16px 0;
+    }
+    .intro {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #334155;
+      margin: 0 0 20px 0;
+    }
+    .info-box {
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 18px 20px;
+      margin-bottom: 24px;
+    }
+    .info-row {
+      font-size: 13px;
+      line-height: 1.6;
+      color: #475569;
+    }
+    .info-label {
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .alert-box {
+      background-color: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      padding: 18px 20px;
+      margin-bottom: 28px;
+    }
+    .alert-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #991b1b;
+      margin-bottom: 6px;
+    }
+    .alert-text {
+      font-size: 13px;
+      color: #b91c1c;
+      line-height: 1.5;
+    }
+    .cta-button {
+      background-color: #dc2626;
+      color: #ffffff !important;
+      display: inline-block;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 14px 32px;
+      text-decoration: none;
+      border-radius: 8px;
+    }
+    .footer {
+      background-color: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      padding: 24px 32px;
+      text-align: center;
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 24px 0; background-color: #f1f5f9;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="center">
+        <table role="presentation" class="container" cellpadding="0" cellspacing="0" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;">
+          <!-- Header -->
+          <tr>
+            <td class="header" style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); padding: 36px 32px; text-align: center;">
+              <h1 class="brand-title" style="color: #ffffff; font-size: 28px; font-weight: 800; margin: 0; letter-spacing: -0.5px;">SwiftDrop</h1>
+              <div class="brand-subtitle" style="color: #93c5fd; font-size: 14px; font-weight: 500; margin-top: 6px;">Island-wide Parcel Delivery & Courier Management</div>
+            </td>
+          </tr>
+          <!-- Content -->
+          <tr>
+            <td class="content" style="padding: 36px 32px;">
+              <h2 class="greeting" style="font-size: 20px; font-weight: 700; color: #0f172a; margin: 0 0 16px 0;">${greeting}</h2>
+              <p class="intro" style="font-size: 15px; line-height: 1.6; color: #334155; margin: 0 0 20px 0;">
+                This is a confirmation that your SwiftDrop account password was successfully reset and updated.
+              </p>
+              
+              <!-- Timestamp Detail Box -->
+              <div class="info-box" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px 20px; margin-bottom: 24px;">
+                <div class="info-row" style="font-size: 13px; line-height: 1.6; color: #475569;">
+                  <span class="info-label" style="font-weight: 600; color: #1e293b;">Time of Reset:</span> ${timestamp}
+                </div>
+                <div class="info-row" style="font-size: 13px; line-height: 1.6; color: #475569; margin-top: 6px;">
+                  <span class="info-label" style="font-weight: 600; color: #1e293b;">Status:</span> Completed successfully
+                </div>
+              </div>
+
+              <!-- Urgent Security Notice -->
+              <div class="alert-box" style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 18px 20px; margin-bottom: 28px;">
+                <div class="alert-title" style="font-size: 14px; font-weight: 700; color: #991b1b; margin-bottom: 6px;">Did you not request this change?</div>
+                <div class="alert-text" style="font-size: 13px; color: #b91c1c; line-height: 1.5;">
+                  If you did not perform this password reset, your account might be compromised. Please contact our security team immediately to secure your account.
+                </div>
+              </div>
+
+              <!-- Action Link -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 24px 0 16px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${supportUrl}" target="_blank" style="background-color: #dc2626; color: #ffffff !important; display: inline-block; font-size: 15px; font-weight: 600; padding: 14px 32px; text-decoration: none; border-radius: 8px;">
+                      Contact Security Support
+                    </a>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding-top: 14px;">
+                    <span style="font-size: 12px; color: #94a3b8;">Or reach us directly at: <a href="mailto:security@swiftdrop.local" style="color: #dc2626; text-decoration: underline;">security@swiftdrop.local</a></span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td class="footer" style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 24px 32px; text-align: center; font-size: 12px; color: #64748b; line-height: 1.5;">
+              SwiftDrop - Fast &amp; Reliable Parcel Delivery<br>
+              Automated Security Notification
             </td>
           </tr>
         </table>

@@ -30,14 +30,16 @@ describe('AuthService', () => {
     createCourier: jest.Mock;
   };
   let passwordService: { verify: jest.Mock; hash: jest.Mock };
-  let jwtService: { signAsync: jest.Mock };
+  let jwtService: { signAsync: jest.Mock; verifyAsync: jest.Mock };
   let configService: { getOrThrow: jest.Mock; get: jest.Mock };
   let emailService: {
     sendCustomerWelcomeEmail: jest.Mock;
     sendWelcomeEmail: jest.Mock;
     sendPasswordResetEmail: jest.Mock;
+    sendPasswordResetConfirmationEmail: jest.Mock;
   };
   let prismaService: {
+    user: { update: jest.Mock };
     notification: { create: jest.Mock };
   };
 
@@ -67,13 +69,20 @@ describe('AuthService', () => {
     };
     jwtService = {
       signAsync: jest.fn(),
+      verifyAsync: jest.fn(),
     };
     emailService = {
       sendCustomerWelcomeEmail: jest.fn().mockResolvedValue(undefined),
       sendWelcomeEmail: jest.fn().mockResolvedValue(undefined),
       sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
+      sendPasswordResetConfirmationEmail: jest
+        .fn()
+        .mockResolvedValue(undefined),
     };
     prismaService = {
+      user: {
+        update: jest.fn().mockResolvedValue(validUser),
+      },
       notification: {
         create: jest.fn().mockResolvedValue({ id: 'notif-uuid' }),
       },
@@ -682,6 +691,140 @@ describe('AuthService', () => {
       expect(result).toEqual({
         message: 'If the email exists, a reset link was sent',
       });
+    });
+  });
+
+  describe('resetPassword', () => {
+    const validResetDto = {
+      token: 'valid-jwt-token',
+      newPassword: 'NewPassword123!',
+    };
+
+    it('successfully resets password, hashes new password, updates Prisma, dispatches security email and in-app notification', async () => {
+      jwtService.verifyAsync.mockResolvedValue({
+        sub: validUser.id,
+        userId: validUser.id,
+        purpose: 'password_reset',
+      });
+      usersService.findById.mockResolvedValue(validUser);
+      passwordService.hash.mockResolvedValue('$2b$12$newHashedPassword');
+
+      const result = await authService.resetPassword(validResetDto);
+
+      expect(jwtService.verifyAsync).toHaveBeenCalledWith(
+        'valid-jwt-token',
+        expect.objectContaining({
+          algorithms: ['HS256'],
+        }),
+      );
+      expect(usersService.findById).toHaveBeenCalledWith(validUser.id);
+      expect(passwordService.hash).toHaveBeenCalledWith('NewPassword123!');
+      expect(prismaService.user.update).toHaveBeenCalledWith({
+        where: { id: validUser.id },
+        data: { passwordHash: '$2b$12$newHashedPassword' },
+      });
+      expect(
+        emailService.sendPasswordResetConfirmationEmail,
+      ).toHaveBeenCalledWith(validUser.email, validUser.fullName);
+
+      const notifCalls = prismaService.notification.create.mock.calls as Array<
+        [
+          {
+            data: {
+              channel: NotificationChannel;
+              recipientUserId: string;
+              title: string;
+              description: string;
+              status: NotificationStatus;
+            };
+          },
+        ]
+      >;
+      const inAppCall = notifCalls.find(
+        ([arg]) => arg.data.channel === NotificationChannel.IN_APP,
+      );
+      expect(inAppCall).toBeDefined();
+      expect(inAppCall?.[0].data.recipientUserId).toBe(validUser.id);
+      expect(inAppCall?.[0].data.title).toBe('Password updated');
+      expect(inAppCall?.[0].data.description).toBe(
+        'Your account password was successfully reset.',
+      );
+      expect(inAppCall?.[0].data.status).toBe(NotificationStatus.SENT);
+
+      expect(result).toEqual({
+        message: 'Password has been reset successfully',
+      });
+    });
+
+    it('rejects consumed reset tokens with BadRequestException', async () => {
+      jwtService.verifyAsync.mockResolvedValue({
+        sub: validUser.id,
+        userId: validUser.id,
+        purpose: 'password_reset',
+      });
+      usersService.findById.mockResolvedValue(validUser);
+      passwordService.hash.mockResolvedValue('$2b$12$newHashedPassword');
+
+      const tokenToConsume = 'unique-consumed-token';
+      await authService.resetPassword({
+        token: tokenToConsume,
+        newPassword: 'NewPassword123!',
+      });
+
+      await expect(
+        authService.resetPassword({
+          token: tokenToConsume,
+          newPassword: 'AnotherPassword123!',
+        }),
+      ).rejects.toThrow(
+        new BadRequestException('Password reset token has already been used'),
+      );
+    });
+
+    it('rejects expired or invalid signature tokens with BadRequestException', async () => {
+      jwtService.verifyAsync.mockRejectedValue(new Error('jwt expired'));
+
+      await expect(
+        authService.resetPassword({
+          token: 'expired-token',
+          newPassword: 'NewPassword123!',
+        }),
+      ).rejects.toThrow(
+        new BadRequestException('Invalid or expired password reset token'),
+      );
+    });
+
+    it('rejects token with invalid purpose with BadRequestException', async () => {
+      jwtService.verifyAsync.mockResolvedValue({
+        sub: validUser.id,
+        userId: validUser.id,
+        purpose: 'access',
+      });
+
+      await expect(
+        authService.resetPassword({
+          token: 'wrong-purpose-token',
+          newPassword: 'NewPassword123!',
+        }),
+      ).rejects.toThrow(
+        new BadRequestException('Invalid password reset token purpose'),
+      );
+    });
+
+    it('throws BadRequestException if user cannot be found', async () => {
+      jwtService.verifyAsync.mockResolvedValue({
+        sub: 'missing-user',
+        userId: 'missing-user',
+        purpose: 'password_reset',
+      });
+      usersService.findById.mockResolvedValue(null);
+
+      await expect(
+        authService.resetPassword({
+          token: 'token-for-missing-user',
+          newPassword: 'NewPassword123!',
+        }),
+      ).rejects.toThrow(new BadRequestException('User not found'));
     });
   });
 

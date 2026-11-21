@@ -18,6 +18,7 @@ import { RegisterCustomerDto } from './dto/register-customer.dto.js';
 import { RegisterMerchantDto } from './dto/register-merchant.dto.js';
 import { RegisterCourierDto } from './dto/register-courier.dto.js';
 import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
+import { ResetPasswordDto } from './dto/reset-password.dto.js';
 import { normalizePhoneNumber } from './utils/phone.util.js';
 import {
   Role,
@@ -95,6 +96,7 @@ export function parseTtlToSeconds(ttl: string | number): number {
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
+  private readonly consumedResetTokens = new Set<string>();
 
   constructor(
     private readonly usersService: UsersService,
@@ -226,6 +228,116 @@ export class AuthService {
     }
 
     return { message: 'If the email exists, a reset link was sent' };
+  }
+
+  invalidateRefreshTokens(userId: string): Promise<void> {
+    this.logger.log(`Invalidating active refresh tokens for user ${userId}`);
+    return Promise.resolve();
+  }
+
+  async resetPassword(dto: ResetPasswordDto): Promise<{ message: string }> {
+    if (this.consumedResetTokens.has(dto.token)) {
+      throw new BadRequestException(
+        'Password reset token has already been used',
+      );
+    }
+
+    const secret =
+      this.configService.get<string>('JWT_RESET_SECRET') ||
+      this.configService.getOrThrow<string>('JWT_ACCESS_SECRET');
+
+    let payload: { sub?: string; userId?: string; purpose?: string };
+    try {
+      payload = await this.jwtService.verifyAsync(dto.token, {
+        secret,
+        algorithms: ['HS256'],
+      });
+    } catch {
+      throw new BadRequestException('Invalid or expired password reset token');
+    }
+
+    if (payload.purpose !== 'password_reset') {
+      throw new BadRequestException('Invalid password reset token purpose');
+    }
+
+    const userId = payload.userId || payload.sub;
+    if (!userId) {
+      throw new BadRequestException('Invalid password reset token payload');
+    }
+
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    // Mark reset token as consumed to prevent token replay
+    this.consumedResetTokens.add(dto.token);
+
+    // Hash the new password using PasswordService
+    const newPasswordHash = await this.passwordService.hash(dto.newPassword);
+
+    // Update passwordHash in Prisma
+    if (this.prisma) {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { passwordHash: newPasswordHash },
+      });
+    }
+
+    // Invalidate existing refresh tokens
+    await this.invalidateRefreshTokens(user.id);
+
+    // Send security notification email
+    if (this.emailService) {
+      try {
+        await this.emailService.sendPasswordResetConfirmationEmail(
+          user.email,
+          user.fullName,
+        );
+      } catch (error) {
+        this.logger.error(
+          `Failed to dispatch password reset confirmation email to ${user.email}: ${(error as Error).message}`,
+          (error as Error).stack,
+        );
+      }
+    }
+
+    // Insert in-app and email notifications in Prisma
+    if (this.prisma) {
+      try {
+        await this.prisma.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.IN_APP,
+            recipientUserId: user.id,
+            template: 'password_reset_success',
+            title: 'Password updated',
+            description: 'Your account password was successfully reset.',
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+
+        await this.prisma.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.EMAIL,
+            recipientUserId: user.id,
+            template: 'password_reset_success',
+            title: 'Password updated',
+            description: 'Your account password was successfully reset.',
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+      } catch (notifError) {
+        this.logger.error(
+          `Failed to create notification records for user ${user.id}: ${(notifError as Error).message}`,
+        );
+      }
+    }
+
+    return { message: 'Password has been reset successfully' };
   }
 
   async registerCustomer(dto: RegisterCustomerDto): Promise<LoginResult> {

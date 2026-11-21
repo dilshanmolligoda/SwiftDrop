@@ -27,6 +27,7 @@ import { RegisterCustomerDto } from './dto/register-customer.dto.js';
 import { RegisterMerchantDto } from './dto/register-merchant.dto.js';
 import { RegisterCourierDto } from './dto/register-courier.dto.js';
 import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
+import { ResetPasswordDto } from './dto/reset-password.dto.js';
 import {
   CurrentUser,
   type AuthenticatedUser,
@@ -91,6 +92,15 @@ export class AuthController {
     @Body() dto: ForgotPasswordDto,
   ): Promise<{ message: string }> {
     return this.authService.forgotPassword(dto);
+  }
+
+  @Public()
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(
+    @Body() dto: ResetPasswordDto,
+  ): Promise<{ message: string }> {
+    return this.authService.resetPassword(dto);
   }
 
   @Public()
