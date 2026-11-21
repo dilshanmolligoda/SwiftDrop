@@ -79,6 +79,7 @@ describe('AuthController', () => {
         email: 'user@example.com',
         fullName: 'Test User',
         role: Role.CUSTOMER,
+        approvalStatus: ApprovalStatus.APPROVED,
       },
     };
     authService.login.mockResolvedValue(loginResult);
@@ -108,7 +109,9 @@ describe('AuthController', () => {
       expiresIn: 900,
       user: loginResult.user,
     });
-    expect((result as Record<string, unknown>).accessToken).toBeUndefined();
+    expect(
+      (result as unknown as Record<string, unknown>).accessToken,
+    ).toBeUndefined();
   });
 
   it('delegates getProfile to AuthService.getProfile using authenticated user id', async () => {
