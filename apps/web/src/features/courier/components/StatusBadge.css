@@ -1,0 +1,76 @@
+/* Status palette shared by badges, summary cards and the timeline. */
+.courier-shell {
+  --cp-tone-neutral: #475569;
+  --cp-tone-neutral-bg: #f1f5f9;
+  --cp-tone-pending: #475569;
+  --cp-tone-pending-bg: #f1f5f9;
+  --cp-tone-picked: #4338ca;
+  --cp-tone-picked-bg: #eef2ff;
+  --cp-tone-transit: #0369a1;
+  --cp-tone-transit-bg: #e0f2fe;
+  --cp-tone-out: #b45309;
+  --cp-tone-out-bg: #fef3c7;
+  --cp-tone-success: #15803d;
+  --cp-tone-success-bg: #dcfce7;
+  --cp-tone-danger: #b91c1c;
+  --cp-tone-danger-bg: #fee2e2;
+}
+
+.cp-status {
+  --tone: var(--cp-tone-neutral);
+  --tone-bg: var(--cp-tone-neutral-bg);
+
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--tone-bg);
+  color: var(--tone);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.cp-status--md {
+  padding: 5px 12px;
+  font-size: 13px;
+}
+
+.cp-status__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.cp-status--pending {
+  --tone: var(--cp-tone-pending);
+  --tone-bg: var(--cp-tone-pending-bg);
+}
+
+.cp-status--picked {
+  --tone: var(--cp-tone-picked);
+  --tone-bg: var(--cp-tone-picked-bg);
+}
+
+.cp-status--transit {
+  --tone: var(--cp-tone-transit);
+  --tone-bg: var(--cp-tone-transit-bg);
+}
+
+.cp-status--out {
+  --tone: var(--cp-tone-out);
+  --tone-bg: var(--cp-tone-out-bg);
+}
+
+.cp-status--success {
+  --tone: var(--cp-tone-success);
+  --tone-bg: var(--cp-tone-success-bg);
+}
+
+.cp-status--danger {
+  --tone: var(--cp-tone-danger);
+  --tone-bg: var(--cp-tone-danger-bg);
+}

@@ -9,7 +9,8 @@ notifications.
 ![Docker](https://img.shields.io/badge/run-docker%20compose-2496ED)
 
 > 🚧 **Setup stage.** The repository structure, architecture and team workflow are in place.
-> Each app folder has a README describing what goes there; services are being scaffolded.
+> `apps/api` (NestJS + Prisma) and `apps/web` (React + Vite) are scaffolded with health checks;
+> the other apps are still being scaffolded. Each app folder has a README describing what goes there.
 
 ---
 
@@ -161,12 +162,12 @@ docker compose down -v           # stop AND wipe database/broker data (fresh sta
 
 | Service | URL |
 |---|---|
-| Web app | <http://localhost:5173> |
-| API | <http://localhost:3000/api/v1> |
-| API docs (Swagger) | <http://localhost:3000/api/docs> |
+| Web app | <http://localhost:5173> · health page <http://localhost:5173/health> |
+| API | <http://localhost:4000/api/v1> · health <http://localhost:4000/api/v1/health> |
+| API docs (Swagger) | <http://localhost:4000/api/docs> |
 | RabbitMQ management | <http://localhost:15672> (user/pass from `.env`) |
 | Mailpit — see sent emails | <http://localhost:8025> |
-| Mock merchant store | <http://localhost:4000> |
+| Mock merchant store | <http://localhost:5000> |
 | AI assistant (bonus) | <http://localhost:3100> |
 
 ### 3. Run one app locally (faster while coding)
@@ -176,11 +177,29 @@ Keep the infrastructure in Docker and run your app with hot reload:
 ```bash
 docker compose up -d                             # infrastructure only
 npm install                                      # once, from the repo root
-npm run dev:api        # or dev:web / dev:worker
+cp apps/api/.env.example apps/api/.env           # once — local overrides for the API
+cp apps/web/.env.example apps/web/.env           # once — web app config
+npm run dev            # API + web together (or dev:api / dev:web / dev:worker)
 ```
 
-When running outside Docker, use `localhost` instead of the service names in `.env`
-(e.g. `POSTGRES_HOST=localhost`).
+Service names like `postgres` only resolve **inside** Docker. When an app runs on your
+machine it needs `localhost` instead — that's what `apps/<app>/.env` is for. It holds only
+the values that differ locally (e.g. `DATABASE_URL` with `@localhost:5432`); everything else
+still comes from the root `.env`. See [apps/api/README.md](apps/api/README.md#environment).
+
+Database (Prisma) commands, from the repo root:
+
+```bash
+npm run db:migrate -- --name <change>   # create + apply a migration (dev)
+npm run db:generate                     # regenerate the Prisma client
+npm run db:status                       # migration status
+npm run db:studio                       # browse data in the browser
+```
+
+> ⚠️ **Don't `source .env` or `export $(cat .env)` in your terminal.** Real environment
+> variables override `.env` files, so stale values stick to that terminal — the API ends up
+> on the wrong port or Prisma tries to reach `postgres:5432`. If that happens:
+> `unset DATABASE_URL API_PORT PORT` or open a new terminal.
 
 ### Demo accounts
 
@@ -201,6 +220,7 @@ All variables are documented in **[.env.example](.env.example)**. Main groups:
 
 | Group | Examples | Used by |
 |---|---|---|
+| API server | `API_PORT` (4000), `API_PREFIX`, `API_VERSION`, `CORS_ORIGINS` | api |
 | Database | `POSTGRES_*`, `DATABASE_URL` | api, worker |
 | Broker | `RABBITMQ_URL`, `RABBITMQ_EVENTS_EXCHANGE` | api, worker |
 | Auth | `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `GOOGLE_CLIENT_*` | api |
@@ -208,6 +228,15 @@ All variables are documented in **[.env.example](.env.example)**. Main groups:
 | Notifications | `SMTP_*`, `SMS_PROVIDER` | worker |
 | Frontend | `VITE_API_BASE_URL` (public!) | web |
 | AI assistant | `LLM_PROVIDER`, `LLM_MODEL`, `LLM_API_KEY` | ai-assistant |
+
+Besides the root `.env`, apps run on your machine have a small `.env` of their own, each
+with a committed `.env.example`:
+
+| File | What it holds |
+|---|---|
+| `.env` (root) | Shared config for every app and for Docker |
+| `apps/api/.env` | Local overrides only — `DATABASE_URL` with `localhost` instead of `postgres` |
+| `apps/web/.env` | `VITE_*` values for the frontend (public) |
 
 **Rules:** never commit `.env`; never hard-code a secret; anything starting with `VITE_` is
 visible in the browser. Adding a variable? Add it to `.env.example` in the same PR.
@@ -250,18 +279,18 @@ must be running. Coverage reports for submission go in [`docs/reports/`](docs/re
 3. Small commits using `type(scope): message` (e.g. `feat(parcels): add status history`).
 4. Open a PR early, fill in the template, get **one approval**, squash-merge.
 
-| Area | Owner(s) |
-|---|---|
-| Repo, DevOps, documentation, architecture | `@dilshanmolligoda` |
-| Frontend | `@…` `@…` |
-| Auth + Google OAuth | `@…` |
-| Parcels, tracking + SSE | `@…` |
-| Pricing + zones | `@…` |
-| Dispatch + courier | `@…` |
-| Merchants, API keys + webhooks | `@…` |
-| Worker, RabbitMQ, notifications | `@…` |
-| Testing + coverage | `@…` |
-| Kubernetes + AI assistant (bonus) | `@…` |
+| Area | Responsibilities | Owner |
+|---|---|---|
+| Authentication | JWT login<br>Registration<br>Google Login<br>Role-based access control<br>Secure password handling | `@hansana` |
+| Customer Delivery Creation | Customer UI<br>Create delivery<br>Pickup/drop-off addresses<br>Parcel weight/size<br>Delivery fee calculation<br>Confirm booking | `@nimradha` |
+| Tracking | Tracking-number page<br>Status timeline<br>Real-time status display<br>Delivery history<br>Receipt generation/download | `@sanduni` |
+| Merchant | Merchant registration<br>Admin approval<br>Merchant dashboard<br>View orders<br>View delivery states | `@sankalpa` |
+| Merchant Integration | REST API for merchants<br>API authentication<br>Programmatic order creation<br>Webhooks<br>Webhook retry on failure | `@wanshika` |
+| Courier | Courier login<br>Daily assigned deliveries<br>Update parcel status<br>Delivery note<br>Recipient information<br>Proof/photo upload<br>Failed delivery reason | `@banula` |
+| Dispatcher/Admin | View unassigned parcels<br>Assign courier<br>Courier workload<br>Manage users<br>Manage merchants<br>Delivery zones<br>Pricing<br>Daily delivery reports<br>Success/failure reports | `@himasha` |
+| Real-Time + Message Broker | WebSocket/SSE<br>RabbitMQ/Kafka<br>Publish status-change events<br>Consume events<br>Connect status changes with notifications/webhooks | `@raju` |
+| Notifications + Testing | Email/mock SMS service<br>Status-change notifications<br>Unit tests<br>Integration tests<br>Authorization tests<br>Event-flow test<br>Code coverage report | `@dashintha` |
+| DevOps + Documentation | Dockerfiles<br>docker-compose.yml<br>Frontend container<br>Backend container<br>Database container<br>RabbitMQ/Kafka container<br>Environment variables<br>Deployment configuration<br>README<br>Architecture documentation<br>Integration diagrams<br>Sequence/activity diagrams<br>Kubernetes<br>AI assistant | `@molligoda` |
 
 Full per-member responsibilities for submission: `docs/contribution-sheet.md`.
 
@@ -278,6 +307,9 @@ Full per-member responsibilities for submission: `docs/contribution-sheet.md`.
 - [x] Environment variables (`.env.example`)
 - [x] `docker-compose.yml` — PostgreSQL, RabbitMQ, Mailpit running; app services ready behind the `app` profile
 - [x] Dockerfile templates (api, worker, web) + nginx config
+- [x] API scaffolded — NestJS, env loading + validation, Prisma 7, `/health` and `/health/db`, port 4000
+- [x] Web scaffolded — React + Vite + React Router, `apps/web/.env`, `/health` status page
+- [x] Root scripts — `npm run dev` (API + web), `db:*` Prisma commands
 - [ ] Finalise Dockerfiles once apps are scaffolded; add mock-merchant + ai-assistant Dockerfiles
 - [ ] Remove the `app` profile so one `docker compose up -d --build` starts everything
 - [ ] Deployment configuration (Helm chart)

@@ -1,0 +1,119 @@
+.session-gate {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px 16px;
+  box-sizing: border-box;
+  background: #f5f8fc;
+  color: #0f172a;
+  color-scheme: light;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  text-align: center;
+}
+
+.session-gate__card {
+  width: 100%;
+  max-width: 440px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 32px 28px;
+  box-shadow: 0 10px 30px -12px rgba(15, 23, 42, 0.15);
+  box-sizing: border-box;
+}
+
+.session-gate__spinner {
+  width: 32px;
+  height: 32px;
+  color: #1d4ed8;
+  animation: session-gate-spin 0.9s linear infinite;
+}
+
+.session-gate__icon {
+  width: 40px;
+  height: 40px;
+  color: #1d4ed8;
+  margin-bottom: 12px;
+}
+
+.session-gate__icon--danger {
+  color: #b91c1c;
+}
+
+.session-gate .session-gate__title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  margin: 0 0 8px;
+  color: #0f172a;
+}
+
+.session-gate__text {
+  font-size: 15px;
+  line-height: 1.55;
+  color: #475569;
+  margin: 0;
+}
+
+.session-gate__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.session-gate__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 18px;
+  margin-top: 20px;
+  border-radius: 10px;
+  border: 1px solid #1d4ed8;
+  background: #1d4ed8;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.session-gate__actions .session-gate__btn {
+  margin-top: 0;
+}
+
+.session-gate__btn:hover {
+  background: #1e40af;
+}
+
+.session-gate__btn--ghost {
+  background: #ffffff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+.session-gate__btn--ghost:hover {
+  background: #eff6ff;
+}
+
+.session-gate__btn:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+@keyframes session-gate-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .session-gate__spinner {
+    animation-duration: 2.5s;
+  }
+}
