@@ -479,6 +479,9 @@ model owner).
 
 ## 13. Deployment
 
+> Deploying the event pipeline (worker, RabbitMQ, webhooks, WebSocket) to the Azure server:
+> see [docs/deployment/events-and-realtime.md](docs/deployment/events-and-realtime.md).
+
 ### 13.1 Local — Docker Compose
 
 | Service | URL / port |

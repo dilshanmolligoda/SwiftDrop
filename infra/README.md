@@ -22,4 +22,9 @@ infra/
 ```
 
 Each app keeps its own `Dockerfile` inside its folder (`apps/api/Dockerfile`, etc.).
+
+Production (single Azure server): `production/docker-compose.prod.yml` + `production/Caddyfile`.
+For the worker, RabbitMQ, webhooks and live updates — required `.env` values, Azure
+checks and post-deploy verification — see
+[../docs/deployment/events-and-realtime.md](../docs/deployment/events-and-realtime.md).
 `docker-compose.yml` lives at the repo root.
