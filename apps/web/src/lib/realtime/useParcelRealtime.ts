@@ -39,7 +39,8 @@ export interface UseParcelRealtimeOptions {
 export function useParcelRealtime({ subscription, onChange }: UseParcelRealtimeOptions): {
   readonly state: RealtimeState
 } {
-  const [state, setState] = useState<RealtimeState>('off')
+  // Reported only while there is something to follow (see the return value).
+  const [state, setState] = useState<RealtimeState>('connecting')
   const onChangeRef = useRef(onChange)
   useEffect(() => {
     onChangeRef.current = onChange
@@ -53,11 +54,8 @@ export function useParcelRealtime({ subscription, onChange }: UseParcelRealtimeO
     : null
 
   useEffect(() => {
-    if (!key || !subscription) {
-      setState('off')
-      return
-    }
-    const target = subscription
+    const target = subscriptionFromKey(key)
+    if (!target) return
     const socket = acquireSocket()
     let last: { sequence: number } | null = null
     let everConnected = false
@@ -90,7 +88,6 @@ export function useParcelRealtime({ subscription, onChange }: UseParcelRealtimeO
         ? RealtimeServerEvent.PARCEL_UPDATED
         : RealtimeServerEvent.PUBLIC_PARCEL_UPDATED
 
-    setState(socket.connected ? 'live' : 'connecting')
     socket.on('connect', onConnect)
     socket.on('disconnect', onDisconnect)
     socket.on(event, onUpdate)
@@ -103,9 +100,69 @@ export function useParcelRealtime({ subscription, onChange }: UseParcelRealtimeO
       if (socket.connected) socket.emit(RealtimeClientEvent.UNSUBSCRIBE, target)
       releaseSocket()
     }
-    // Depends on `key` only: it identifies `subscription`, so a new object with
-    // the same target (every render) does not re-subscribe.
+    // Depends on `key` only: it identifies the subscription, so a new object
+    // with the same target (every render) does not re-subscribe.
   }, [key])
 
-  return { state }
+  return { state: key ? state : 'off' }
+}
+
+/** Inverse of the `key` built above. */
+function subscriptionFromKey(key: string | null): RealtimeSubscription | null {
+  if (!key) return null
+  const separator = key.indexOf(':')
+  const scope = key.slice(0, separator)
+  const value = key.slice(separator + 1)
+  return scope === 'parcel'
+    ? { scope: 'parcel', parcelId: value }
+    : { scope: 'public', trackingNumber: value }
+}
+
+/**
+ * For role screens (courier, merchant, dispatcher): the server already puts
+ * the socket in the user's room, which receives every update for their
+ * parcels. Calls `onChange` (debounced) for any update and after reconnects —
+ * e.g. to reload a delivery list.
+ */
+export function useLiveParcelEvents(
+  onChange: () => void,
+  { enabled = true, debounceMs = 400 }: { enabled?: boolean; debounceMs?: number } = {},
+): { readonly state: RealtimeState } {
+  // Reported only while there is something to follow (see the return value).
+  const [state, setState] = useState<RealtimeState>('connecting')
+  const onChangeRef = useRef(onChange)
+  useEffect(() => {
+    onChangeRef.current = onChange
+  }, [onChange])
+
+  useEffect(() => {
+    if (!enabled) return
+    const socket = acquireSocket()
+    let timer: ReturnType<typeof setTimeout> | undefined
+    let everConnected = false
+    const changed = () => {
+      clearTimeout(timer)
+      timer = setTimeout(() => onChangeRef.current(), debounceMs)
+    }
+    const onConnect = () => {
+      setState('live')
+      if (everConnected) changed()
+      everConnected = true
+    }
+    const onDisconnect = () => setState('reconnecting')
+
+    socket.on('connect', onConnect)
+    socket.on('disconnect', onDisconnect)
+    socket.on(RealtimeServerEvent.PARCEL_UPDATED, changed)
+    if (socket.connected) onConnect()
+    return () => {
+      clearTimeout(timer)
+      socket.off('connect', onConnect)
+      socket.off('disconnect', onDisconnect)
+      socket.off(RealtimeServerEvent.PARCEL_UPDATED, changed)
+      releaseSocket()
+    }
+  }, [enabled, debounceMs])
+
+  return { state: enabled ? state : 'off' }
 }
