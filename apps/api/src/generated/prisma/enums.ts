@@ -29,6 +29,15 @@ export const ApprovalStatus = {
 export type ApprovalStatus = (typeof ApprovalStatus)[keyof typeof ApprovalStatus]
 
 
+export const MerchantBusinessUpdateStatus = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED'
+} as const
+
+export type MerchantBusinessUpdateStatus = (typeof MerchantBusinessUpdateStatus)[keyof typeof MerchantBusinessUpdateStatus]
+
+
 export const ParcelStatus = {
   CREATED: 'CREATED',
   ASSIGNED: 'ASSIGNED',

@@ -19,6 +19,7 @@ import { MerchantDashboardModule } from './modules/merchant-dashboard/merchant-d
 import { PricingModule } from './modules/pricing/pricing.module.js';
 import { ParcelsModule } from './modules/parcels/parcels.module.js';
 import { TrackingModule } from './modules/tracking/tracking.module.js';
+import { MerchantSettingsModule } from './modules/merchant-settings/merchant-settings.module.js';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { TrackingModule } from './modules/tracking/tracking.module.js';
     CourierModule,
     HealthModule,
     MerchantDashboardModule,
+    MerchantSettingsModule,
     MessagingModule,
     ParcelsModule,
     PricingModule,

@@ -1,0 +1,72 @@
+:root {
+  --merchant-page-title-size: 1.75rem;
+  --merchant-page-subtitle-size: 0.925rem;
+  --merchant-card-title-size: 1.15rem;
+  --merchant-body-size: 0.875rem;
+  --merchant-small-size: 0.775rem;
+  --merchant-table-header-size: 0.75rem;
+  --merchant-metric-label-size: 0.8125rem;
+  --merchant-metric-value-size: 1.875rem;
+}
+
+.merchant-layout__content h1,
+.dashboard h1,
+.merchant-layout__content .headingRow h1,
+.merchant-layout__content .heading h1 {
+  font-size: var(--merchant-page-title-size);
+}
+
+.merchant-layout__content h2,
+.dashboard h2 {
+  font-size: var(--merchant-card-title-size);
+}
+
+.merchant-layout__content h1 + p,
+.merchant-layout__content .headingRow p,
+.merchant-layout__content .heading p,
+.dashboard .pageHeading p {
+  font-size: var(--merchant-page-subtitle-size);
+}
+
+.merchant-layout__content table,
+.merchant-layout__content th,
+.merchant-layout__content td,
+.dashboard table,
+.dashboard th,
+.dashboard td {
+  font-size: var(--merchant-body-size);
+}
+
+.merchant-layout__content th,
+.dashboard th {
+  font-size: var(--merchant-table-header-size);
+}
+
+.merchant-layout__content p,
+.merchant-layout__content label,
+.merchant-layout__content input,
+.merchant-layout__content select,
+.merchant-layout__content button,
+.dashboard p,
+.dashboard label,
+.dashboard input,
+.dashboard select,
+.dashboard button {
+  font-size: var(--merchant-body-size);
+}
+
+.merchant-layout__content small,
+.dashboard small {
+  font-size: var(--merchant-small-size);
+}
+
+.merchant-layout__content .metricCard strong,
+.dashboard .metricCard strong {
+  font-size: var(--merchant-metric-value-size);
+}
+
+.merchant-layout__content .metricCard span,
+.dashboard .metricCard p,
+.dashboard .metricCard span {
+  font-size: var(--merchant-metric-label-size);
+}

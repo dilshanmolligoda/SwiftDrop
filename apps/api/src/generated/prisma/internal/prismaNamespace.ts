@@ -402,6 +402,7 @@ export const ModelName = {
   ParcelStatusEvent: 'ParcelStatusEvent',
   DeliveryProof: 'DeliveryProof',
   MerchantProfile: 'MerchantProfile',
+  MerchantBusinessUpdateRequest: 'MerchantBusinessUpdateRequest',
   CourierProfile: 'CourierProfile',
   MerchantOrder: 'MerchantOrder',
   Parcel: 'Parcel',
@@ -426,7 +427,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "deliveryAssignment" | "parcelStatusEvent" | "deliveryProof" | "merchantProfile" | "courierProfile" | "merchantOrder" | "parcel" | "parcelStatusHistory" | "outboxEvent" | "processedEvent" | "webhookEndpoint" | "webhookDelivery" | "notification"
+    modelProps: "user" | "deliveryAssignment" | "parcelStatusEvent" | "deliveryProof" | "merchantProfile" | "merchantBusinessUpdateRequest" | "courierProfile" | "merchantOrder" | "parcel" | "parcelStatusHistory" | "outboxEvent" | "processedEvent" | "webhookEndpoint" | "webhookDelivery" | "notification"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -797,6 +798,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.MerchantProfileCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.MerchantProfileCountAggregateOutputType> | number
+        }
+      }
+    }
+    MerchantBusinessUpdateRequest: {
+      payload: Prisma.$MerchantBusinessUpdateRequestPayload<ExtArgs>
+      fields: Prisma.MerchantBusinessUpdateRequestFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.MerchantBusinessUpdateRequestFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantBusinessUpdateRequestPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.MerchantBusinessUpdateRequestFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantBusinessUpdateRequestPayload>
+        }
+        findFirst: {
+          args: Prisma.MerchantBusinessUpdateRequestFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantBusinessUpdateRequestPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.MerchantBusinessUpdateRequestFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantBusinessUpdateRequestPayload>
+        }
+        findMany: {
+          args: Prisma.MerchantBusinessUpdateRequestFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantBusinessUpdateRequestPayload>[]
+        }
+        create: {
+          args: Prisma.MerchantBusinessUpdateRequestCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantBusinessUpdateRequestPayload>
+        }
+        createMany: {
+          args: Prisma.MerchantBusinessUpdateRequestCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.MerchantBusinessUpdateRequestCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantBusinessUpdateRequestPayload>[]
+        }
+        delete: {
+          args: Prisma.MerchantBusinessUpdateRequestDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantBusinessUpdateRequestPayload>
+        }
+        update: {
+          args: Prisma.MerchantBusinessUpdateRequestUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantBusinessUpdateRequestPayload>
+        }
+        deleteMany: {
+          args: Prisma.MerchantBusinessUpdateRequestDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.MerchantBusinessUpdateRequestUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.MerchantBusinessUpdateRequestUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantBusinessUpdateRequestPayload>[]
+        }
+        upsert: {
+          args: Prisma.MerchantBusinessUpdateRequestUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MerchantBusinessUpdateRequestPayload>
+        }
+        aggregate: {
+          args: Prisma.MerchantBusinessUpdateRequestAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMerchantBusinessUpdateRequest>
+        }
+        groupBy: {
+          args: Prisma.MerchantBusinessUpdateRequestGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MerchantBusinessUpdateRequestGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.MerchantBusinessUpdateRequestCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MerchantBusinessUpdateRequestCountAggregateOutputType> | number
         }
       }
     }
@@ -1515,6 +1590,12 @@ export const UserScalarFieldEnum = {
   approvalStatus: 'approvalStatus',
   isActive: 'isActive',
   googleSubject: 'googleSubject',
+  twoFactorEnabled: 'twoFactorEnabled',
+  deliveryStatusNotifications: 'deliveryStatusNotifications',
+  failedDeliveryNotifications: 'failedDeliveryNotifications',
+  storeConnectionNotifications: 'storeConnectionNotifications',
+  language: 'language',
+  timeZone: 'timeZone',
   reviewedAt: 'reviewedAt',
   reviewedBy: 'reviewedBy',
   rejectionReason: 'rejectionReason',
@@ -1575,11 +1656,31 @@ export const MerchantProfileScalarFieldEnum = {
   businessName: 'businessName',
   businessAddress: 'businessAddress',
   businessType: 'businessType',
+  registrationNumber: 'registrationNumber',
+  website: 'website',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type MerchantProfileScalarFieldEnum = (typeof MerchantProfileScalarFieldEnum)[keyof typeof MerchantProfileScalarFieldEnum]
+
+
+export const MerchantBusinessUpdateRequestScalarFieldEnum = {
+  id: 'id',
+  merchantUserId: 'merchantUserId',
+  businessName: 'businessName',
+  businessAddress: 'businessAddress',
+  businessType: 'businessType',
+  registrationNumber: 'registrationNumber',
+  website: 'website',
+  status: 'status',
+  createdAt: 'createdAt',
+  reviewedAt: 'reviewedAt',
+  reviewedBy: 'reviewedBy',
+  rejectionReason: 'rejectionReason'
+} as const
+
+export type MerchantBusinessUpdateRequestScalarFieldEnum = (typeof MerchantBusinessUpdateRequestScalarFieldEnum)[keyof typeof MerchantBusinessUpdateRequestScalarFieldEnum]
 
 
 export const CourierProfileScalarFieldEnum = {
@@ -1880,6 +1981,20 @@ export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel,
 
 
 /**
+ * Reference to a field of type 'MerchantBusinessUpdateStatus'
+ */
+export type EnumMerchantBusinessUpdateStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MerchantBusinessUpdateStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'MerchantBusinessUpdateStatus[]'
+ */
+export type ListEnumMerchantBusinessUpdateStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MerchantBusinessUpdateStatus[]'>
+    
+
+
+/**
  * Reference to a field of type 'VehicleType'
  */
 export type EnumVehicleTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'VehicleType'>
@@ -2174,6 +2289,7 @@ export type GlobalOmitConfig = {
   parcelStatusEvent?: Prisma.ParcelStatusEventOmit
   deliveryProof?: Prisma.DeliveryProofOmit
   merchantProfile?: Prisma.MerchantProfileOmit
+  merchantBusinessUpdateRequest?: Prisma.MerchantBusinessUpdateRequestOmit
   courierProfile?: Prisma.CourierProfileOmit
   merchantOrder?: Prisma.MerchantOrderOmit
   parcel?: Prisma.ParcelOmit
