@@ -1,6 +1,8 @@
+import { Reflector } from '@nestjs/core';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Role } from '../../generated/prisma/enums.js';
 import type { AuthenticatedUser } from '../auth/decorators/current-user.decorator.js';
+import { ROLES_KEY } from '../auth/decorators/roles.decorator.js';
 import { AdminController } from './admin.controller.js';
 import { AdminService } from './admin.service.js';
 
@@ -47,6 +49,12 @@ describe('AdminController', () => {
     }).compile();
 
     controller = module.get<AdminController>(AdminController);
+  });
+
+  it('is protected with ADMIN and DISPATCHER roles', () => {
+    const reflector = new Reflector();
+    const roles = reflector.get(ROLES_KEY, AdminController);
+    expect(roles).toEqual([Role.ADMIN, Role.DISPATCHER]);
   });
 
   it('delegates getDashboard to AdminService.getDashboard', async () => {
