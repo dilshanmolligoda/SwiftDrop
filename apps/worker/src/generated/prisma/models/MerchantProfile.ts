@@ -30,6 +30,8 @@ export type MerchantProfileMinAggregateOutputType = {
   businessName: string | null
   businessAddress: string | null
   businessType: string | null
+  registrationNumber: string | null
+  website: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -40,6 +42,8 @@ export type MerchantProfileMaxAggregateOutputType = {
   businessName: string | null
   businessAddress: string | null
   businessType: string | null
+  registrationNumber: string | null
+  website: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -50,6 +54,8 @@ export type MerchantProfileCountAggregateOutputType = {
   businessName: number
   businessAddress: number
   businessType: number
+  registrationNumber: number
+  website: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -62,6 +68,8 @@ export type MerchantProfileMinAggregateInputType = {
   businessName?: true
   businessAddress?: true
   businessType?: true
+  registrationNumber?: true
+  website?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -72,6 +80,8 @@ export type MerchantProfileMaxAggregateInputType = {
   businessName?: true
   businessAddress?: true
   businessType?: true
+  registrationNumber?: true
+  website?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -82,6 +92,8 @@ export type MerchantProfileCountAggregateInputType = {
   businessName?: true
   businessAddress?: true
   businessType?: true
+  registrationNumber?: true
+  website?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -165,6 +177,8 @@ export type MerchantProfileGroupByOutputType = {
   businessName: string
   businessAddress: string
   businessType: string
+  registrationNumber: string | null
+  website: string | null
   createdAt: Date
   updatedAt: Date
   _count: MerchantProfileCountAggregateOutputType | null
@@ -196,6 +210,8 @@ export type MerchantProfileWhereInput = {
   businessName?: Prisma.StringFilter<"MerchantProfile"> | string
   businessAddress?: Prisma.StringFilter<"MerchantProfile"> | string
   businessType?: Prisma.StringFilter<"MerchantProfile"> | string
+  registrationNumber?: Prisma.StringNullableFilter<"MerchantProfile"> | string | null
+  website?: Prisma.StringNullableFilter<"MerchantProfile"> | string | null
   createdAt?: Prisma.DateTimeFilter<"MerchantProfile"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"MerchantProfile"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -207,6 +223,8 @@ export type MerchantProfileOrderByWithRelationInput = {
   businessName?: Prisma.SortOrder
   businessAddress?: Prisma.SortOrder
   businessType?: Prisma.SortOrder
+  registrationNumber?: Prisma.SortOrderInput | Prisma.SortOrder
+  website?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
@@ -221,6 +239,8 @@ export type MerchantProfileWhereUniqueInput = Prisma.AtLeast<{
   businessName?: Prisma.StringFilter<"MerchantProfile"> | string
   businessAddress?: Prisma.StringFilter<"MerchantProfile"> | string
   businessType?: Prisma.StringFilter<"MerchantProfile"> | string
+  registrationNumber?: Prisma.StringNullableFilter<"MerchantProfile"> | string | null
+  website?: Prisma.StringNullableFilter<"MerchantProfile"> | string | null
   createdAt?: Prisma.DateTimeFilter<"MerchantProfile"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"MerchantProfile"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
@@ -232,6 +252,8 @@ export type MerchantProfileOrderByWithAggregationInput = {
   businessName?: Prisma.SortOrder
   businessAddress?: Prisma.SortOrder
   businessType?: Prisma.SortOrder
+  registrationNumber?: Prisma.SortOrderInput | Prisma.SortOrder
+  website?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.MerchantProfileCountOrderByAggregateInput
@@ -248,6 +270,8 @@ export type MerchantProfileScalarWhereWithAggregatesInput = {
   businessName?: Prisma.StringWithAggregatesFilter<"MerchantProfile"> | string
   businessAddress?: Prisma.StringWithAggregatesFilter<"MerchantProfile"> | string
   businessType?: Prisma.StringWithAggregatesFilter<"MerchantProfile"> | string
+  registrationNumber?: Prisma.StringNullableWithAggregatesFilter<"MerchantProfile"> | string | null
+  website?: Prisma.StringNullableWithAggregatesFilter<"MerchantProfile"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"MerchantProfile"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"MerchantProfile"> | Date | string
 }
@@ -257,6 +281,8 @@ export type MerchantProfileCreateInput = {
   businessName: string
   businessAddress: string
   businessType: string
+  registrationNumber?: string | null
+  website?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   user: Prisma.UserCreateNestedOneWithoutMerchantProfileInput
@@ -268,6 +294,8 @@ export type MerchantProfileUncheckedCreateInput = {
   businessName: string
   businessAddress: string
   businessType: string
+  registrationNumber?: string | null
+  website?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -277,6 +305,8 @@ export type MerchantProfileUpdateInput = {
   businessName?: Prisma.StringFieldUpdateOperationsInput | string
   businessAddress?: Prisma.StringFieldUpdateOperationsInput | string
   businessType?: Prisma.StringFieldUpdateOperationsInput | string
+  registrationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutMerchantProfileNestedInput
@@ -288,6 +318,8 @@ export type MerchantProfileUncheckedUpdateInput = {
   businessName?: Prisma.StringFieldUpdateOperationsInput | string
   businessAddress?: Prisma.StringFieldUpdateOperationsInput | string
   businessType?: Prisma.StringFieldUpdateOperationsInput | string
+  registrationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -298,6 +330,8 @@ export type MerchantProfileCreateManyInput = {
   businessName: string
   businessAddress: string
   businessType: string
+  registrationNumber?: string | null
+  website?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -307,6 +341,8 @@ export type MerchantProfileUpdateManyMutationInput = {
   businessName?: Prisma.StringFieldUpdateOperationsInput | string
   businessAddress?: Prisma.StringFieldUpdateOperationsInput | string
   businessType?: Prisma.StringFieldUpdateOperationsInput | string
+  registrationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -317,6 +353,8 @@ export type MerchantProfileUncheckedUpdateManyInput = {
   businessName?: Prisma.StringFieldUpdateOperationsInput | string
   businessAddress?: Prisma.StringFieldUpdateOperationsInput | string
   businessType?: Prisma.StringFieldUpdateOperationsInput | string
+  registrationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -332,6 +370,8 @@ export type MerchantProfileCountOrderByAggregateInput = {
   businessName?: Prisma.SortOrder
   businessAddress?: Prisma.SortOrder
   businessType?: Prisma.SortOrder
+  registrationNumber?: Prisma.SortOrder
+  website?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -342,6 +382,8 @@ export type MerchantProfileMaxOrderByAggregateInput = {
   businessName?: Prisma.SortOrder
   businessAddress?: Prisma.SortOrder
   businessType?: Prisma.SortOrder
+  registrationNumber?: Prisma.SortOrder
+  website?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -352,6 +394,8 @@ export type MerchantProfileMinOrderByAggregateInput = {
   businessName?: Prisma.SortOrder
   businessAddress?: Prisma.SortOrder
   businessType?: Prisma.SortOrder
+  registrationNumber?: Prisma.SortOrder
+  website?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -393,6 +437,8 @@ export type MerchantProfileCreateWithoutUserInput = {
   businessName: string
   businessAddress: string
   businessType: string
+  registrationNumber?: string | null
+  website?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -402,6 +448,8 @@ export type MerchantProfileUncheckedCreateWithoutUserInput = {
   businessName: string
   businessAddress: string
   businessType: string
+  registrationNumber?: string | null
+  website?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -427,6 +475,8 @@ export type MerchantProfileUpdateWithoutUserInput = {
   businessName?: Prisma.StringFieldUpdateOperationsInput | string
   businessAddress?: Prisma.StringFieldUpdateOperationsInput | string
   businessType?: Prisma.StringFieldUpdateOperationsInput | string
+  registrationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -436,6 +486,8 @@ export type MerchantProfileUncheckedUpdateWithoutUserInput = {
   businessName?: Prisma.StringFieldUpdateOperationsInput | string
   businessAddress?: Prisma.StringFieldUpdateOperationsInput | string
   businessType?: Prisma.StringFieldUpdateOperationsInput | string
+  registrationNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  website?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -448,6 +500,8 @@ export type MerchantProfileSelect<ExtArgs extends runtime.Types.Extensions.Inter
   businessName?: boolean
   businessAddress?: boolean
   businessType?: boolean
+  registrationNumber?: boolean
+  website?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -459,6 +513,8 @@ export type MerchantProfileSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
   businessName?: boolean
   businessAddress?: boolean
   businessType?: boolean
+  registrationNumber?: boolean
+  website?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -470,6 +526,8 @@ export type MerchantProfileSelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
   businessName?: boolean
   businessAddress?: boolean
   businessType?: boolean
+  registrationNumber?: boolean
+  website?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -481,11 +539,13 @@ export type MerchantProfileSelectScalar = {
   businessName?: boolean
   businessAddress?: boolean
   businessType?: boolean
+  registrationNumber?: boolean
+  website?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type MerchantProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "businessName" | "businessAddress" | "businessType" | "createdAt" | "updatedAt", ExtArgs["result"]["merchantProfile"]>
+export type MerchantProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "businessName" | "businessAddress" | "businessType" | "registrationNumber" | "website" | "createdAt" | "updatedAt", ExtArgs["result"]["merchantProfile"]>
 export type MerchantProfileInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -507,6 +567,8 @@ export type $MerchantProfilePayload<ExtArgs extends runtime.Types.Extensions.Int
     businessName: string
     businessAddress: string
     businessType: string
+    registrationNumber: string | null
+    website: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["merchantProfile"]>
@@ -938,6 +1000,8 @@ export interface MerchantProfileFieldRefs {
   readonly businessName: Prisma.FieldRef<"MerchantProfile", 'String'>
   readonly businessAddress: Prisma.FieldRef<"MerchantProfile", 'String'>
   readonly businessType: Prisma.FieldRef<"MerchantProfile", 'String'>
+  readonly registrationNumber: Prisma.FieldRef<"MerchantProfile", 'String'>
+  readonly website: Prisma.FieldRef<"MerchantProfile", 'String'>
   readonly createdAt: Prisma.FieldRef<"MerchantProfile", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"MerchantProfile", 'DateTime'>
 }

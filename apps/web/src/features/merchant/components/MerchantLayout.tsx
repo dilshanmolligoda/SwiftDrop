@@ -85,6 +85,8 @@ export const MerchantLayout: React.FC = () => {
       ? 'Track a parcel'
       : location.pathname.includes('pricing')
         ? 'Pricing'
+        : location.pathname.includes('settings')
+          ? 'Settings'
         : 'Dashboard'
 
   return (

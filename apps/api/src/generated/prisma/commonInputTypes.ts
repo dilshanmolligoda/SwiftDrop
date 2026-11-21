@@ -297,6 +297,23 @@ export type IntWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedIntFilter<$PrismaModel>
 }
 
+export type EnumMerchantBusinessUpdateStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.MerchantBusinessUpdateStatus | Prisma.EnumMerchantBusinessUpdateStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.MerchantBusinessUpdateStatus[] | Prisma.ListEnumMerchantBusinessUpdateStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.MerchantBusinessUpdateStatus[] | Prisma.ListEnumMerchantBusinessUpdateStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumMerchantBusinessUpdateStatusFilter<$PrismaModel> | $Enums.MerchantBusinessUpdateStatus
+}
+
+export type EnumMerchantBusinessUpdateStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.MerchantBusinessUpdateStatus | Prisma.EnumMerchantBusinessUpdateStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.MerchantBusinessUpdateStatus[] | Prisma.ListEnumMerchantBusinessUpdateStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.MerchantBusinessUpdateStatus[] | Prisma.ListEnumMerchantBusinessUpdateStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumMerchantBusinessUpdateStatusWithAggregatesFilter<$PrismaModel> | $Enums.MerchantBusinessUpdateStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumMerchantBusinessUpdateStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumMerchantBusinessUpdateStatusFilter<$PrismaModel>
+}
+
 export type EnumVehicleTypeFilter<$PrismaModel = never> = {
   equals?: $Enums.VehicleType | Prisma.EnumVehicleTypeFieldRefInput<$PrismaModel>
   in?: $Enums.VehicleType[] | Prisma.ListEnumVehicleTypeFieldRefInput<$PrismaModel>
@@ -821,6 +838,23 @@ export type NestedFloatFilter<$PrismaModel = never> = {
   gt?: number | Prisma.FloatFieldRefInput<$PrismaModel>
   gte?: number | Prisma.FloatFieldRefInput<$PrismaModel>
   not?: Prisma.NestedFloatFilter<$PrismaModel> | number
+}
+
+export type NestedEnumMerchantBusinessUpdateStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.MerchantBusinessUpdateStatus | Prisma.EnumMerchantBusinessUpdateStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.MerchantBusinessUpdateStatus[] | Prisma.ListEnumMerchantBusinessUpdateStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.MerchantBusinessUpdateStatus[] | Prisma.ListEnumMerchantBusinessUpdateStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumMerchantBusinessUpdateStatusFilter<$PrismaModel> | $Enums.MerchantBusinessUpdateStatus
+}
+
+export type NestedEnumMerchantBusinessUpdateStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.MerchantBusinessUpdateStatus | Prisma.EnumMerchantBusinessUpdateStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.MerchantBusinessUpdateStatus[] | Prisma.ListEnumMerchantBusinessUpdateStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.MerchantBusinessUpdateStatus[] | Prisma.ListEnumMerchantBusinessUpdateStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumMerchantBusinessUpdateStatusWithAggregatesFilter<$PrismaModel> | $Enums.MerchantBusinessUpdateStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumMerchantBusinessUpdateStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumMerchantBusinessUpdateStatusFilter<$PrismaModel>
 }
 
 export type NestedEnumVehicleTypeFilter<$PrismaModel = never> = {
