@@ -1,3 +1,4 @@
+import { parseEncryptionKey } from '@swiftdrop/contracts/node';
 import { NUMERIC_SETTINGS } from './worker.config.js';
 
 /** The worker only reacts to RabbitMQ events, so it cannot run without both. */
@@ -31,5 +32,42 @@ export function validateEnv(config: Record<string, unknown>) {
     }
   }
 
+  validateWebhookEnv(config);
+
   return config;
+}
+
+function validateWebhookEnv(config: Record<string, unknown>) {
+  const production = config.NODE_ENV === 'production';
+  const allowPrivate = config.WEBHOOK_ALLOW_PRIVATE_TARGETS;
+
+  if (
+    allowPrivate !== undefined &&
+    allowPrivate !== 'true' &&
+    allowPrivate !== 'false'
+  ) {
+    throw new Error('WEBHOOK_ALLOW_PRIVATE_TARGETS must be "true" or "false".');
+  }
+  if (production && allowPrivate === 'true') {
+    throw new Error(
+      'WEBHOOK_ALLOW_PRIVATE_TARGETS=true is not allowed in production; ' +
+        'list specific hosts in WEBHOOK_PRIVATE_HOST_ALLOWLIST instead.',
+    );
+  }
+
+  // In development a missing key only disables webhooks (logged at startup);
+  // in production merchants would silently get nothing, so refuse to start.
+  if (production) {
+    try {
+      parseEncryptionKey(
+        typeof config.WEBHOOK_SECRET_ENCRYPTION_KEY === 'string'
+          ? config.WEBHOOK_SECRET_ENCRYPTION_KEY.trim()
+          : undefined,
+      );
+    } catch (error: unknown) {
+      throw new Error(
+        error instanceof Error ? error.message : 'Invalid encryption key',
+      );
+    }
+  }
 }

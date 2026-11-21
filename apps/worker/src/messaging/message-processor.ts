@@ -8,13 +8,16 @@ import {
 
 /**
  * What to do with a message once processing finished:
- * - `ack`: done (handled now, or already handled before)
- * - `retry`: temporary problem; put it back on the queue after a delay. The
- *   quorum queue's delivery limit dead-letters it if it keeps failing.
+ * - `ack`: done — handled now, handled before, or a later attempt is scheduled
+ * - `retry`: temporary problem; re-published after a growing delay and
+ *   dead-lettered after MAX_PROCESSING_ATTEMPTS (see planRetry)
  * - `dead-letter`: can never succeed; move it to the DLQ for inspection.
  */
 export type Outcome =
-  | { readonly action: 'ack'; readonly detail: 'handled' | 'duplicate' }
+  | {
+      readonly action: 'ack';
+      readonly detail: 'handled' | 'duplicate' | 'deferred';
+    }
   | { readonly action: 'retry'; readonly reason: string }
   | { readonly action: 'dead-letter'; readonly reason: string };
 
@@ -44,7 +47,10 @@ export async function processMessage(
     if (await store.isProcessed(event.eventId, consumer.name)) {
       return { action: 'ack', detail: 'duplicate' };
     }
-    await consumer.handle(event, message.delivery);
+    const result = await consumer.handle(event, message.delivery);
+    if (result === 'deferred') {
+      return { action: 'ack', detail: 'deferred' };
+    }
     await store.markProcessed(event.eventId, consumer.name);
     return { action: 'ack', detail: 'handled' };
   } catch (error: unknown) {

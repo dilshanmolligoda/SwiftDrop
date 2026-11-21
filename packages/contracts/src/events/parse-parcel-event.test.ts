@@ -66,7 +66,10 @@ describe('parseParcelEvent', () => {
     ['an array', []],
     ['null', null],
     ['an unknown version', { ...statusChanged, version: 2 }],
-    ['an unknown event type', { ...statusChanged, eventType: 'parcel.deleted' }],
+    [
+      'an unknown event type',
+      { ...statusChanged, eventType: 'parcel.deleted' },
+    ],
     ['a non-UUID eventId', { ...statusChanged, eventId: 'abc' }],
     ['a non-UTC time', { ...statusChanged, occurredAt: '2026-11-21 08:30' }],
     ['an empty tracking number', { ...statusChanged, trackingNumber: '' }],

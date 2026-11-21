@@ -261,7 +261,7 @@ flowchart LR
     WC["Webhook consumer — worker"]
     RT["WebSocket gateway — each api instance"]
 
-    RQ["webhooks.retry.1…5 — TTL delay queues: 30s · 2m · 8m · 32m · ~2h"]
+    RQ["webhooks.retry.{delay}ms — TTL delay queues: 30s · 2m · 8m · 32m · ~2h"]
     DLQW["webhooks.dead-letter"]
     DLQN["notifications.dead-letter"]
 

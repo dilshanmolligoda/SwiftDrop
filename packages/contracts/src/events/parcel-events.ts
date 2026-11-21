@@ -38,13 +38,15 @@ interface ParcelEventBaseV1<TType extends ParcelEventType> {
   readonly sequence: number;
 }
 
-export interface ParcelCreatedV1
-  extends ParcelEventBaseV1<typeof ParcelEventType.CREATED> {
+export interface ParcelCreatedV1 extends ParcelEventBaseV1<
+  typeof ParcelEventType.CREATED
+> {
   readonly status: ParcelStatus;
 }
 
-export interface ParcelStatusChangedV1
-  extends ParcelEventBaseV1<typeof ParcelEventType.STATUS_CHANGED> {
+export interface ParcelStatusChangedV1 extends ParcelEventBaseV1<
+  typeof ParcelEventType.STATUS_CHANGED
+> {
   readonly previousStatus: ParcelStatus;
   readonly newStatus: ParcelStatus;
   /** Set only when `newStatus` is FAILED. */

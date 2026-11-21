@@ -13,6 +13,8 @@ import {
   type ParcelEventConsumer,
 } from './messaging/parcel-event-consumer.js';
 import { RabbitMqConnection } from './messaging/rabbitmq.connection.js';
+import { WorkerPublisher } from './messaging/worker-publisher.js';
+import { WebhookDeliveryRepository } from './webhooks/webhook-delivery.repository.js';
 
 @Module({
   imports: [
@@ -32,6 +34,8 @@ import { RabbitMqConnection } from './messaging/rabbitmq.connection.js';
     PrismaService,
     RabbitMqConnection,
     ProcessedEventsStore,
+    WorkerPublisher,
+    WebhookDeliveryRepository,
     NotificationConsumer,
     WebhookConsumer,
     {

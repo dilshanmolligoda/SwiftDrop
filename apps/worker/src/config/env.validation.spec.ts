@@ -47,3 +47,56 @@ describe('validateEnv (worker)', () => {
     );
   });
 });
+
+describe('validateEnv (worker webhooks)', () => {
+  const base = {
+    DATABASE_URL: 'postgresql://user:pass@localhost:5432/db',
+    RABBITMQ_URL: 'amqp://swiftdrop:secret@localhost:5672',
+  };
+  const key = Buffer.alloc(32, 1).toString('base64');
+
+  it('lets development start without an encryption key', () => {
+    expect(() => validateEnv(base)).not.toThrow();
+  });
+
+  it('requires a valid 32-byte key in production', () => {
+    expect(() => validateEnv({ ...base, NODE_ENV: 'production' })).toThrow(
+      /WEBHOOK_SECRET_ENCRYPTION_KEY/,
+    );
+    expect(() =>
+      validateEnv({
+        ...base,
+        NODE_ENV: 'production',
+        WEBHOOK_SECRET_ENCRYPTION_KEY: '<change-me-32-bytes-base64>',
+      }),
+    ).toThrow(/32 bytes/);
+    expect(() =>
+      validateEnv({
+        ...base,
+        NODE_ENV: 'production',
+        WEBHOOK_SECRET_ENCRYPTION_KEY: key,
+      }),
+    ).not.toThrow();
+  });
+
+  it('refuses the private-target switch in production', () => {
+    expect(() =>
+      validateEnv({
+        ...base,
+        NODE_ENV: 'production',
+        WEBHOOK_SECRET_ENCRYPTION_KEY: key,
+        WEBHOOK_ALLOW_PRIVATE_TARGETS: 'true',
+      }),
+    ).toThrow(/not allowed in production/);
+  });
+
+  it.each([
+    ['WEBHOOK_MAX_ATTEMPTS', '21'],
+    ['WEBHOOK_TIMEOUT_MS', '0'],
+    ['WEBHOOK_ALLOW_PRIVATE_TARGETS', 'yes'],
+  ])('rejects %s=%s', (name, value) => {
+    expect(() => validateEnv({ ...base, [name]: value })).toThrow(
+      new RegExp(name),
+    );
+  });
+});
