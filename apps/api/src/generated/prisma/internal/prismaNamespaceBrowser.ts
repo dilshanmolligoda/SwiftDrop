@@ -56,6 +56,7 @@ export const ModelName = {
   ParcelStatusEvent: 'ParcelStatusEvent',
   DeliveryProof: 'DeliveryProof',
   MerchantProfile: 'MerchantProfile',
+  MerchantBusinessUpdateRequest: 'MerchantBusinessUpdateRequest',
   CourierProfile: 'CourierProfile',
   MerchantOrder: 'MerchantOrder',
   Parcel: 'Parcel',
@@ -93,6 +94,12 @@ export const UserScalarFieldEnum = {
   approvalStatus: 'approvalStatus',
   isActive: 'isActive',
   googleSubject: 'googleSubject',
+  twoFactorEnabled: 'twoFactorEnabled',
+  deliveryStatusNotifications: 'deliveryStatusNotifications',
+  failedDeliveryNotifications: 'failedDeliveryNotifications',
+  storeConnectionNotifications: 'storeConnectionNotifications',
+  language: 'language',
+  timeZone: 'timeZone',
   reviewedAt: 'reviewedAt',
   reviewedBy: 'reviewedBy',
   rejectionReason: 'rejectionReason',
@@ -153,11 +160,31 @@ export const MerchantProfileScalarFieldEnum = {
   businessName: 'businessName',
   businessAddress: 'businessAddress',
   businessType: 'businessType',
+  registrationNumber: 'registrationNumber',
+  website: 'website',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type MerchantProfileScalarFieldEnum = (typeof MerchantProfileScalarFieldEnum)[keyof typeof MerchantProfileScalarFieldEnum]
+
+
+export const MerchantBusinessUpdateRequestScalarFieldEnum = {
+  id: 'id',
+  merchantUserId: 'merchantUserId',
+  businessName: 'businessName',
+  businessAddress: 'businessAddress',
+  businessType: 'businessType',
+  registrationNumber: 'registrationNumber',
+  website: 'website',
+  status: 'status',
+  createdAt: 'createdAt',
+  reviewedAt: 'reviewedAt',
+  reviewedBy: 'reviewedBy',
+  rejectionReason: 'rejectionReason'
+} as const
+
+export type MerchantBusinessUpdateRequestScalarFieldEnum = (typeof MerchantBusinessUpdateRequestScalarFieldEnum)[keyof typeof MerchantBusinessUpdateRequestScalarFieldEnum]
 
 
 export const CourierProfileScalarFieldEnum = {

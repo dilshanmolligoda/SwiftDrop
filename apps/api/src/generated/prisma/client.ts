@@ -65,6 +65,11 @@ export type DeliveryProof = Prisma.DeliveryProofModel
  */
 export type MerchantProfile = Prisma.MerchantProfileModel
 /**
+ * Model MerchantBusinessUpdateRequest
+ * 
+ */
+export type MerchantBusinessUpdateRequest = Prisma.MerchantBusinessUpdateRequestModel
+/**
  * Model CourierProfile
  * 
  */
