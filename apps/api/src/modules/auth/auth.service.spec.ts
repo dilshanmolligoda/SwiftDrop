@@ -35,6 +35,7 @@ describe('AuthService', () => {
   let emailService: {
     sendCustomerWelcomeEmail: jest.Mock;
     sendWelcomeEmail: jest.Mock;
+    sendPasswordResetEmail: jest.Mock;
   };
   let prismaService: {
     notification: { create: jest.Mock };
@@ -70,6 +71,7 @@ describe('AuthService', () => {
     emailService = {
       sendCustomerWelcomeEmail: jest.fn().mockResolvedValue(undefined),
       sendWelcomeEmail: jest.fn().mockResolvedValue(undefined),
+      sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
     };
     prismaService = {
       notification: {
@@ -615,6 +617,71 @@ describe('AuthService', () => {
         rejectionReason: 'Invalid business address documentation',
       });
       expect('reviewedBy' in status).toBe(false);
+    });
+  });
+
+  describe('forgotPassword', () => {
+    it('generates a 15-minute signed token and dispatches reset email when user exists', async () => {
+      usersService.findByEmail.mockResolvedValue(validUser);
+      jwtService.signAsync.mockResolvedValue('secure-signed-reset-token');
+
+      const result = await authService.forgotPassword({
+        email: 'user@example.com',
+      });
+
+      expect(usersService.findByEmail).toHaveBeenCalledWith('user@example.com');
+      expect(jwtService.signAsync).toHaveBeenCalledWith(
+        {
+          sub: validUser.id,
+          userId: validUser.id,
+          purpose: 'password_reset',
+        },
+        expect.objectContaining({
+          expiresIn: '15m',
+          algorithm: 'HS256',
+        }),
+      );
+      expect(emailService.sendPasswordResetEmail).toHaveBeenCalledWith(
+        validUser.email,
+        'secure-signed-reset-token',
+        validUser.fullName,
+      );
+      expect(result).toEqual({
+        message: 'If the email exists, a reset link was sent',
+      });
+    });
+
+    it('returns standard 200 message without generating token or sending email when user does not exist', async () => {
+      usersService.findByEmail.mockResolvedValue(null);
+
+      const result = await authService.forgotPassword({
+        email: 'unknown@example.com',
+      });
+
+      expect(usersService.findByEmail).toHaveBeenCalledWith(
+        'unknown@example.com',
+      );
+      expect(jwtService.signAsync).not.toHaveBeenCalled();
+      expect(emailService.sendPasswordResetEmail).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        message: 'If the email exists, a reset link was sent',
+      });
+    });
+
+    it('returns standard message gracefully even if email service fails', async () => {
+      usersService.findByEmail.mockResolvedValue(validUser);
+      jwtService.signAsync.mockResolvedValue('secure-signed-reset-token');
+      emailService.sendPasswordResetEmail.mockRejectedValue(
+        new Error('SMTP connection error'),
+      );
+
+      const result = await authService.forgotPassword({
+        email: 'user@example.com',
+      });
+
+      expect(result).toEqual({
+        message: 'If the email exists, a reset link was sent',
+      });
     });
   });
 

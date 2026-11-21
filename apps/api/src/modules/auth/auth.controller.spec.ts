@@ -27,6 +27,7 @@ describe('AuthController', () => {
     registerCourier: jest.Mock;
     getProfile: jest.Mock;
     getApplicationStatus: jest.Mock;
+    forgotPassword: jest.Mock;
   };
   let configService: { get: jest.Mock };
 
@@ -38,6 +39,7 @@ describe('AuthController', () => {
       registerCourier: jest.fn(),
       getProfile: jest.fn(),
       getApplicationStatus: jest.fn(),
+      forgotPassword: jest.fn(),
     };
     configService = {
       get: jest
@@ -129,6 +131,19 @@ describe('AuthController', () => {
 
     expect(authService.getProfile).toHaveBeenCalledWith('user-1');
     expect(result).toEqual(profileResponse);
+  });
+
+  it('delegates forgotPassword to AuthService.forgotPassword and returns standard message', async () => {
+    const expectedResponse = {
+      message: 'If the email exists, a reset link was sent',
+    };
+    authService.forgotPassword.mockResolvedValue(expectedResponse);
+
+    const dto = { email: 'user@example.com' };
+    const result = await controller.forgotPassword(dto);
+
+    expect(authService.forgotPassword).toHaveBeenCalledWith(dto);
+    expect(result).toEqual(expectedResponse);
   });
 
   it('clears authentication cookie on logout with matching cookie attributes', () => {

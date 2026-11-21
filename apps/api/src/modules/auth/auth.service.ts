@@ -17,6 +17,7 @@ import { LoginDto } from './dto/login.dto.js';
 import { RegisterCustomerDto } from './dto/register-customer.dto.js';
 import { RegisterMerchantDto } from './dto/register-merchant.dto.js';
 import { RegisterCourierDto } from './dto/register-courier.dto.js';
+import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
 import { normalizePhoneNumber } from './utils/phone.util.js';
 import {
   Role,
@@ -182,6 +183,49 @@ export class AuthService {
       role: user.role,
       approvalStatus: user.approvalStatus,
     });
+  }
+
+  async forgotPassword(dto: ForgotPasswordDto): Promise<{ message: string }> {
+    const normalizedEmail = dto.email.trim().toLowerCase();
+    const user = await this.usersService.findByEmail(normalizedEmail);
+
+    if (!user) {
+      return { message: 'If the email exists, a reset link was sent' };
+    }
+
+    const secret =
+      this.configService.get<string>('JWT_RESET_SECRET') ||
+      this.configService.getOrThrow<string>('JWT_ACCESS_SECRET');
+
+    const token = await this.jwtService.signAsync(
+      {
+        sub: user.id,
+        userId: user.id,
+        purpose: 'password_reset',
+      },
+      {
+        secret,
+        expiresIn: '15m',
+        algorithm: 'HS256',
+      },
+    );
+
+    if (this.emailService) {
+      try {
+        await this.emailService.sendPasswordResetEmail(
+          user.email,
+          token,
+          user.fullName,
+        );
+      } catch (error) {
+        this.logger.error(
+          `Failed to dispatch password reset email to ${user.email}: ${(error as Error).message}`,
+          (error as Error).stack,
+        );
+      }
+    }
+
+    return { message: 'If the email exists, a reset link was sent' };
   }
 
   async registerCustomer(dto: RegisterCustomerDto): Promise<LoginResult> {

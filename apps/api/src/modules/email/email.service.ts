@@ -89,6 +89,26 @@ export class EmailService {
     return this.sendCustomerWelcomeEmail(to, fullName);
   }
 
+  async sendPasswordResetEmail(
+    to: string,
+    token: string,
+    fullName?: string,
+  ): Promise<void> {
+    const resetUrl = `${this.webAppUrl.replace(/\/+$/, '')}/reset-password?token=${encodeURIComponent(token)}`;
+    const subject = 'Reset your SwiftDrop password';
+    const html = this.renderPasswordResetHtml(fullName, resetUrl);
+    const text = fullName
+      ? `Hello ${fullName},\n\nWe received a request to reset the password for your SwiftDrop account.\n\nTo reset your password, please click the link below:\n${resetUrl}\n\nThis link will expire in 15 minutes. If you did not request a password reset, you can safely ignore this email.\n\nBest regards,\nThe SwiftDrop Team`
+      : `Hello,\n\nWe received a request to reset the password for your SwiftDrop account.\n\nTo reset your password, please click the link below:\n${resetUrl}\n\nThis link will expire in 15 minutes. If you did not request a password reset, you can safely ignore this email.\n\nBest regards,\nThe SwiftDrop Team`;
+
+    await this.sendMail({
+      to,
+      subject,
+      html,
+      text,
+    });
+  }
+
   private renderCustomerWelcomeHtml(
     fullName: string,
     loginUrl: string,
@@ -288,6 +308,184 @@ export class EmailService {
             <td class="footer" style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 24px 32px; text-align: center; font-size: 12px; color: #64748b; line-height: 1.5;">
               SwiftDrop - Fast &amp; Reliable Parcel Delivery<br>
               If you didn't create an account, you can safely ignore this email.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+  }
+
+  private renderPasswordResetHtml(
+    fullName: string | undefined,
+    resetUrl: string,
+  ): string {
+    const greeting = fullName ? `Hello, ${fullName}!` : 'Hello!';
+
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reset your SwiftDrop password</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f1f5f9;
+      color: #1e293b;
+      -webkit-font-smoothing: antialiased;
+    }
+    table {
+      border-collapse: collapse;
+    }
+    .container {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    }
+    .header {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+      padding: 36px 32px;
+      text-align: center;
+    }
+    .brand-title {
+      color: #ffffff;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin: 0;
+    }
+    .brand-subtitle {
+      color: #93c5fd;
+      font-size: 14px;
+      font-weight: 500;
+      margin-top: 6px;
+    }
+    .content {
+      padding: 36px 32px;
+    }
+    .greeting {
+      font-size: 20px;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0 0 16px 0;
+    }
+    .intro {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #334155;
+      margin: 0 0 20px 0;
+    }
+    .warning-box {
+      background-color: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+    }
+    .warning-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1e40af;
+      margin-bottom: 4px;
+    }
+    .warning-text {
+      font-size: 13px;
+      color: #3b82f6;
+      line-height: 1.5;
+    }
+    .cta-button {
+      background-color: #2563eb;
+      color: #ffffff !important;
+      display: inline-block;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 14px 32px;
+      text-decoration: none;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+    }
+    .cta-hint {
+      font-size: 12px;
+      color: #94a3b8;
+      text-align: center;
+      margin-top: 12px;
+    }
+    .footer {
+      background-color: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      padding: 24px 32px;
+      text-align: center;
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 24px 0; background-color: #f1f5f9;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="center">
+        <table role="presentation" class="container" cellpadding="0" cellspacing="0" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;">
+          <!-- Header -->
+          <tr>
+            <td class="header" style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); padding: 36px 32px; text-align: center;">
+              <h1 class="brand-title" style="color: #ffffff; font-size: 28px; font-weight: 800; margin: 0; letter-spacing: -0.5px;">SwiftDrop</h1>
+              <div class="brand-subtitle" style="color: #93c5fd; font-size: 14px; font-weight: 500; margin-top: 6px;">Island-wide Parcel Delivery & Courier Management</div>
+            </td>
+          </tr>
+          <!-- Content -->
+          <tr>
+            <td class="content" style="padding: 36px 32px;">
+              <h2 class="greeting" style="font-size: 20px; font-weight: 700; color: #0f172a; margin: 0 0 16px 0;">${greeting}</h2>
+              <p class="intro" style="font-size: 15px; line-height: 1.6; color: #334155; margin: 0 0 20px 0;">
+                We received a request to reset your password for your SwiftDrop account. Click the button below to choose a new password.
+              </p>
+              
+              <!-- Expiration Warning Box -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; margin-bottom: 28px;">
+                <tr>
+                  <td style="padding: 16px 20px;">
+                    <div style="font-size: 14px; font-weight: 700; color: #1e40af; margin-bottom: 4px;">Important Note</div>
+                    <div style="font-size: 13px; color: #1e3a8a; line-height: 1.5;">This password reset link will expire in 15 minutes. For security reasons, it can only be used once.</div>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Call to Action -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 28px 0 16px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${resetUrl}" target="_blank" style="background-color: #2563eb; color: #ffffff !important; display: inline-block; font-size: 15px; font-weight: 600; padding: 14px 32px; text-decoration: none; border-radius: 8px;">
+                      Reset Password
+                    </a>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding-top: 14px;">
+                    <span style="font-size: 12px; color: #94a3b8; word-break: break-all;">Or visit: <a href="${resetUrl}" style="color: #2563eb; text-decoration: underline;">${resetUrl}</a></span>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="font-size: 13px; line-height: 1.5; color: #64748b; margin: 24px 0 0 0;">
+                If you did not request a password reset, you can safely ignore this email. Your current password remains unchanged.
+              </p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td class="footer" style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 24px 32px; text-align: center; font-size: 12px; color: #64748b; line-height: 1.5;">
+              SwiftDrop - Fast &amp; Reliable Parcel Delivery<br>
+              If you have any questions, please contact our support team.
             </td>
           </tr>
         </table>
