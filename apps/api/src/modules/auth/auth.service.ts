@@ -677,6 +677,56 @@ export class AuthService {
       googleSubject: identity.googleSubject,
     });
 
+    // Send Google account linked email
+    if (this.emailService) {
+      try {
+        await this.emailService.sendGoogleLinkedEmail(
+          newCustomer.email,
+          identity.email,
+          newCustomer.fullName,
+        );
+      } catch (emailError) {
+        this.logger.error(
+          `Failed to send Google linked email to ${newCustomer.email}: ${(emailError as Error).message}`,
+        );
+      }
+    }
+
+    // Insert in-app and email notification records
+    if (this.prisma) {
+      try {
+        await this.prisma.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.IN_APP,
+            recipientUserId: newCustomer.id,
+            template: 'google_account_linked',
+            title: 'Google account linked',
+            description: 'You can now sign in using Google.',
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+
+        await this.prisma.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.EMAIL,
+            recipientUserId: newCustomer.id,
+            template: 'google_account_linked',
+            title: 'Google account linked',
+            description: `Your SwiftDrop profile is now connected with your Google account (${identity.email}). You can now use Login with Google.`,
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+      } catch (notifError) {
+        this.logger.error(
+          `Failed to create notification records for Google customer ${newCustomer.id}: ${(notifError as Error).message}`,
+        );
+      }
+    }
+
     const session = await this.createAuthSession({
       id: newCustomer.id,
       email: newCustomer.email,
@@ -745,6 +795,56 @@ export class AuthService {
       currentUser.id,
       identity.googleSubject,
     );
+
+    // Send Google account linked email
+    if (this.emailService) {
+      try {
+        await this.emailService.sendGoogleLinkedEmail(
+          currentUser.email,
+          identity.email,
+          currentUser.fullName,
+        );
+      } catch (emailError) {
+        this.logger.error(
+          `Failed to send Google linked email to ${currentUser.email}: ${(emailError as Error).message}`,
+        );
+      }
+    }
+
+    // Insert in-app and email notification records
+    if (this.prisma) {
+      try {
+        await this.prisma.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.IN_APP,
+            recipientUserId: currentUser.id,
+            template: 'google_account_linked',
+            title: 'Google account linked',
+            description: 'You can now sign in using Google.',
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+
+        await this.prisma.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.EMAIL,
+            recipientUserId: currentUser.id,
+            template: 'google_account_linked',
+            title: 'Google account linked',
+            description: `Your SwiftDrop profile is now connected with your Google account (${identity.email}). You can now use Login with Google.`,
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+      } catch (notifError) {
+        this.logger.error(
+          `Failed to create notification records for linked user ${currentUser.id}: ${(notifError as Error).message}`,
+        );
+      }
+    }
 
     return {
       redirectUrl: `${dashboardUrl}?link_success=google_connected`,

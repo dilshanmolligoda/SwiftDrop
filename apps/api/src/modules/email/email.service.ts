@@ -168,6 +168,25 @@ export class EmailService {
     });
   }
 
+  async sendGoogleLinkedEmail(
+    to: string,
+    googleEmail: string,
+    fullName?: string,
+  ): Promise<void> {
+    const loginUrl = `${this.webAppUrl.replace(/\/+$/, '')}/login`;
+    const subject = 'Your Google Account is linked to SwiftDrop';
+    const html = this.renderGoogleLinkedHtml(fullName, googleEmail, loginUrl);
+    const greeting = fullName ? `Hello ${fullName},` : 'Hello,';
+    const text = `${greeting}\n\nYour SwiftDrop profile is now connected with your Google account (${googleEmail}). You can now use Login with Google.\n\nBest regards,\nThe SwiftDrop Team`;
+
+    await this.sendMail({
+      to,
+      subject,
+      html,
+      text,
+    });
+  }
+
   private renderCustomerWelcomeHtml(
     fullName: string,
     loginUrl: string,
@@ -919,6 +938,73 @@ export class EmailService {
             <td class="footer" style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 24px 32px; text-align: center; font-size: 12px; color: #64748b; line-height: 1.5;">
               SwiftDrop - Fast &amp; Reliable Parcel Delivery<br>
               Automated Security Notification
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+  }
+
+  private renderGoogleLinkedHtml(
+    fullName: string | undefined,
+    googleEmail: string,
+    loginUrl: string,
+  ): string {
+    const greeting = fullName ? `Hello ${fullName},` : 'Hello,';
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google Account Linked</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; color: #1e293b; -webkit-font-smoothing: antialiased;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f1f5f9; padding: 40px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); padding: 36px 32px; text-align: center;">
+              <h1 style="color: #ffffff; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin: 0;">SwiftDrop</h1>
+              <div style="color: #93c5fd; font-size: 14px; font-weight: 500; margin-top: 6px;">Smart Courier &amp; Logistics Management</div>
+            </td>
+          </tr>
+          <!-- Body Content -->
+          <tr>
+            <td style="padding: 40px 36px;">
+              <h2 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-top: 0; margin-bottom: 16px;">Google Account Connected</h2>
+              <p style="font-size: 15px; line-height: 1.6; color: #475569; margin-bottom: 16px;">${greeting}</p>
+              <p style="font-size: 15px; line-height: 1.6; color: #475569; margin-bottom: 24px;">
+                Your SwiftDrop profile is now connected with your Google account (<strong>${googleEmail}</strong>). You can now use Login with Google.
+              </p>
+              
+              <!-- Info Box -->
+              <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #2563eb; border-radius: 8px; padding: 18px 20px; margin-bottom: 28px;">
+                <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 4px;">Connected Google Account</div>
+                <div style="font-size: 15px; font-weight: 600; color: #0f172a;">${googleEmail}</div>
+              </div>
+
+              <!-- Call to Action -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 28px 0 16px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${loginUrl}" target="_blank" style="background-color: #2563eb; color: #ffffff !important; display: inline-block; font-size: 15px; font-weight: 600; padding: 14px 32px; text-decoration: none; border-radius: 8px;">
+                      Sign in to SwiftDrop
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 24px 32px; text-align: center; font-size: 12px; color: #64748b; line-height: 1.5;">
+              SwiftDrop - Fast &amp; Reliable Parcel Delivery<br>
+              Automated Account Notification
             </td>
           </tr>
         </table>

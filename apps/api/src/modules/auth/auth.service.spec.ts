@@ -73,6 +73,9 @@ describe('AuthService', () => {
       createCustomer: jest.fn(),
       createMerchant: jest.fn(),
       createCourier: jest.fn(),
+      createGoogleCustomer: jest.fn(),
+      findByGoogleSubject: jest.fn(),
+      linkGoogleSubject: jest.fn(),
     };
     passwordService = {
       verify: jest.fn(),
@@ -89,6 +92,7 @@ describe('AuthService', () => {
       sendPasswordResetConfirmationEmail: jest
         .fn()
         .mockResolvedValue(undefined),
+      sendGoogleLinkedEmail: jest.fn().mockResolvedValue(undefined),
     };
     prismaService = {
       user: {
@@ -836,6 +840,105 @@ describe('AuthService', () => {
           newPassword: 'NewPassword123!',
         }),
       ).rejects.toThrow(new BadRequestException('User not found'));
+    });
+  });
+
+  describe('Google OAuth Notifications (Scenario 05)', () => {
+    const googleIdentity = {
+      googleSubject: 'google-sub-12345',
+      email: 'customer@example.com',
+      fullName: 'Google User',
+      emailVerified: true,
+    };
+
+    it('dispatches email and records notifications when a new customer account is created via Google', async () => {
+      usersService.findByGoogleSubject.mockResolvedValue(null);
+      usersService.findByEmail.mockResolvedValue(null);
+      usersService.createGoogleCustomer.mockResolvedValue({
+        id: 'new-google-user-id',
+        email: 'customer@example.com',
+        fullName: 'Google User',
+        role: Role.CUSTOMER,
+        approvalStatus: ApprovalStatus.APPROVED,
+      });
+      jwtService.signAsync.mockResolvedValue('test-jwt');
+
+      const result = await authService.handleGoogleSignIn(googleIdentity);
+
+      expect(result.type).toBe('authenticated');
+      expect(emailService.sendGoogleLinkedEmail).toHaveBeenCalledWith(
+        'customer@example.com',
+        'customer@example.com',
+        'Google User',
+      );
+      expect(prismaService.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            recipientUserId: 'new-google-user-id',
+            channel: NotificationChannel.IN_APP,
+            template: 'google_account_linked',
+            title: 'Google account linked',
+            description: 'You can now sign in using Google.',
+            status: NotificationStatus.SENT,
+          }),
+        }),
+      );
+      expect(prismaService.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            recipientUserId: 'new-google-user-id',
+            channel: NotificationChannel.EMAIL,
+            template: 'google_account_linked',
+            title: 'Google account linked',
+            status: NotificationStatus.SENT,
+          }),
+        }),
+      );
+    });
+
+    it('dispatches email and records notifications when an existing user links their Google account', async () => {
+      usersService.findById.mockResolvedValue({
+        id: validUser.id,
+        email: 'customer@example.com',
+        fullName: 'Test Customer',
+        role: Role.CUSTOMER,
+        approvalStatus: ApprovalStatus.APPROVED,
+        isActive: true,
+        googleSubject: null,
+      });
+      usersService.findByGoogleSubject.mockResolvedValue(null);
+      usersService.linkGoogleSubject.mockResolvedValue({
+        ...validUser,
+        googleSubject: 'google-sub-12345',
+      });
+
+      const result = await authService.handleGoogleLink(
+        validUser.id,
+        googleIdentity,
+      );
+
+      expect(result.redirectUrl).toContain('link_success=google_connected');
+      expect(usersService.linkGoogleSubject).toHaveBeenCalledWith(
+        validUser.id,
+        'google-sub-12345',
+      );
+      expect(emailService.sendGoogleLinkedEmail).toHaveBeenCalledWith(
+        'customer@example.com',
+        'customer@example.com',
+        'Test Customer',
+      );
+      expect(prismaService.notification.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            recipientUserId: validUser.id,
+            channel: NotificationChannel.IN_APP,
+            template: 'google_account_linked',
+            title: 'Google account linked',
+            description: 'You can now sign in using Google.',
+            status: NotificationStatus.SENT,
+          }),
+        }),
+      );
     });
   });
 
