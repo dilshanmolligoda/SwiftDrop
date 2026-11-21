@@ -97,6 +97,15 @@ export class UsersRepository {
     });
   }
 
+  async updatePassword(userId: string, passwordHash: string): Promise<User> {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        passwordHash,
+      },
+    });
+  }
+
   async createCustomer(data: CreateCustomerData): Promise<User> {
     const normalizedEmail = data.email.trim().toLowerCase();
     return this.prisma.user.create({

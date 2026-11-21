@@ -1,26 +1,26 @@
-import React, { useState } from 'react'
-import { Lock, CheckCircle, AlertCircle, X, Eye, EyeOff } from 'lucide-react'
-import { ToggleSwitch } from '../components/ToggleSwitch'
-import { useCustomerProfile } from '../context/useCustomerProfile'
-import { GoogleIcon } from '../../auth/components/GoogleIcon'
-import { env } from '../../../lib/env'
-import './SettingsPage.css'
+import React, { useState } from "react";
+import { Lock, CheckCircle, AlertCircle, X, Eye, EyeOff } from "lucide-react";
+import { ToggleSwitch } from "../components/ToggleSwitch";
+import { useCustomerProfile } from "../context/useCustomerProfile";
+import { GoogleIcon } from "../../auth/components/GoogleIcon";
+import { env } from "../../../lib/env";
+import "./SettingsPage.css";
 
 interface UserProfileState {
-  fullName: string
-  email: string
-  phoneNumber: string
+  fullName: string;
+  email: string;
+  phoneNumber: string;
 }
 
 interface NotificationPreferencesState {
-  isEmailUpdatesEnabled: boolean
-  isSmsUpdatesEnabled: boolean
+  isEmailUpdatesEnabled: boolean;
+  isSmsUpdatesEnabled: boolean;
 }
 
 interface ValidationErrors {
-  fullName?: string
-  email?: string
-  phoneNumber?: string
+  fullName?: string;
+  email?: string;
+  phoneNumber?: string;
 }
 
 /**
@@ -28,43 +28,51 @@ interface ValidationErrors {
  * and notification preferences. Adheres to SOLID, DRY, and explicit naming standards.
  */
 export const SettingsPage: React.FC = () => {
-  const { profile: customerProfile, updateProfile } = useCustomerProfile()
+  const { profile: customerProfile, updateProfile } = useCustomerProfile();
 
   // State management initialized from shared customer profile context
   const [profile, setProfile] = useState<UserProfileState>({
     fullName: customerProfile.fullName,
     email: customerProfile.email,
     phoneNumber: customerProfile.phoneNumber,
-  })
+  });
   const [persistedProfile, setPersistedProfile] = useState<UserProfileState>({
     fullName: customerProfile.fullName,
     email: customerProfile.email,
     phoneNumber: customerProfile.phoneNumber,
-  })
-  const [notifications, setNotifications] = useState<NotificationPreferencesState>({
-    isEmailUpdatesEnabled: customerProfile.notifications.isEmailUpdatesEnabled,
-    isSmsUpdatesEnabled: customerProfile.notifications.isSmsUpdatesEnabled,
-  })
-  const [persistedNotifications, setPersistedNotifications] = useState<NotificationPreferencesState>({
-    isEmailUpdatesEnabled: customerProfile.notifications.isEmailUpdatesEnabled,
-    isSmsUpdatesEnabled: customerProfile.notifications.isSmsUpdatesEnabled,
-  })
+  });
+  const [notifications, setNotifications] =
+    useState<NotificationPreferencesState>({
+      isEmailUpdatesEnabled:
+        customerProfile.notifications.isEmailUpdatesEnabled,
+      isSmsUpdatesEnabled: customerProfile.notifications.isSmsUpdatesEnabled,
+    });
+  const [persistedNotifications, setPersistedNotifications] =
+    useState<NotificationPreferencesState>({
+      isEmailUpdatesEnabled:
+        customerProfile.notifications.isEmailUpdatesEnabled,
+      isSmsUpdatesEnabled: customerProfile.notifications.isSmsUpdatesEnabled,
+    });
 
-  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>(
+    {},
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusFeedbackMessage, setStatusFeedbackMessage] = useState<{
-    type: 'success' | 'error'
-    text: string
-  } | null>(null)
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   // Password Modal State
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false)
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [showPasswords, setShowPasswords] = useState(false)
-  const [passwordModalError, setPasswordModalError] = useState<string | null>(null)
-  const [isPasswordSubmitting, setIsPasswordSubmitting] = useState(false)
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPasswords, setShowPasswords] = useState(false);
+  const [passwordModalError, setPasswordModalError] = useState<string | null>(
+    null,
+  );
+  const [isPasswordSubmitting, setIsPasswordSubmitting] = useState(false);
 
   // Handlers for profile field changes
   const handleProfileFieldChange = (
@@ -74,75 +82,76 @@ export const SettingsPage: React.FC = () => {
     setProfile((previous) => ({
       ...previous,
       [field]: value,
-    }))
+    }));
 
     // Clear specific field error when user starts typing
     if (validationErrors[field]) {
       setValidationErrors((previous) => ({
         ...previous,
         [field]: undefined,
-      }))
+      }));
     }
-  }
+  };
 
   // Handlers for notification preferences
   const handleEmailNotificationToggle = (nextState: boolean): void => {
     setNotifications((previous) => ({
       ...previous,
       isEmailUpdatesEnabled: nextState,
-    }))
-  }
+    }));
+  };
 
   const handleSmsNotificationToggle = (nextState: boolean): void => {
     setNotifications((previous) => ({
       ...previous,
       isSmsUpdatesEnabled: nextState,
-    }))
-  }
+    }));
+  };
 
   // Input validation logic
   const validateForm = (): boolean => {
-    const errors: ValidationErrors = {}
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    const errors: ValidationErrors = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!profile.fullName.trim()) {
-      errors.fullName = 'Full name is required.'
+      errors.fullName = "Full name is required.";
     }
 
     if (!profile.email.trim()) {
-      errors.email = 'Email address is required.'
+      errors.email = "Email address is required.";
     } else if (!emailRegex.test(profile.email.trim())) {
-      errors.email = 'Please provide a valid email address.'
+      errors.email = "Please provide a valid email address.";
     }
 
     // Sri Lankan / International phone format validation (+94 or 0 followed by 9 digits)
-    const phoneCleaned = profile.phoneNumber.replace(/[\s-]/g, '')
-    const phoneRegex = /^(\+94|0)[0-9]{9}$/
+    const phoneCleaned = profile.phoneNumber.replace(/[\s-]/g, "");
+    const phoneRegex = /^(\+94|0)[0-9]{9}$/;
     if (profile.phoneNumber.trim() && !phoneRegex.test(phoneCleaned)) {
-      errors.phoneNumber = 'Enter a valid phone number (e.g., +94 77 123 4567 or 0771234567).'
+      errors.phoneNumber =
+        "Enter a valid phone number (e.g., +94 77 123 4567 or 0771234567).";
     }
 
-    setValidationErrors(errors)
-    return Object.keys(errors).length === 0
-  }
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   // Save changes handler
   const handleSaveChanges = async (event: React.FormEvent): Promise<void> => {
-    event.preventDefault()
-    setStatusFeedbackMessage(null)
+    event.preventDefault();
+    setStatusFeedbackMessage(null);
 
     if (!validateForm()) {
       setStatusFeedbackMessage({
-        type: 'error',
-        text: 'Please review and correct the errors highlighted below.',
-      })
-      return
+        type: "error",
+        text: "Please review and correct the errors highlighted below.",
+      });
+      return;
     }
 
     try {
-      setIsSubmitting(true)
+      setIsSubmitting(true);
       // Simulate backend API call latency
-      await new Promise((resolve) => setTimeout(resolve, 600))
+      await new Promise((resolve) => setTimeout(resolve, 600));
 
       // Update shared customer context so topbar and sidebar sync instantly
       updateProfile({
@@ -153,77 +162,106 @@ export const SettingsPage: React.FC = () => {
           isEmailUpdatesEnabled: notifications.isEmailUpdatesEnabled,
           isSmsUpdatesEnabled: notifications.isSmsUpdatesEnabled,
         },
-      })
+      });
 
-      setPersistedProfile(profile)
-      setPersistedNotifications(notifications)
+      setPersistedProfile(profile);
+      setPersistedNotifications(notifications);
       setStatusFeedbackMessage({
-        type: 'success',
-        text: 'Your settings and preferences have been successfully updated.',
-      })
+        type: "success",
+        text: "Your settings and preferences have been successfully updated.",
+      });
     } catch {
       setStatusFeedbackMessage({
-        type: 'error',
-        text: 'An unexpected error occurred while saving. Please try again.',
-      })
+        type: "error",
+        text: "An unexpected error occurred while saving. Please try again.",
+      });
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   // Cancel handler: resets modified state back to persisted data
   const handleCancelChanges = (): void => {
-    setProfile(persistedProfile)
-    setNotifications(persistedNotifications)
-    setValidationErrors({})
-    setStatusFeedbackMessage(null)
-  }
+    setProfile(persistedProfile);
+    setNotifications(persistedNotifications);
+    setValidationErrors({});
+    setStatusFeedbackMessage(null);
+  };
 
   // Password change submission handler
-  const handleChangePasswordSubmit = async (event: React.FormEvent): Promise<void> => {
-    event.preventDefault()
-    setPasswordModalError(null)
+  const handleChangePasswordSubmit = async (
+    event: React.FormEvent,
+  ): Promise<void> => {
+    event.preventDefault();
+    setPasswordModalError(null);
 
     if (!currentPassword) {
-      setPasswordModalError('Please enter your current password.')
-      return
+      setPasswordModalError("Please enter your current password.");
+      return;
     }
 
     if (newPassword.length < 8) {
-      setPasswordModalError('New password must be at least 8 characters long.')
-      return
+      setPasswordModalError("New password must be at least 8 characters long.");
+      return;
     }
 
     if (newPassword !== confirmPassword) {
-      setPasswordModalError('New passwords do not match.')
-      return
+      setPasswordModalError("New passwords do not match.");
+      return;
     }
 
     try {
-      setIsPasswordSubmitting(true)
-      await new Promise((resolve) => setTimeout(resolve, 600))
+      setIsPasswordSubmitting(true);
+      const res = await fetch(`${env.apiBaseUrl}/users/me/password`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+        }),
+      });
 
-      setIsPasswordModalOpen(false)
-      setCurrentPassword('')
-      setNewPassword('')
-      setConfirmPassword('')
+      if (!res.ok) {
+        const errorData = (await res.json().catch(() => ({}))) as {
+          message?: string | string[];
+        };
+        const message = Array.isArray(errorData.message)
+          ? errorData.message.join(", ")
+          : errorData.message ||
+            "Failed to change password. Please verify your current password.";
+        throw new Error(message);
+      }
+
+      setIsPasswordModalOpen(false);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
       setStatusFeedbackMessage({
-        type: 'success',
-        text: 'Your password was changed successfully.',
-      })
-    } catch {
-      setPasswordModalError('Failed to change password. Please verify your current password.')
+        type: "success",
+        text: "Your password was changed successfully.",
+      });
+    } catch (error) {
+      setPasswordModalError(
+        error instanceof Error
+          ? error.message
+          : "Failed to change password. Please verify your current password.",
+      );
     } finally {
-      setIsPasswordSubmitting(false)
+      setIsPasswordSubmitting(false);
     }
-  }
+  };
 
   return (
     <div className="settings-container">
       {/* Page Header */}
       <header className="settings-header">
         <h1 className="settings-header__title">Settings</h1>
-        <p className="settings-header__subtitle">Manage your profile and preferences.</p>
+        <p className="settings-header__subtitle">
+          Manage your profile and preferences.
+        </p>
       </header>
 
       {/* Global Status Banner */}
@@ -232,7 +270,7 @@ export const SettingsPage: React.FC = () => {
           role="status"
           className={`settings-feedback settings-feedback--${statusFeedbackMessage.type}`}
         >
-          {statusFeedbackMessage.type === 'success' ? (
+          {statusFeedbackMessage.type === "success" ? (
             <CheckCircle className="settings-feedback__icon" />
           ) : (
             <AlertCircle className="settings-feedback__icon" />
@@ -264,12 +302,16 @@ export const SettingsPage: React.FC = () => {
                 id="input-full-name"
                 type="text"
                 value={profile.fullName}
-                onChange={(e) => handleProfileFieldChange('fullName', e.target.value)}
-                className={`settings-input ${validationErrors.fullName ? 'settings-input--error' : ''}`}
+                onChange={(e) =>
+                  handleProfileFieldChange("fullName", e.target.value)
+                }
+                className={`settings-input ${validationErrors.fullName ? "settings-input--error" : ""}`}
                 placeholder="Your full name"
               />
               {validationErrors.fullName && (
-                <span className="settings-error-text">{validationErrors.fullName}</span>
+                <span className="settings-error-text">
+                  {validationErrors.fullName}
+                </span>
               )}
             </div>
 
@@ -281,12 +323,16 @@ export const SettingsPage: React.FC = () => {
                 id="input-email-address"
                 type="email"
                 value={profile.email}
-                onChange={(e) => handleProfileFieldChange('email', e.target.value)}
-                className={`settings-input ${validationErrors.email ? 'settings-input--error' : ''}`}
+                onChange={(e) =>
+                  handleProfileFieldChange("email", e.target.value)
+                }
+                className={`settings-input ${validationErrors.email ? "settings-input--error" : ""}`}
                 placeholder="name@example.com"
               />
               {validationErrors.email && (
-                <span className="settings-error-text">{validationErrors.email}</span>
+                <span className="settings-error-text">
+                  {validationErrors.email}
+                </span>
               )}
             </div>
 
@@ -298,12 +344,16 @@ export const SettingsPage: React.FC = () => {
                 id="input-phone-number"
                 type="tel"
                 value={profile.phoneNumber}
-                onChange={(e) => handleProfileFieldChange('phoneNumber', e.target.value)}
-                className={`settings-input ${validationErrors.phoneNumber ? 'settings-input--error' : ''}`}
+                onChange={(e) =>
+                  handleProfileFieldChange("phoneNumber", e.target.value)
+                }
+                className={`settings-input ${validationErrors.phoneNumber ? "settings-input--error" : ""}`}
                 placeholder="+94 77 123 4567"
               />
               {validationErrors.phoneNumber && (
-                <span className="settings-error-text">{validationErrors.phoneNumber}</span>
+                <span className="settings-error-text">
+                  {validationErrors.phoneNumber}
+                </span>
               )}
             </div>
           </div>
@@ -314,15 +364,17 @@ export const SettingsPage: React.FC = () => {
         {/* Section 2: Security */}
         <section className="settings-section">
           <h2 className="settings-section__title">Security</h2>
-          <p className="settings-section__description">Keep your account secure.</p>
+          <p className="settings-section__description">
+            Keep your account secure.
+          </p>
 
           <div className="settings-row">
             <span className="settings-row__label">Password</span>
             <button
               type="button"
               onClick={() => {
-                setPasswordModalError(null)
-                setIsPasswordModalOpen(true)
+                setPasswordModalError(null);
+                setIsPasswordModalOpen(true);
               }}
               className="settings-btn-secondary"
             >
@@ -336,8 +388,8 @@ export const SettingsPage: React.FC = () => {
               <span className="settings-row__label">Google Account</span>
               <p className="settings-row__hint">
                 {customerProfile.isGoogleLinked
-                  ? 'Your account is linked to Google for single-click sign in.'
-                  : 'Link your Google account for secure single-click login.'}
+                  ? "Your account is linked to Google for single-click sign in."
+                  : "Link your Google account for secure single-click login."}
               </p>
             </div>
             {customerProfile.isGoogleLinked ? (
@@ -349,7 +401,7 @@ export const SettingsPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => {
-                  window.location.href = `${env.apiBaseUrl}/auth/google/link`
+                  window.location.href = `${env.apiBaseUrl}/auth/google/link`;
                 }}
                 className="settings-btn-secondary"
               >
@@ -369,7 +421,9 @@ export const SettingsPage: React.FC = () => {
           <div className="settings-notification-list">
             <div className="settings-notification-item">
               <div className="settings-notification-info">
-                <span className="settings-notification-title">Email updates</span>
+                <span className="settings-notification-title">
+                  Email updates
+                </span>
                 <span className="settings-notification-description">
                   Delivery status updates by email.
                 </span>
@@ -415,14 +469,17 @@ export const SettingsPage: React.FC = () => {
             disabled={isSubmitting}
             className="settings-actions__save-btn"
           >
-            {isSubmitting ? 'Saving...' : 'Save changes'}
+            {isSubmitting ? "Saving..." : "Save changes"}
           </button>
         </div>
       </form>
 
       {/* Password Change Dialog Modal */}
       {isPasswordModalOpen && (
-        <div className="settings-modal-backdrop" onClick={() => setIsPasswordModalOpen(false)}>
+        <div
+          className="settings-modal-backdrop"
+          onClick={() => setIsPasswordModalOpen(false)}
+        >
           <div
             className="settings-modal-card"
             onClick={(e) => e.stopPropagation()}
@@ -451,14 +508,20 @@ export const SettingsPage: React.FC = () => {
               </div>
             )}
 
-            <form onSubmit={handleChangePasswordSubmit} className="settings-modal-form">
+            <form
+              onSubmit={handleChangePasswordSubmit}
+              className="settings-modal-form"
+            >
               <div className="settings-form-group">
-                <label htmlFor="modal-current-password" className="settings-label">
+                <label
+                  htmlFor="modal-current-password"
+                  className="settings-label"
+                >
                   Current password
                 </label>
                 <input
                   id="modal-current-password"
-                  type={showPasswords ? 'text' : 'password'}
+                  type={showPasswords ? "text" : "password"}
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   className="settings-input"
@@ -473,7 +536,7 @@ export const SettingsPage: React.FC = () => {
                 </label>
                 <input
                   id="modal-new-password"
-                  type={showPasswords ? 'text' : 'password'}
+                  type={showPasswords ? "text" : "password"}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="settings-input"
@@ -482,12 +545,15 @@ export const SettingsPage: React.FC = () => {
               </div>
 
               <div className="settings-form-group">
-                <label htmlFor="modal-confirm-password" className="settings-label">
+                <label
+                  htmlFor="modal-confirm-password"
+                  className="settings-label"
+                >
                   Confirm new password
                 </label>
                 <input
                   id="modal-confirm-password"
-                  type={showPasswords ? 'text' : 'password'}
+                  type={showPasswords ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="settings-input"
@@ -506,7 +572,9 @@ export const SettingsPage: React.FC = () => {
                   ) : (
                     <Eye className="w-4 h-4 mr-1.5" />
                   )}
-                  <span>{showPasswords ? 'Hide passwords' : 'Show passwords'}</span>
+                  <span>
+                    {showPasswords ? "Hide passwords" : "Show passwords"}
+                  </span>
                 </button>
               </div>
 
@@ -523,7 +591,7 @@ export const SettingsPage: React.FC = () => {
                   disabled={isPasswordSubmitting}
                   className="settings-actions__save-btn"
                 >
-                  {isPasswordSubmitting ? 'Updating...' : 'Update password'}
+                  {isPasswordSubmitting ? "Updating..." : "Update password"}
                 </button>
               </div>
             </form>
@@ -531,6 +599,6 @@ export const SettingsPage: React.FC = () => {
         </div>
       )}
     </div>
-  )
-}
-export default SettingsPage
+  );
+};
+export default SettingsPage;
