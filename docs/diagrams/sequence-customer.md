@@ -1,7 +1,7 @@
 # Sequence Diagram — Customer
 
 Covers: registration, email/password login, **Login with Google (OAuth 2.0 + PKCE)**,
-**creating a delivery** with fee estimate, live tracking over **SSE**, public tracking,
+**creating a delivery** with fee estimate, live tracking over **WebSocket (Socket.IO)**, public tracking,
 delivery history and receipt download.
 
 ← [Back to diagram index](README.md)
@@ -69,15 +69,18 @@ sequenceDiagram
 
     opt View live tracking
         Customer->>UI: Open parcel tracking
-        UI->>API: Request current status and subscribe through SSE
-        API->>API: Check access to requested parcel
+        UI->>API: GET current status and history (REST)
         API->>DB: Read current status and history
         DB-->>API: Tracking details
-        API-->>UI: Return initial tracking information
+        API-->>UI: Return tracking information
+        UI->>API: WebSocket subscribe to the parcel (cookie auth)
+        API->>DB: Check the customer owns the parcel
+        API-->>UI: Subscription confirmed
 
         loop While connected and status changes
-            Note over API: Status update becomes available
-            API-->>UI: Push latest status through SSE
+            Note over API: Parcel event arrives from RabbitMQ (realtime fan-out)
+            API-->>UI: Push parcel update (status, sequence)
+            UI->>API: Re-read tracking details in the background (REST)
             UI-->>Customer: Refresh tracking timeline
         end
     end
@@ -120,6 +123,6 @@ sequenceDiagram
 | Google login | Authorization Code flow with `state` + PKCE, handled by the backend | Prevents CSRF and code interception; the client secret never reaches the browser |
 | Google login | Backend issues **our own** JWT after verifying Google's ID token | All roles use the same JWT + RBAC checks afterwards |
 | Create delivery | Fee is recalculated on the server and stored with the parcel | The client cannot change the price; the receipt shows the agreed fee |
-| Live tracking | SSE (one-way server → browser) | Simpler than WebSockets for status pushes; auto-reconnects |
+| Live tracking | WebSocket (Socket.IO), same cookie as REST, ownership check per parcel ([ADR 0002](../adr/0002-realtime-websocket.md)) | One connection serves every live screen; the page re-reads over REST on each update and reconnect, so nothing is missed |
 | Public tracking | Limited response (status + timeline, no names/phones/addresses) | Protects personal data on an unauthenticated page |
 | Receipt | Ownership check before generating the PDF | A customer can't download another customer's receipt |

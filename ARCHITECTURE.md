@@ -283,33 +283,60 @@ manual setup in RabbitMQ.
 ### 7.3 Event contract
 
 ```jsonc
-// routing key: parcel.status.changed
+// routing key = eventType: parcel.status.changed (also parcel.created)
 {
-  "eventId": "6f1c2c8e-…",          // UUID, used for idempotency
+  "eventId": "6f1c2c8e-…",          // UUID = outbox row id; consumers dedupe on it
   "eventType": "parcel.status.changed",
   "version": 1,
-  "occurredAt": "2026-10-10T08:30:00Z",
+  "occurredAt": "2026-10-10T08:30:00.000Z",
   "parcelId": "…",
-  "trackingNumber": "SD-7K2M9QX4",
-  "merchantId": "…",               // null for customer parcels → no webhook
+  "trackingNumber": "SD-…",
+  "merchantId": "…",               // merchant user; null for customer parcels → no webhook
+  "courierId": "…",                // assigned courier, for live-update routing
+  "sequence": 42,                  // grows per parcel; drop anything not newer
   "previousStatus": "IN_TRANSIT",
   "newStatus": "OUT_FOR_DELIVERY",
-  "failureReason": null
+  "failureReason": null            // only for FAILED
 }
 ```
 
-The TypeScript type lives in `packages/contracts` and is shared by API and worker. Events
-carry **no personal data** (no names, phones or addresses) — consumers look up what they
-need.
+Types, a runtime parser and the queue topology live in `packages/contracts` and are shared
+by API, worker and web. Events carry **no personal data** (no names, phones or addresses)
+— consumers look up what they need. Recording one is a single call inside the business
+transaction: `OutboxWriter.recordParcelStatusChanged(tx, …)` (see
+`apps/api/src/infrastructure/outbox/README.md`).
+
+**Reliability, as built**
+
+| Failure | What happens |
+|---|---|
+| RabbitMQ down | Rows wait in `outbox_events`; the relay retries with backoff; `/health` shows the backlog |
+| API crash after publish, before marking | Event published again → consumers skip it (`processed_events`) |
+| Worker crash mid-message | Unacked message is redelivered → skipped if already handled |
+| Consumer error (DB/SMTP down) | Re-published with `x-swiftdrop-processing-attempt`, waits 5 s → 5 min; DLQ after 10 attempts (RabbitMQ 4 quorum queues don't count requeues toward `x-delivery-limit`, so the worker counts) |
+| Invalid message | Straight to the dead-letter queue |
+| Several API instances | One relay at a time (Postgres advisory lock) keeps publish order |
 
 ### 7.4 Merchant webhook
 
-- `POST {merchant webhook URL}` with JSON body `{ eventId, trackingNumber, merchantOrderRef, status, occurredAt }`.
-- Headers: `X-SwiftDrop-Event-Id`, `X-SwiftDrop-Timestamp`,
-  `X-SwiftDrop-Signature: sha256=<HMAC of timestamp + body with the merchant's secret>`.
-- `2xx` = success. Timeout / `5xx` / `429` = retry. Other `4xx` = no retry, marked failed.
-- Every attempt stored in `webhook_deliveries` (status code, duration, next retry) and shown
-  in the merchant dashboard.
+- Set up by the merchant: `PUT /merchant/webhook { url }` returns the signing secret
+  **once**; `POST /merchant/webhook/rotate-secret`, `DELETE /merchant/webhook`,
+  `GET /merchant/webhook/deliveries`. The secret is stored AES-256-GCM encrypted, bound to
+  the merchant.
+- `POST {merchant webhook URL}` with `MerchantWebhookPayloadV1`:
+  `{ eventId, eventType, version, occurredAt, trackingNumber, merchantOrderRef, status,
+  previousStatus, failureReason, sequence }`.
+- Headers: `X-SwiftDrop-Event-Id`, `-Event-Type`, `-Timestamp`, `-Delivery-Attempt`, and
+  `X-SwiftDrop-Signature: sha256=` + hex HMAC-SHA256 of `<timestamp>.<raw body>`. Merchants
+  reject timestamps older than 5 minutes and ignore a lower `sequence`.
+- `2xx` = delivered. Timeout / network / `408` / `429` / `5xx` = retry after 30 s · 2 m ·
+  8 m · 32 m · ~2 h (`webhooks.retry.{delay}ms` TTL queues), then `webhooks.dead-letter`.
+  Other `4xx` = no retry, marked failed.
+- **SSRF protection:** URLs are checked when saved and the worker refuses to connect to
+  private, loopback or link-local addresses (checked after DNS, no redirects). Dev switch
+  `WEBHOOK_ALLOW_PRIVATE_TARGETS`; production allowlist `WEBHOOK_PRIVATE_HOST_ALLOWLIST`
+  (e.g. `mock-merchant`); https only in production.
+- Every attempt stored in `webhook_deliveries` (status code, duration, next retry).
 
 ---
 
@@ -388,15 +415,16 @@ model owner).
 | `courier_profiles` | user → courier details, home zone, active flag |
 | `merchants` | owner user, business details, status `PENDING / APPROVED / SUSPENDED` |
 | `api_keys` | merchant, key prefix, key hash, last used, revoked_at |
-| `webhook_endpoints` / `webhook_deliveries` | merchant URL + encrypted secret / every attempt |
+| `webhook_endpoints` / `webhook_deliveries` | one per merchant: URL, encrypted secret, last-4 hint, active / one row per attempt: status, response code, duration, next attempt (unique per endpoint + event + attempt) |
 | `zones` | name, list of areas/cities |
 | `pricing_rules` | from-zone, to-zone, base fee, per-kg fee, size multipliers, active dates |
 | `parcels` | tracking number (unique), sender, pickup/drop-off, size, weight, fee, status, customer_id **or** merchant_id, courier_id |
 | `parcel_status_history` | append-only: parcel, status, actor, note, timestamp |
 | `delivery_proofs` | parcel, recipient name, photo path, failure reason |
-| `outbox_events` | event payload, created_at, published_at |
+| `outbox_events` | event payload, monotonic `sequence`, created/published at, publish attempts + next attempt |
 | `processed_events` | eventId + consumer name (idempotency) |
-| `notifications` | channel, recipient, template, result |
+| `notifications` | event, channel (EMAIL/SMS), recipient user, template, result SENT/FAILED/SKIPPED — unique per event + channel + recipient |
+| `parcels.merchantOrderId` | optional link to the merchant order ([ADR 0003](docs/adr/0003-parcel-merchant-link.md)) |
 
 ---
 
