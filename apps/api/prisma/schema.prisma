@@ -95,6 +95,9 @@ model User {
   parcelStatusEvents ParcelStatusEvent[]  @relation("StatusEventActors")
   deliveryProofs     DeliveryProof[]      @relation("ProofCouriers")
 
+  webhookEndpoint WebhookEndpoint?
+  notifications   Notification[]
+
   @@map("users")
 }
 
@@ -210,6 +213,8 @@ model MerchantOrder {
   updatedAt              DateTime            @updatedAt
 
   merchant User @relation(fields: [merchantUserId], references: [id], onDelete: Cascade)
+  /// Parcel created for this order (ADR 0003). Parcel.status is the source of truth.
+  parcel   Parcel?
 
   @@unique([merchantUserId, reference])
   @@index([merchantUserId, updatedAt])
@@ -237,6 +242,8 @@ model Parcel {
   failedDeliveryAttempts Int        @default(0)
   deliveredAt           DateTime?
   deliveredProofId      String?     @unique @db.Uuid
+  /// Set when the parcel was booked through a merchant order (ADR 0003); null = customer parcel.
+  merchantOrderId       String?     @unique @db.Uuid
   createdAt             DateTime    @default(now())
   updatedAt             DateTime    @updatedAt
 
@@ -246,6 +253,7 @@ model Parcel {
   proofs         DeliveryProof[]
   statusHistory  ParcelStatusHistory[]
   deliveredProof DeliveryProof?        @relation("ParcelDeliveredProof", fields: [deliveredProofId, id], references: [id, parcelId], onDelete: Restrict)
+  merchantOrder  MerchantOrder?        @relation(fields: [merchantOrderId], references: [id], onDelete: SetNull)
 
   @@unique([deliveredProofId, id])
   @@index([status, updatedAt])
@@ -266,4 +274,134 @@ model ParcelStatusHistory {
 
   @@index([parcelId, createdAt])
   @@map("parcel_status_history")
+}
+
+// =====================================================================
+// Events, webhooks and notifications (ARCHITECTURE.md §7)
+// Event shapes: packages/contracts/src/events
+// =====================================================================
+
+/// Transactional outbox: written in the same transaction as the business
+/// change, then published to RabbitMQ by the relay.
+model OutboxEvent {
+  /// Also the eventId inside the published message.
+  id            String    @id @db.Uuid
+  /// Monotonic insert order. Published as the event's `sequence`; per parcel it
+  /// follows commit order because status changes on one parcel are serialized.
+  sequence      BigInt    @unique @default(autoincrement())
+  aggregateType String    @db.VarChar(32)
+  aggregateId   String    @db.Uuid
+  eventType     String    @db.VarChar(64)
+  routingKey    String    @db.VarChar(128)
+  /// Event body without `sequence`, which the relay adds from the column above.
+  payload       Json
+  createdAt     DateTime  @default(now()) @db.Timestamptz(3)
+  publishedAt   DateTime? @db.Timestamptz(3)
+  /// Failed publish attempts; the relay backs off using nextAttemptAt.
+  attempts      Int       @default(0)
+  nextAttemptAt DateTime  @default(now()) @db.Timestamptz(3)
+  lastError     String?   @db.VarChar(1000)
+
+  @@index([publishedAt, nextAttemptAt, sequence])
+  @@index([aggregateId, sequence])
+  @@map("outbox_events")
+}
+
+/// Idempotent consumers: one row per (event, consumer) already handled.
+model ProcessedEvent {
+  eventId     String   @db.Uuid
+  consumer    String   @db.VarChar(64)
+  processedAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@id([eventId, consumer])
+  @@index([processedAt])
+  @@map("processed_events")
+}
+
+/// One webhook URL per merchant. The signing secret is AES-256-GCM encrypted
+/// (merchant-integration/domain/webhook-secret.ts), never stored in plain text.
+model WebhookEndpoint {
+  id              String   @id @default(uuid()) @db.Uuid
+  merchantUserId  String   @unique @db.Uuid
+  url             String   @db.VarChar(2048)
+  secretEncrypted String   @db.Text
+  /// Last characters of the secret, so the dashboard can show which one is active.
+  secretHint      String   @db.VarChar(16)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime @updatedAt @db.Timestamptz(3)
+
+  merchant   User              @relation(fields: [merchantUserId], references: [id], onDelete: Cascade)
+  deliveries WebhookDelivery[]
+
+  @@map("webhook_endpoints")
+}
+
+enum WebhookDeliveryStatus {
+  /// 2xx received.
+  DELIVERED
+  /// Timeout / network error / 408 / 429 / 5xx; another attempt is scheduled.
+  RETRY_SCHEDULED
+  /// Other 4xx; retrying would not help.
+  FAILED
+  /// Retryable failure on the last allowed attempt.
+  DEAD_LETTERED
+}
+
+/// One row per delivery attempt, shown in the merchant dashboard.
+model WebhookDelivery {
+  id             String                @id @default(uuid()) @db.Uuid
+  endpointId     String                @db.Uuid
+  eventId        String                @db.Uuid
+  eventType      String                @db.VarChar(64)
+  trackingNumber String
+  /// 1-based; continues counting on a manual redelivery.
+  attempt        Int
+  status         WebhookDeliveryStatus
+  /// URL at the time of the attempt (the endpoint URL may change later).
+  requestUrl     String                @db.VarChar(2048)
+  responseStatus Int?
+  durationMs     Int?
+  /// Short, sanitized reason (never the response body).
+  errorMessage   String?               @db.VarChar(500)
+  nextAttemptAt  DateTime?             @db.Timestamptz(3)
+  createdAt      DateTime              @default(now()) @db.Timestamptz(3)
+
+  endpoint WebhookEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+
+  @@unique([endpointId, eventId, attempt])
+  @@index([endpointId, createdAt])
+  @@index([eventId])
+  @@map("webhook_deliveries")
+}
+
+enum NotificationChannel {
+  EMAIL
+  SMS
+}
+
+enum NotificationStatus {
+  SENT
+  FAILED
+  /// Not sent on purpose, e.g. no email address or channel disabled.
+  SKIPPED
+}
+
+/// One row per (event, channel, recipient); the unique key stops duplicates.
+model Notification {
+  id              String              @id @default(uuid()) @db.Uuid
+  eventId         String              @db.Uuid
+  channel         NotificationChannel
+  recipientUserId String              @db.Uuid
+  template        String              @db.VarChar(64)
+  status          NotificationStatus
+  errorMessage    String?             @db.VarChar(500)
+  createdAt       DateTime            @default(now()) @db.Timestamptz(3)
+  sentAt          DateTime?           @db.Timestamptz(3)
+
+  recipient User @relation(fields: [recipientUserId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, channel, recipientUserId])
+  @@index([recipientUserId, createdAt])
+  @@map("notifications")
 }

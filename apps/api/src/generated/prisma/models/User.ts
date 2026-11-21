@@ -262,6 +262,8 @@ export type UserWhereInput = {
   createdAssignments?: Prisma.DeliveryAssignmentListRelationFilter
   parcelStatusEvents?: Prisma.ParcelStatusEventListRelationFilter
   deliveryProofs?: Prisma.DeliveryProofListRelationFilter
+  webhookEndpoint?: Prisma.XOR<Prisma.WebhookEndpointNullableScalarRelationFilter, Prisma.WebhookEndpointWhereInput> | null
+  notifications?: Prisma.NotificationListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -287,6 +289,8 @@ export type UserOrderByWithRelationInput = {
   createdAssignments?: Prisma.DeliveryAssignmentOrderByRelationAggregateInput
   parcelStatusEvents?: Prisma.ParcelStatusEventOrderByRelationAggregateInput
   deliveryProofs?: Prisma.DeliveryProofOrderByRelationAggregateInput
+  webhookEndpoint?: Prisma.WebhookEndpointOrderByWithRelationInput
+  notifications?: Prisma.NotificationOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -315,6 +319,8 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   createdAssignments?: Prisma.DeliveryAssignmentListRelationFilter
   parcelStatusEvents?: Prisma.ParcelStatusEventListRelationFilter
   deliveryProofs?: Prisma.DeliveryProofListRelationFilter
+  webhookEndpoint?: Prisma.XOR<Prisma.WebhookEndpointNullableScalarRelationFilter, Prisma.WebhookEndpointWhereInput> | null
+  notifications?: Prisma.NotificationListRelationFilter
 }, "id" | "email" | "googleSubject">
 
 export type UserOrderByWithAggregationInput = {
@@ -380,6 +386,8 @@ export type UserCreateInput = {
   createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
   parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
   deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -405,6 +413,8 @@ export type UserUncheckedCreateInput = {
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
 }
 
 export type UserUpdateInput = {
@@ -430,6 +440,8 @@ export type UserUpdateInput = {
   createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
   deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -455,6 +467,8 @@ export type UserUncheckedUpdateInput = {
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -711,6 +725,34 @@ export type UserUpdateOneRequiredWithoutParcelsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutParcelsInput, Prisma.UserUpdateWithoutParcelsInput>, Prisma.UserUncheckedUpdateWithoutParcelsInput>
 }
 
+export type UserCreateNestedOneWithoutWebhookEndpointInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutWebhookEndpointInput, Prisma.UserUncheckedCreateWithoutWebhookEndpointInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutWebhookEndpointInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutWebhookEndpointNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutWebhookEndpointInput, Prisma.UserUncheckedCreateWithoutWebhookEndpointInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutWebhookEndpointInput
+  upsert?: Prisma.UserUpsertWithoutWebhookEndpointInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutWebhookEndpointInput, Prisma.UserUpdateWithoutWebhookEndpointInput>, Prisma.UserUncheckedUpdateWithoutWebhookEndpointInput>
+}
+
+export type UserCreateNestedOneWithoutNotificationsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutNotificationsInput, Prisma.UserUncheckedCreateWithoutNotificationsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutNotificationsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutNotificationsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutNotificationsInput, Prisma.UserUncheckedCreateWithoutNotificationsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutNotificationsInput
+  upsert?: Prisma.UserUpsertWithoutNotificationsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutNotificationsInput, Prisma.UserUpdateWithoutNotificationsInput>, Prisma.UserUncheckedUpdateWithoutNotificationsInput>
+}
+
 export type UserCreateWithoutCourierAssignmentsInput = {
   id?: string
   email: string
@@ -733,6 +775,8 @@ export type UserCreateWithoutCourierAssignmentsInput = {
   createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
   parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
   deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
 }
 
 export type UserUncheckedCreateWithoutCourierAssignmentsInput = {
@@ -757,6 +801,8 @@ export type UserUncheckedCreateWithoutCourierAssignmentsInput = {
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
 }
 
 export type UserCreateOrConnectWithoutCourierAssignmentsInput = {
@@ -786,6 +832,8 @@ export type UserCreateWithoutCreatedAssignmentsInput = {
   courierAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutCourierInput
   parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
   deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
 }
 
 export type UserUncheckedCreateWithoutCreatedAssignmentsInput = {
@@ -810,6 +858,8 @@ export type UserUncheckedCreateWithoutCreatedAssignmentsInput = {
   courierAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutCourierInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
 }
 
 export type UserCreateOrConnectWithoutCreatedAssignmentsInput = {
@@ -850,6 +900,8 @@ export type UserUpdateWithoutCourierAssignmentsInput = {
   createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
   deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCourierAssignmentsInput = {
@@ -874,6 +926,8 @@ export type UserUncheckedUpdateWithoutCourierAssignmentsInput = {
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserUpsertWithoutCreatedAssignmentsInput = {
@@ -909,6 +963,8 @@ export type UserUpdateWithoutCreatedAssignmentsInput = {
   courierAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutCourierNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
   deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCreatedAssignmentsInput = {
@@ -933,6 +989,8 @@ export type UserUncheckedUpdateWithoutCreatedAssignmentsInput = {
   courierAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutCourierNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserCreateWithoutParcelStatusEventsInput = {
@@ -957,6 +1015,8 @@ export type UserCreateWithoutParcelStatusEventsInput = {
   courierAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutCourierInput
   createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
   deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
 }
 
 export type UserUncheckedCreateWithoutParcelStatusEventsInput = {
@@ -981,6 +1041,8 @@ export type UserUncheckedCreateWithoutParcelStatusEventsInput = {
   courierAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutCourierInput
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
 }
 
 export type UserCreateOrConnectWithoutParcelStatusEventsInput = {
@@ -1021,6 +1083,8 @@ export type UserUpdateWithoutParcelStatusEventsInput = {
   courierAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutCourierNestedInput
   createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
   deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserUncheckedUpdateWithoutParcelStatusEventsInput = {
@@ -1045,6 +1109,8 @@ export type UserUncheckedUpdateWithoutParcelStatusEventsInput = {
   courierAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutCourierNestedInput
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserCreateWithoutDeliveryProofsInput = {
@@ -1069,6 +1135,8 @@ export type UserCreateWithoutDeliveryProofsInput = {
   courierAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutCourierInput
   createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
   parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
+  webhookEndpoint?: Prisma.WebhookEndpointCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
 }
 
 export type UserUncheckedCreateWithoutDeliveryProofsInput = {
@@ -1093,6 +1161,8 @@ export type UserUncheckedCreateWithoutDeliveryProofsInput = {
   courierAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutCourierInput
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
 }
 
 export type UserCreateOrConnectWithoutDeliveryProofsInput = {
@@ -1133,6 +1203,8 @@ export type UserUpdateWithoutDeliveryProofsInput = {
   courierAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutCourierNestedInput
   createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDeliveryProofsInput = {
@@ -1157,6 +1229,8 @@ export type UserUncheckedUpdateWithoutDeliveryProofsInput = {
   courierAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutCourierNestedInput
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserCreateWithoutMerchantProfileInput = {
@@ -1181,6 +1255,8 @@ export type UserCreateWithoutMerchantProfileInput = {
   createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
   parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
   deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
 }
 
 export type UserUncheckedCreateWithoutMerchantProfileInput = {
@@ -1205,6 +1281,8 @@ export type UserUncheckedCreateWithoutMerchantProfileInput = {
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
 }
 
 export type UserCreateOrConnectWithoutMerchantProfileInput = {
@@ -1245,6 +1323,8 @@ export type UserUpdateWithoutMerchantProfileInput = {
   createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
   deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMerchantProfileInput = {
@@ -1269,6 +1349,8 @@ export type UserUncheckedUpdateWithoutMerchantProfileInput = {
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserCreateWithoutCourierProfileInput = {
@@ -1293,6 +1375,8 @@ export type UserCreateWithoutCourierProfileInput = {
   createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
   parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
   deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
 }
 
 export type UserUncheckedCreateWithoutCourierProfileInput = {
@@ -1317,6 +1401,8 @@ export type UserUncheckedCreateWithoutCourierProfileInput = {
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
 }
 
 export type UserCreateOrConnectWithoutCourierProfileInput = {
@@ -1357,6 +1443,8 @@ export type UserUpdateWithoutCourierProfileInput = {
   createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
   deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCourierProfileInput = {
@@ -1381,6 +1469,8 @@ export type UserUncheckedUpdateWithoutCourierProfileInput = {
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserCreateWithoutMerchantOrdersInput = {
@@ -1405,6 +1495,8 @@ export type UserCreateWithoutMerchantOrdersInput = {
   createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
   parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
   deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
 }
 
 export type UserUncheckedCreateWithoutMerchantOrdersInput = {
@@ -1429,6 +1521,8 @@ export type UserUncheckedCreateWithoutMerchantOrdersInput = {
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
 }
 
 export type UserCreateOrConnectWithoutMerchantOrdersInput = {
@@ -1469,6 +1563,8 @@ export type UserUpdateWithoutMerchantOrdersInput = {
   createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
   deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMerchantOrdersInput = {
@@ -1493,6 +1589,8 @@ export type UserUncheckedUpdateWithoutMerchantOrdersInput = {
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserCreateWithoutParcelsInput = {
@@ -1517,6 +1615,8 @@ export type UserCreateWithoutParcelsInput = {
   createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
   parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
   deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
 }
 
 export type UserUncheckedCreateWithoutParcelsInput = {
@@ -1541,6 +1641,8 @@ export type UserUncheckedCreateWithoutParcelsInput = {
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
 }
 
 export type UserCreateOrConnectWithoutParcelsInput = {
@@ -1581,6 +1683,8 @@ export type UserUpdateWithoutParcelsInput = {
   createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
   deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserUncheckedUpdateWithoutParcelsInput = {
@@ -1605,6 +1709,248 @@ export type UserUncheckedUpdateWithoutParcelsInput = {
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
+}
+
+export type UserCreateWithoutWebhookEndpointInput = {
+  id?: string
+  email: string
+  fullName: string
+  phoneNumber?: string | null
+  passwordHash?: string | null
+  role?: $Enums.Role
+  approvalStatus?: $Enums.ApprovalStatus
+  isActive?: boolean
+  googleSubject?: string | null
+  reviewedAt?: Date | string | null
+  reviewedBy?: string | null
+  rejectionReason?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  merchantProfile?: Prisma.MerchantProfileCreateNestedOneWithoutUserInput
+  courierProfile?: Prisma.CourierProfileCreateNestedOneWithoutUserInput
+  merchantOrders?: Prisma.MerchantOrderCreateNestedManyWithoutMerchantInput
+  parcels?: Prisma.ParcelCreateNestedManyWithoutCustomerInput
+  courierAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutCourierInput
+  createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
+  deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
+}
+
+export type UserUncheckedCreateWithoutWebhookEndpointInput = {
+  id?: string
+  email: string
+  fullName: string
+  phoneNumber?: string | null
+  passwordHash?: string | null
+  role?: $Enums.Role
+  approvalStatus?: $Enums.ApprovalStatus
+  isActive?: boolean
+  googleSubject?: string | null
+  reviewedAt?: Date | string | null
+  reviewedBy?: string | null
+  rejectionReason?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  merchantProfile?: Prisma.MerchantProfileUncheckedCreateNestedOneWithoutUserInput
+  courierProfile?: Prisma.CourierProfileUncheckedCreateNestedOneWithoutUserInput
+  merchantOrders?: Prisma.MerchantOrderUncheckedCreateNestedManyWithoutMerchantInput
+  parcels?: Prisma.ParcelUncheckedCreateNestedManyWithoutCustomerInput
+  courierAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutCourierInput
+  createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
+  deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
+}
+
+export type UserCreateOrConnectWithoutWebhookEndpointInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutWebhookEndpointInput, Prisma.UserUncheckedCreateWithoutWebhookEndpointInput>
+}
+
+export type UserUpsertWithoutWebhookEndpointInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutWebhookEndpointInput, Prisma.UserUncheckedUpdateWithoutWebhookEndpointInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutWebhookEndpointInput, Prisma.UserUncheckedCreateWithoutWebhookEndpointInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutWebhookEndpointInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutWebhookEndpointInput, Prisma.UserUncheckedUpdateWithoutWebhookEndpointInput>
+}
+
+export type UserUpdateWithoutWebhookEndpointInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  merchantProfile?: Prisma.MerchantProfileUpdateOneWithoutUserNestedInput
+  courierProfile?: Prisma.CourierProfileUpdateOneWithoutUserNestedInput
+  merchantOrders?: Prisma.MerchantOrderUpdateManyWithoutMerchantNestedInput
+  parcels?: Prisma.ParcelUpdateManyWithoutCustomerNestedInput
+  courierAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutCourierNestedInput
+  createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
+  deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
+}
+
+export type UserUncheckedUpdateWithoutWebhookEndpointInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  merchantProfile?: Prisma.MerchantProfileUncheckedUpdateOneWithoutUserNestedInput
+  courierProfile?: Prisma.CourierProfileUncheckedUpdateOneWithoutUserNestedInput
+  merchantOrders?: Prisma.MerchantOrderUncheckedUpdateManyWithoutMerchantNestedInput
+  parcels?: Prisma.ParcelUncheckedUpdateManyWithoutCustomerNestedInput
+  courierAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutCourierNestedInput
+  createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
+  deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
+}
+
+export type UserCreateWithoutNotificationsInput = {
+  id?: string
+  email: string
+  fullName: string
+  phoneNumber?: string | null
+  passwordHash?: string | null
+  role?: $Enums.Role
+  approvalStatus?: $Enums.ApprovalStatus
+  isActive?: boolean
+  googleSubject?: string | null
+  reviewedAt?: Date | string | null
+  reviewedBy?: string | null
+  rejectionReason?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  merchantProfile?: Prisma.MerchantProfileCreateNestedOneWithoutUserInput
+  courierProfile?: Prisma.CourierProfileCreateNestedOneWithoutUserInput
+  merchantOrders?: Prisma.MerchantOrderCreateNestedManyWithoutMerchantInput
+  parcels?: Prisma.ParcelCreateNestedManyWithoutCustomerInput
+  courierAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutCourierInput
+  createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
+  deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointCreateNestedOneWithoutMerchantInput
+}
+
+export type UserUncheckedCreateWithoutNotificationsInput = {
+  id?: string
+  email: string
+  fullName: string
+  phoneNumber?: string | null
+  passwordHash?: string | null
+  role?: $Enums.Role
+  approvalStatus?: $Enums.ApprovalStatus
+  isActive?: boolean
+  googleSubject?: string | null
+  reviewedAt?: Date | string | null
+  reviewedBy?: string | null
+  rejectionReason?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  merchantProfile?: Prisma.MerchantProfileUncheckedCreateNestedOneWithoutUserInput
+  courierProfile?: Prisma.CourierProfileUncheckedCreateNestedOneWithoutUserInput
+  merchantOrders?: Prisma.MerchantOrderUncheckedCreateNestedManyWithoutMerchantInput
+  parcels?: Prisma.ParcelUncheckedCreateNestedManyWithoutCustomerInput
+  courierAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutCourierInput
+  createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
+  deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedCreateNestedOneWithoutMerchantInput
+}
+
+export type UserCreateOrConnectWithoutNotificationsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutNotificationsInput, Prisma.UserUncheckedCreateWithoutNotificationsInput>
+}
+
+export type UserUpsertWithoutNotificationsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutNotificationsInput, Prisma.UserUncheckedUpdateWithoutNotificationsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutNotificationsInput, Prisma.UserUncheckedCreateWithoutNotificationsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutNotificationsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutNotificationsInput, Prisma.UserUncheckedUpdateWithoutNotificationsInput>
+}
+
+export type UserUpdateWithoutNotificationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  merchantProfile?: Prisma.MerchantProfileUpdateOneWithoutUserNestedInput
+  courierProfile?: Prisma.CourierProfileUpdateOneWithoutUserNestedInput
+  merchantOrders?: Prisma.MerchantOrderUpdateManyWithoutMerchantNestedInput
+  parcels?: Prisma.ParcelUpdateManyWithoutCustomerNestedInput
+  courierAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutCourierNestedInput
+  createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
+  deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUpdateOneWithoutMerchantNestedInput
+}
+
+export type UserUncheckedUpdateWithoutNotificationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  merchantProfile?: Prisma.MerchantProfileUncheckedUpdateOneWithoutUserNestedInput
+  courierProfile?: Prisma.CourierProfileUncheckedUpdateOneWithoutUserNestedInput
+  merchantOrders?: Prisma.MerchantOrderUncheckedUpdateManyWithoutMerchantNestedInput
+  parcels?: Prisma.ParcelUncheckedUpdateManyWithoutCustomerNestedInput
+  courierAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutCourierNestedInput
+  createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
+  deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedUpdateOneWithoutMerchantNestedInput
 }
 
 
@@ -1619,6 +1965,7 @@ export type UserCountOutputType = {
   createdAssignments: number
   parcelStatusEvents: number
   deliveryProofs: number
+  notifications: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1628,6 +1975,7 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   createdAssignments?: boolean | UserCountOutputTypeCountCreatedAssignmentsArgs
   parcelStatusEvents?: boolean | UserCountOutputTypeCountParcelStatusEventsArgs
   deliveryProofs?: boolean | UserCountOutputTypeCountDeliveryProofsArgs
+  notifications?: boolean | UserCountOutputTypeCountNotificationsArgs
 }
 
 /**
@@ -1682,6 +2030,13 @@ export type UserCountOutputTypeCountDeliveryProofsArgs<ExtArgs extends runtime.T
   where?: Prisma.DeliveryProofWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountNotificationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.NotificationWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1706,6 +2061,8 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   createdAssignments?: boolean | Prisma.User$createdAssignmentsArgs<ExtArgs>
   parcelStatusEvents?: boolean | Prisma.User$parcelStatusEventsArgs<ExtArgs>
   deliveryProofs?: boolean | Prisma.User$deliveryProofsArgs<ExtArgs>
+  webhookEndpoint?: boolean | Prisma.User$webhookEndpointArgs<ExtArgs>
+  notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -1770,6 +2127,8 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   createdAssignments?: boolean | Prisma.User$createdAssignmentsArgs<ExtArgs>
   parcelStatusEvents?: boolean | Prisma.User$parcelStatusEventsArgs<ExtArgs>
   deliveryProofs?: boolean | Prisma.User$deliveryProofsArgs<ExtArgs>
+  webhookEndpoint?: boolean | Prisma.User$webhookEndpointArgs<ExtArgs>
+  notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1786,6 +2145,8 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     createdAssignments: Prisma.$DeliveryAssignmentPayload<ExtArgs>[]
     parcelStatusEvents: Prisma.$ParcelStatusEventPayload<ExtArgs>[]
     deliveryProofs: Prisma.$DeliveryProofPayload<ExtArgs>[]
+    webhookEndpoint: Prisma.$WebhookEndpointPayload<ExtArgs> | null
+    notifications: Prisma.$NotificationPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2204,6 +2565,8 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   createdAssignments<T extends Prisma.User$createdAssignmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$createdAssignmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DeliveryAssignmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   parcelStatusEvents<T extends Prisma.User$parcelStatusEventsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$parcelStatusEventsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ParcelStatusEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   deliveryProofs<T extends Prisma.User$deliveryProofsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$deliveryProofsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DeliveryProofPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  webhookEndpoint<T extends Prisma.User$webhookEndpointArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$webhookEndpointArgs<ExtArgs>>): Prisma.Prisma__WebhookEndpointClient<runtime.Types.Result.GetResult<Prisma.$WebhookEndpointPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  notifications<T extends Prisma.User$notificationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notificationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2819,6 +3182,49 @@ export type User$deliveryProofsArgs<ExtArgs extends runtime.Types.Extensions.Int
   take?: number
   skip?: number
   distinct?: Prisma.DeliveryProofScalarFieldEnum | Prisma.DeliveryProofScalarFieldEnum[]
+}
+
+/**
+ * User.webhookEndpoint
+ */
+export type User$webhookEndpointArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the WebhookEndpoint
+   */
+  select?: Prisma.WebhookEndpointSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the WebhookEndpoint
+   */
+  omit?: Prisma.WebhookEndpointOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.WebhookEndpointInclude<ExtArgs> | null
+  where?: Prisma.WebhookEndpointWhereInput
+}
+
+/**
+ * User.notifications
+ */
+export type User$notificationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Notification
+   */
+  select?: Prisma.NotificationSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Notification
+   */
+  omit?: Prisma.NotificationOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.NotificationInclude<ExtArgs> | null
+  where?: Prisma.NotificationWhereInput
+  orderBy?: Prisma.NotificationOrderByWithRelationInput | Prisma.NotificationOrderByWithRelationInput[]
+  cursor?: Prisma.NotificationWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.NotificationScalarFieldEnum | Prisma.NotificationScalarFieldEnum[]
 }
 
 /**
