@@ -505,6 +505,24 @@ export class CourierService {
           },
         });
       }
+
+      if (
+        dto.status === ParcelStatus.DELIVERED &&
+        assignment.parcel.customerId
+      ) {
+        await (tx as any).notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.IN_APP,
+            recipientUserId: assignment.parcel.customerId,
+            template: 'parcel_delivered',
+            title: 'Parcel delivered',
+            description: `${assignment.parcel.trackingNumber ?? ''} was delivered successfully.`.trim(),
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+      }
     }
 
     return { parcelId, status: dto.status, event, duplicate: false };
