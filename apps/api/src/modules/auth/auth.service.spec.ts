@@ -101,6 +101,9 @@ describe('AuthService', () => {
       sendCourierRegistrationReceivedEmail: jest
         .fn()
         .mockResolvedValue(undefined),
+      sendMerchantRegistrationReceivedEmail: jest
+        .fn()
+        .mockResolvedValue(undefined),
     };
     prismaService = {
       user: {
@@ -490,6 +493,7 @@ describe('AuthService', () => {
       const createdMerchant = {
         ...validUser,
         id: 'merchant-uuid',
+        fullName: 'Merchant Owner',
         email: 'store@example.com',
         role: Role.MERCHANT,
         approvalStatus: ApprovalStatus.PENDING,
@@ -526,6 +530,38 @@ describe('AuthService', () => {
       });
       expect(result.user.approvalStatus).toBe(ApprovalStatus.PENDING);
       expect(result.user.role).toBe(Role.MERCHANT);
+      expect(
+        emailService.sendMerchantRegistrationReceivedEmail,
+      ).toHaveBeenCalledWith('store@example.com', 'Merchant Owner', 'My Store');
+
+      const notifCalls = prismaService.notification.create.mock.calls as Array<
+        [
+          {
+            data: {
+              channel: NotificationChannel;
+              recipientUserId: string;
+              template: string;
+              title: string;
+            };
+          },
+        ]
+      >;
+      expect(
+        notifCalls.some(
+          (call) =>
+            call[0].data.channel === NotificationChannel.IN_APP &&
+            call[0].data.recipientUserId === 'merchant-uuid' &&
+            call[0].data.template === 'merchant_registration_submitted',
+        ),
+      ).toBe(true);
+      expect(
+        notifCalls.some(
+          (call) =>
+            call[0].data.channel === NotificationChannel.EMAIL &&
+            call[0].data.recipientUserId === 'merchant-uuid' &&
+            call[0].data.template === 'merchant_registration_submitted',
+        ),
+      ).toBe(true);
     });
   });
 
