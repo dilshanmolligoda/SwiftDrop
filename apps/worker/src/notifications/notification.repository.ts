@@ -65,10 +65,11 @@ export class NotificationRepository {
     id: string;
     phoneNumber: string | null;
     fullName: string;
+    email: string | null;
   } | null> {
     return this.prisma.user.findUnique({
       where: { id },
-      select: { id: true, phoneNumber: true, fullName: true },
+      select: { id: true, phoneNumber: true, fullName: true, email: true },
     });
   }
 
