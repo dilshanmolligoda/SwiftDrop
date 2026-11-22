@@ -1,5 +1,13 @@
-import { Controller, HttpCode, HttpStatus, Param, Patch } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+} from '@nestjs/common';
 import { UsersService } from './users.service.js';
+import { RejectApplicationDto } from './dto/reject-application.dto.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { Role } from '../../generated/prisma/enums.js';
 import {
@@ -27,6 +35,32 @@ export class AdminController {
         fullName: user.fullName,
         role: user.role,
         approvalStatus: user.approvalStatus,
+      },
+    };
+  }
+
+  @Patch('couriers/:id/reject')
+  @Roles(Role.ADMIN, Role.DISPATCHER)
+  @HttpCode(HttpStatus.OK)
+  async rejectCourier(
+    @Param('id') courierId: string,
+    @Body() dto: RejectApplicationDto,
+    @CurrentUser() admin: AuthenticatedUser,
+  ) {
+    const user = await this.usersService.rejectCourier(
+      courierId,
+      dto.reason,
+      admin.id,
+    );
+    return {
+      message: 'Courier application rejected',
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        role: user.role,
+        approvalStatus: user.approvalStatus,
+        rejectionReason: user.rejectionReason,
       },
     };
   }

@@ -356,4 +356,61 @@ export class UsersService {
 
     return updatedUser;
   }
+
+  async rejectCourier(
+    courierId: string,
+    reason: string,
+    reviewedBy?: string,
+  ): Promise<User> {
+    const user = await this.usersRepository.findById(courierId);
+    if (!user) {
+      throw new NotFoundException('Courier not found');
+    }
+    if (user.role !== Role.COURIER) {
+      throw new BadRequestException('User is not a courier');
+    }
+
+    const updatedUser = await this.usersRepository.rejectUser(
+      courierId,
+      reason,
+      reviewedBy,
+    );
+
+    if (this.emailService) {
+      try {
+        await this.emailService.sendCourierRejectedEmail(
+          updatedUser.email,
+          updatedUser.fullName,
+          reason,
+        );
+      } catch (emailErr) {
+        this.logger.error(
+          `Failed to send courier rejection email to ${updatedUser.email}: ${(emailErr as Error).message}`,
+        );
+      }
+    }
+
+    if (this.prisma) {
+      try {
+        await this.prisma.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.EMAIL,
+            recipientUserId: updatedUser.id,
+            template: 'courier_rejected',
+            title: 'Courier application rejected',
+            description: `Application could not be approved: ${reason}`,
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+      } catch (notifErr) {
+        this.logger.error(
+          `Failed to record courier rejection notification for ${updatedUser.id}: ${(notifErr as Error).message}`,
+        );
+      }
+    }
+
+    return updatedUser;
+  }
 }

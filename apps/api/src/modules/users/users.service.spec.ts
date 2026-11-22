@@ -39,6 +39,7 @@ describe('UsersService', () => {
     sendPasswordChangedSettingsEmail: jest.Mock;
     sendProfileUpdatedEmail: jest.Mock;
     sendCourierApprovedEmail: jest.Mock;
+    sendCourierRejectedEmail: jest.Mock;
   };
   let prismaService: {
     notification: { create: jest.Mock };
@@ -77,6 +78,7 @@ describe('UsersService', () => {
       updatePassword: jest.fn(),
       updateProfile: jest.fn(),
       approveUser: jest.fn(),
+      rejectUser: jest.fn(),
     };
     passwordService = {
       verify: jest.fn(),
@@ -86,6 +88,7 @@ describe('UsersService', () => {
       sendPasswordChangedSettingsEmail: jest.fn().mockResolvedValue(undefined),
       sendProfileUpdatedEmail: jest.fn().mockResolvedValue(undefined),
       sendCourierApprovedEmail: jest.fn().mockResolvedValue(undefined),
+      sendCourierRejectedEmail: jest.fn().mockResolvedValue(undefined),
     };
     prismaService = {
       notification: {
@@ -541,6 +544,84 @@ describe('UsersService', () => {
       await expect(service.approveCourier(mockUser.id)).rejects.toThrow(
         BadRequestException,
       );
+    });
+  });
+
+  describe('rejectCourier', () => {
+    const mockCourier: User = {
+      ...mockUser,
+      id: 'courier-uuid-1',
+      role: Role.COURIER,
+      approvalStatus: ApprovalStatus.PENDING,
+    };
+
+    it('rejects a courier application, sends email notice, and logs notification', async () => {
+      repository.findById.mockResolvedValue(mockCourier);
+      const rejectedCourier = {
+        ...mockCourier,
+        approvalStatus: ApprovalStatus.REJECTED,
+        rejectionReason: 'Invalid driver license documents',
+        reviewedAt: new Date(),
+        reviewedBy: 'admin-uuid-1',
+      };
+      repository.rejectUser.mockResolvedValue(rejectedCourier);
+
+      const result = await service.rejectCourier(
+        'courier-uuid-1',
+        'Invalid driver license documents',
+        'admin-uuid-1',
+      );
+
+      expect(result.approvalStatus).toBe(ApprovalStatus.REJECTED);
+      expect(repository.rejectUser).toHaveBeenCalledWith(
+        'courier-uuid-1',
+        'Invalid driver license documents',
+        'admin-uuid-1',
+      );
+      expect(emailService.sendCourierRejectedEmail).toHaveBeenCalledWith(
+        mockCourier.email,
+        mockCourier.fullName,
+        'Invalid driver license documents',
+      );
+      expect(prismaService.notification.create).toHaveBeenCalledTimes(1);
+
+      const calls = prismaService.notification.create.mock.calls as Array<
+        [
+          {
+            data: {
+              recipientUserId: string;
+              channel: NotificationChannel;
+              template: string;
+              title: string;
+              description: string;
+            };
+          },
+        ]
+      >;
+      expect(calls[0][0].data).toMatchObject({
+        recipientUserId: 'courier-uuid-1',
+        channel: NotificationChannel.EMAIL,
+        template: 'courier_rejected',
+        title: 'Courier application rejected',
+        description:
+          'Application could not be approved: Invalid driver license documents',
+      });
+    });
+
+    it('throws NotFoundException if courier does not exist', async () => {
+      repository.findById.mockResolvedValue(null);
+
+      await expect(
+        service.rejectCourier('unknown-courier', 'Reason'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('throws BadRequestException if target user is not a courier', async () => {
+      repository.findById.mockResolvedValue(mockUser);
+
+      await expect(
+        service.rejectCourier(mockUser.id, 'Reason'),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });
