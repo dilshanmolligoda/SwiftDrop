@@ -11,6 +11,8 @@ export default tseslint.config(
     languageOptions: {
       globals: { ...globals.node },
       sourceType: 'module',
+      // Needed when the VS Code ESLint extension lints several workspaces at once
+      parserOptions: { tsconfigRootDir: import.meta.dirname },
     },
   },
 );
