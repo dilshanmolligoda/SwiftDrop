@@ -483,4 +483,62 @@ export class UsersService {
 
     return updatedUser;
   }
+
+  async rejectMerchant(
+    merchantId: string,
+    reason: string,
+    reviewedBy?: string,
+  ): Promise<User> {
+    const user = await this.usersRepository.findMerchantById(merchantId);
+    if (!user) {
+      throw new NotFoundException('Merchant not found');
+    }
+    if (user.role !== Role.MERCHANT) {
+      throw new BadRequestException('User is not a merchant');
+    }
+
+    const updatedUser = await this.usersRepository.rejectUser(
+      merchantId,
+      reason,
+      reviewedBy,
+    );
+
+    if (this.emailService) {
+      try {
+        await this.emailService.sendMerchantRejectedEmail(
+          updatedUser.email,
+          updatedUser.fullName,
+          reason,
+          user.merchantProfile?.businessName,
+        );
+      } catch (emailErr) {
+        this.logger.error(
+          `Failed to send merchant rejection email to ${updatedUser.email}: ${(emailErr as Error).message}`,
+        );
+      }
+    }
+
+    if (this.prisma) {
+      try {
+        await this.prisma.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.EMAIL,
+            recipientUserId: updatedUser.id,
+            template: 'merchant_rejected',
+            title: 'Merchant application rejected',
+            description: `Application could not be approved: ${reason}`,
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+      } catch (notifErr) {
+        this.logger.error(
+          `Failed to record merchant rejection notification for ${updatedUser.id}: ${(notifErr as Error).message}`,
+        );
+      }
+    }
+
+    return updatedUser;
+  }
 }

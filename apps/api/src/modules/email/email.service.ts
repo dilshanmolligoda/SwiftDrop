@@ -322,6 +322,28 @@ export class EmailService {
     });
   }
 
+  async sendMerchantRejectedEmail(
+    to: string,
+    fullName: string,
+    rejectionReason: string,
+    businessName?: string,
+  ): Promise<void> {
+    const subject = 'SwiftDrop Merchant Application Update';
+    const html = this.renderMerchantRejectedHtml(
+      fullName,
+      rejectionReason,
+      businessName,
+    );
+    const text = `Hello ${fullName},\n\nThank you for your interest in partnering with SwiftDrop. We have reviewed the merchant application for ${businessName ?? 'your business'}. Unfortunately, your application could not be approved at this time.\n\nReason: ${rejectionReason}\n\nIf you have questions or would like to submit updated documentation, please contact our merchant support team.\n\nBest regards,\nThe SwiftDrop Merchant Operations Team`;
+
+    await this.sendMail({
+      to,
+      subject,
+      html,
+      text,
+    });
+  }
+
   private renderCustomerWelcomeHtml(
     fullName: string,
     loginUrl: string,
@@ -1660,6 +1682,90 @@ export class EmailService {
                   Open Merchant Dashboard
                 </a>
               </div>
+              <p style="font-size: 14px; line-height: 1.5; color: #64748b; margin-top: 24px;">
+                Best regards,<br>
+                <strong>The SwiftDrop Merchant Operations Team</strong>
+              </p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 24px 32px; text-align: center; font-size: 12px; color: #64748b; line-height: 1.5;">
+              SwiftDrop - Merchant Services<br>
+              Colombo, Sri Lanka
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+  }
+
+  private renderMerchantRejectedHtml(
+    fullName: string,
+    rejectionReason: string,
+    businessName?: string,
+  ): string {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Merchant Application Update</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f1f5f9;
+      color: #1e293b;
+      -webkit-font-smoothing: antialiased;
+    }
+    table {
+      border-collapse: collapse;
+    }
+    .container {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 32px 16px; background-color: #f1f5f9;">
+  <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+    <tr>
+      <td align="center">
+        <table class="container" width="600" cellpadding="0" cellspacing="0" role="presentation" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #0f172a 0%, #475569 100%); padding: 36px 32px; text-align: center;">
+              <h1 style="color: #ffffff; font-size: 26px; font-weight: 700; margin: 0; letter-spacing: -0.5px;">SwiftDrop</h1>
+              <p style="color: #cbd5e1; font-size: 14px; margin: 8px 0 0 0; font-weight: 500;">Merchant Solutions</p>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding: 40px 36px;">
+              <h2 style="font-size: 20px; font-weight: 600; color: #0f172a; margin-top: 0; margin-bottom: 20px;">Merchant Application Update</h2>
+              <p style="font-size: 15px; line-height: 1.6; color: #334155; margin-bottom: 20px;">Hello ${fullName},</p>
+              <p style="font-size: 15px; line-height: 1.6; color: #334155; margin-bottom: 20px;">
+                Thank you for your interest in partnering with SwiftDrop. We have completed the review of the merchant application for ${businessName ? `<strong>${businessName}</strong>` : 'your business'}.
+              </p>
+              <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 16px; border-radius: 4px; margin-bottom: 24px;">
+                <p style="margin: 0; font-size: 14px; color: #991b1b; line-height: 1.5;">
+                  <strong>Status:</strong> Not Approved<br>
+                  <strong>Reason:</strong> ${rejectionReason}
+                </p>
+              </div>
+              <p style="font-size: 14px; line-height: 1.6; color: #475569; margin-bottom: 20px;">
+                If you believe this decision was made in error or would like to submit updated business verification documentation, please contact our merchant support team.
+              </p>
               <p style="font-size: 14px; line-height: 1.5; color: #64748b; margin-top: 24px;">
                 Best regards,<br>
                 <strong>The SwiftDrop Merchant Operations Team</strong>

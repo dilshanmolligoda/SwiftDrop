@@ -84,4 +84,30 @@ export class AdminController {
       },
     };
   }
+
+  @Patch('merchants/:id/reject')
+  @Roles(Role.ADMIN, Role.DISPATCHER)
+  @HttpCode(HttpStatus.OK)
+  async rejectMerchant(
+    @Param('id') merchantId: string,
+    @Body() dto: RejectApplicationDto,
+    @CurrentUser() admin: AuthenticatedUser,
+  ) {
+    const user = await this.usersService.rejectMerchant(
+      merchantId,
+      dto.reason,
+      admin.id,
+    );
+    return {
+      message: 'Merchant application rejected',
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        role: user.role,
+        approvalStatus: user.approvalStatus,
+        rejectionReason: user.rejectionReason,
+      },
+    };
+  }
 }

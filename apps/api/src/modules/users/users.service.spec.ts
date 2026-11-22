@@ -42,6 +42,7 @@ describe('UsersService', () => {
     sendCourierApprovedEmail: jest.Mock;
     sendCourierRejectedEmail: jest.Mock;
     sendMerchantApprovedEmail: jest.Mock;
+    sendMerchantRejectedEmail: jest.Mock;
   };
   let prismaService: {
     notification: { create: jest.Mock };
@@ -93,6 +94,7 @@ describe('UsersService', () => {
       sendCourierApprovedEmail: jest.fn().mockResolvedValue(undefined),
       sendCourierRejectedEmail: jest.fn().mockResolvedValue(undefined),
       sendMerchantApprovedEmail: jest.fn().mockResolvedValue(undefined),
+      sendMerchantRejectedEmail: jest.fn().mockResolvedValue(undefined),
     };
     prismaService = {
       notification: {
@@ -707,6 +709,88 @@ describe('UsersService', () => {
       await expect(service.approveMerchant(mockUser.id)).rejects.toThrow(
         BadRequestException,
       );
+    });
+  });
+
+  describe('rejectMerchant', () => {
+    const mockMerchant: User & { merchantProfile: { businessName: string } } = {
+      ...mockUser,
+      id: 'merchant-uuid-1',
+      role: Role.MERCHANT,
+      approvalStatus: ApprovalStatus.PENDING,
+      merchantProfile: {
+        businessName: 'Super Mart',
+      },
+    };
+
+    it('rejects a merchant application, sends rejection email, and records notification', async () => {
+      repository.findMerchantById.mockResolvedValue(mockMerchant);
+      const rejectedMerchant = {
+        ...mockMerchant,
+        approvalStatus: ApprovalStatus.REJECTED,
+        rejectionReason: 'Invalid business registration documentation',
+        reviewedAt: new Date(),
+        reviewedBy: 'admin-uuid-1',
+      };
+      repository.rejectUser.mockResolvedValue(rejectedMerchant);
+
+      const result = await service.rejectMerchant(
+        'merchant-uuid-1',
+        'Invalid business registration documentation',
+        'admin-uuid-1',
+      );
+
+      expect(result.approvalStatus).toBe(ApprovalStatus.REJECTED);
+      expect(repository.rejectUser).toHaveBeenCalledWith(
+        'merchant-uuid-1',
+        'Invalid business registration documentation',
+        'admin-uuid-1',
+      );
+      expect(emailService.sendMerchantRejectedEmail).toHaveBeenCalledWith(
+        mockMerchant.email,
+        mockMerchant.fullName,
+        'Invalid business registration documentation',
+        'Super Mart',
+      );
+      expect(prismaService.notification.create).toHaveBeenCalledTimes(1);
+
+      const calls = prismaService.notification.create.mock.calls as Array<
+        [
+          {
+            data: {
+              recipientUserId: string;
+              channel: NotificationChannel;
+              template: string;
+              title: string;
+              description: string;
+            };
+          },
+        ]
+      >;
+      expect(calls[0][0].data).toMatchObject({
+        recipientUserId: 'merchant-uuid-1',
+        channel: NotificationChannel.EMAIL,
+        template: 'merchant_rejected',
+        title: 'Merchant application rejected',
+        description:
+          'Application could not be approved: Invalid business registration documentation',
+      });
+    });
+
+    it('throws NotFoundException if merchant does not exist', async () => {
+      repository.findMerchantById.mockResolvedValue(null);
+
+      await expect(
+        service.rejectMerchant('unknown-merchant', 'Reason'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('throws BadRequestException if user is not a merchant', async () => {
+      repository.findMerchantById.mockResolvedValue(mockUser);
+
+      await expect(
+        service.rejectMerchant(mockUser.id, 'Reason'),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });
