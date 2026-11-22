@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import {
   BadRequestException,
   ConflictException,
@@ -7,6 +8,11 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 import { PasswordService } from '../auth/password.service.js';
+import { EmailService } from '../email/email.service.js';
+import {
+  NotificationChannel,
+  NotificationStatus,
+} from '../../generated/prisma/enums.js';
 import type { UpdateMerchantContactDto } from './dto/update-contact.dto.js';
 import type { ChangeMerchantPasswordDto } from './dto/change-password.dto.js';
 import type { UpdateMerchantNotificationsDto } from './dto/update-notifications.dto.js';
@@ -19,6 +25,7 @@ export class MerchantSettingsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly passwordService: PasswordService,
+    private readonly emailService: EmailService,
   ) {}
 
   async getSettings(merchantUserId: string) {
@@ -222,6 +229,66 @@ export class MerchantSettingsService {
           })
         )?.approvalStatus === 'APPROVED',
       documents: [],
+    };
+  }
+
+  async notifyApiKeyUpdated(
+    merchantUserId: string,
+    action: 'issued' | 'revoked',
+    keyPrefix: string,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: merchantUserId },
+    });
+    if (!user) {
+      throw new NotFoundException('Merchant not found');
+    }
+
+    try {
+      await this.emailService.sendMerchantApiKeyUpdatedEmail(
+        user.email,
+        user.fullName,
+        action,
+        keyPrefix,
+      );
+    } catch {
+      // Non-blocking email dispatch
+    }
+
+    const actionText = action === 'issued' ? 'issued' : 'revoked';
+    const description = `A new API key (prefix: ${keyPrefix}) was ${actionText} on your merchant account.`;
+    const eventId = randomUUID();
+
+    await this.prisma.notification.createMany({
+      data: [
+        {
+          eventId,
+          channel: NotificationChannel.EMAIL,
+          recipientUserId: user.id,
+          template: 'merchant_api_key_updated',
+          title: 'API key settings updated',
+          description,
+          status: NotificationStatus.SENT,
+          sentAt: new Date(),
+        },
+        {
+          eventId,
+          channel: NotificationChannel.IN_APP,
+          recipientUserId: user.id,
+          template: 'merchant_api_key_updated',
+          title: 'API key settings updated',
+          description,
+          status: NotificationStatus.SENT,
+          sentAt: new Date(),
+        },
+      ],
+      skipDuplicates: true,
+    });
+
+    return {
+      message: 'API key notification processed',
+      action,
+      keyPrefix,
     };
   }
 }

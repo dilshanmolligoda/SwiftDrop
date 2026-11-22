@@ -1786,4 +1786,99 @@ export class EmailService {
 </body>
 </html>`;
   }
+
+  async sendMerchantApiKeyUpdatedEmail(
+    to: string,
+    recipientName: string,
+    action: 'issued' | 'revoked',
+    keyPrefix: string,
+  ): Promise<void> {
+    const actionText = action === 'issued' ? 'issued' : 'revoked';
+    const actionTitle = action === 'issued' ? 'Generated' : 'Revoked';
+    const subject = `Security Alert: API Key ${actionTitle} - SwiftDrop`;
+    const text = `Hello ${recipientName},\n\nA new API key (prefix: ${keyPrefix}) was ${actionText} on your merchant account.\n\nIf you did not perform this action, please sign in to review your API keys and secure your account immediately.\n\nBest regards,\nThe SwiftDrop Team`;
+    const html = this.renderMerchantApiKeyUpdatedHtml(
+      recipientName,
+      action,
+      keyPrefix,
+    );
+
+    await this.transporter.sendMail({
+      from: this.from,
+      to,
+      subject,
+      text,
+      html,
+    });
+  }
+
+  private renderMerchantApiKeyUpdatedHtml(
+    recipientName: string,
+    action: 'issued' | 'revoked',
+    keyPrefix: string,
+  ): string {
+    const actionText = action === 'issued' ? 'issued' : 'revoked';
+    const actionHeading = action === 'issued' ? 'Generated' : 'Revoked';
+    const actionColor = action === 'issued' ? '#2563eb' : '#dc2626';
+    const settingsUrl = `${this.webAppUrl}/merchant/settings`;
+
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>API Key Update</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+    <tr>
+      <td align="center">
+        <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 36px 32px; text-align: center;">
+              <h1 style="color: #ffffff; font-size: 26px; font-weight: 700; margin: 0; letter-spacing: -0.5px;">SwiftDrop</h1>
+              <p style="color: #cbd5e1; font-size: 14px; margin: 8px 0 0 0; font-weight: 500;">Merchant Security Alert</p>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding: 40px 36px;">
+              <h2 style="font-size: 20px; font-weight: 600; color: #0f172a; margin-top: 0; margin-bottom: 20px;">API Key ${actionHeading}</h2>
+              <p style="font-size: 15px; line-height: 1.6; color: #334155; margin-bottom: 20px;">Hello ${recipientName},</p>
+              <p style="font-size: 15px; line-height: 1.6; color: #334155; margin-bottom: 20px;">
+                A new API key (prefix: <strong>${keyPrefix}</strong>) was ${actionText} on your merchant account.
+              </p>
+              <div style="background-color: #f8fafc; border-left: 4px solid ${actionColor}; padding: 16px; border-radius: 4px; margin-bottom: 24px;">
+                <p style="margin: 0; font-size: 14px; color: #334155; line-height: 1.5;">
+                  <strong>Action:</strong> API Key ${actionHeading}<br>
+                  <strong>Key Prefix:</strong> ${keyPrefix}<br>
+                  <strong>Timestamp:</strong> ${new Date().toUTCString()}
+                </p>
+              </div>
+              <div style="text-align: center; margin: 32px 0;">
+                <a href="${settingsUrl}" style="background-color: #0f172a; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block;">View API Key Settings</a>
+              </div>
+              <p style="font-size: 14px; line-height: 1.6; color: #64748b; margin-bottom: 20px;">
+                If you did not perform this action, please log in immediately and revoke any unauthorized API keys to protect your merchant account.
+              </p>
+              <p style="font-size: 14px; line-height: 1.5; color: #64748b; margin-top: 24px;">
+                Best regards,<br>
+                <strong>The SwiftDrop Security Team</strong>
+              </p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 24px 32px; text-align: center; font-size: 12px; color: #64748b; line-height: 1.5;">
+              SwiftDrop - Merchant Services<br>
+              Colombo, Sri Lanka
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+  }
 }
