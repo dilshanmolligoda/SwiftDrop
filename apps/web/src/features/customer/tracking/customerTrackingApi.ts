@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useSyncExternalStore } from 'react'
 import { env } from '../../../lib/env'
+import { createCustomerRequest, type CustomerRequestFailure } from './customerRequest'
 
 export type ParcelStatus = 'CREATED' | 'ASSIGNED' | 'PENDING' | 'PICKED_UP' | 'IN_TRANSIT' | 'OUT_FOR_DELIVERY' | 'DELIVERED' | 'FAILED' | 'RETURNED'
 export type DeliveryFilter = 'all' | 'active' | 'history'
@@ -172,49 +173,39 @@ export function customerErrorMessage(error: unknown): string {
   return error instanceof CustomerApiError ? error.message : 'Unable to load this information. Please try again.'
 }
 
-/** A new query immediately hides the previous result; aborted requests cannot publish data. */
+function describeRequestError(error: unknown): CustomerRequestFailure {
+  const status = error instanceof CustomerApiError ? error.status : -1
+  return {
+    message: customerErrorMessage(error),
+    temporary: status === 0 || status === 429 || status >= 500,
+    accessDenied: status === 401 || status === 403,
+  }
+}
+
+/** A new load/session scope immediately hides old data. Background retention is opt-in. */
 export function useCustomerRequest<T>(
   load: (signal: AbortSignal) => Promise<T>,
   onAccessError: (error: unknown) => boolean,
   enabled = true,
+  { keepPreviousDataOnRefresh = false }: { keepPreviousDataOnRefresh?: boolean } = {},
 ) {
-  const [attempt, setAttempt] = useState(0)
-  // true while a refresh() runs: the previous data stays on screen meanwhile.
-  const [refreshing, setRefreshing] = useState(false)
-  const [completed, setCompleted] = useState<{
-    load: typeof load; attempt: number; data: T | null; error: string
-  } | null>(null)
+  const request = useMemo(() => createCustomerRequest({
+    load, onAccessError, describeError: describeRequestError, keepPreviousDataOnRefresh, enabled,
+  }), [load, onAccessError, enabled, keepPreviousDataOnRefresh])
+  const snapshot = useSyncExternalStore(request.subscribe, request.getSnapshot, request.getSnapshot)
 
   useEffect(() => {
     if (!enabled) return
-    const controller = new AbortController()
-    void (async () => {
-      try {
-        const data = await load(controller.signal)
-        if (!controller.signal.aborted) setCompleted({ load, attempt, data, error: '' })
-      } catch (error) {
-        if (!controller.signal.aborted && !onAccessError(error)) {
-          setCompleted({ load, attempt, data: null, error: customerErrorMessage(error) })
-        }
-      }
-    })()
-    return () => controller.abort()
-  }, [load, onAccessError, enabled, attempt])
+    request.start()
+    return request.stop
+  }, [request, enabled])
 
-  const current = enabled && completed?.load === load && completed.attempt === attempt ? completed : null
-  const previous = enabled && refreshing && !current && completed?.load === load ? completed : null
   return {
-    data: current?.data ?? previous?.data ?? null,
-    error: current?.error ?? '',
-    loading: enabled && !current && !previous,
-    retry: () => {
-      setRefreshing(false)
-      setAttempt(value => value + 1)
-    },
-    /** Re-reads in the background (e.g. after a live update) without a loading state. */
-    refresh: () => {
-      setRefreshing(true)
-      setAttempt(value => value + 1)
-    },
+    data: enabled ? snapshot.data : null,
+    error: enabled ? snapshot.error : '',
+    loading: enabled && snapshot.loading,
+    refreshing: enabled && snapshot.loading && snapshot.data !== null,
+    refresh: request.refresh,
+    retry: request.refresh,
   }
 }
