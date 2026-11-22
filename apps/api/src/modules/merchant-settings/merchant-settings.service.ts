@@ -133,6 +133,21 @@ export class MerchantSettingsService {
         storeConnectionNotifications: dto.storeConnectionIssues,
       },
     });
+
+    const eventId = randomUUID();
+    await this.prisma.notification.create({
+      data: {
+        eventId,
+        channel: NotificationChannel.IN_APP,
+        recipientUserId: merchantUserId,
+        template: 'preferences_updated',
+        title: 'Preferences updated',
+        description: 'Your notification preferences have been saved.',
+        status: NotificationStatus.SENT,
+        sentAt: new Date(),
+      },
+    });
+
     return dto;
   }
 
