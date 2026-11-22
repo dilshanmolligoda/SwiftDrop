@@ -10,6 +10,7 @@ import {
   DeliveryFailureReason,
 } from '../../generated/prisma/enums.js';
 import { Prisma } from '../../generated/prisma/client.js';
+import type { OutboxWriter } from '../../infrastructure/outbox/outbox.writer.js';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 import type { ObjectStorage } from '../../infrastructure/storage/storage.types.js';
 import { ListDeliveriesQueryDto } from './dto/list-deliveries-query.dto.js';
@@ -32,10 +33,19 @@ const validPng: UploadedProofFile = {
 
 function createHarness() {
   const transactionClient = {
-    deliveryAssignment: { findFirst: jest.fn() },
+    deliveryAssignment: {
+      findFirst: jest.fn(),
+      updateMany: jest.fn(),
+      create: jest.fn(),
+    },
     deliveryProof: { findFirst: jest.fn(), create: jest.fn() },
-    parcel: { updateMany: jest.fn() },
+    parcel: {
+      findUnique: jest.fn(),
+      update: jest.fn(),
+      updateMany: jest.fn(),
+    },
     parcelStatusEvent: { findFirst: jest.fn(), create: jest.fn() },
+    notification: { create: jest.fn() },
   };
   const prismaMock = {
     deliveryAssignment: {
@@ -57,11 +67,15 @@ function createHarness() {
       .mockResolvedValue({ key: 'random-proof.png', provider: 'local' }),
     delete: jest.fn().mockResolvedValue(undefined),
   };
+  const outbox = {
+    recordParcelStatusChanged: jest.fn().mockResolvedValue('event-id'),
+  };
   const service = new CourierService(
     prismaMock as unknown as PrismaService,
     storage,
+    outbox as unknown as OutboxWriter,
   );
-  return { service, prismaMock, transactionClient, storage };
+  return { service, prismaMock, transactionClient, storage, outbox };
 }
 
 function activeAssignment(
@@ -73,7 +87,12 @@ function activeAssignment(
     courierId: COURIER_ID,
     endedAt: null,
     assignedAt: new Date('2026-11-03T14:00:00.000Z'),
-    parcel: { id: PARCEL_ID, status },
+    parcel: {
+      id: PARCEL_ID,
+      status,
+      customerId: 'customer-123',
+      trackingNumber: 'SD-001',
+    },
   };
 }
 
@@ -262,6 +281,49 @@ describe('CourierService', () => {
         where: { id: PARCEL_ID, status: ParcelStatus.ASSIGNED },
         data: { status: ParcelStatus.PICKED_UP },
       });
+    });
+
+    it('records a status-changed event in the outbox with the same transaction', async () => {
+      const { service, transactionClient, outbox } = createHarness();
+      const assignment = activeAssignment(ParcelStatus.ASSIGNED);
+      transactionClient.deliveryAssignment.findFirst.mockResolvedValue(
+        assignment,
+      );
+      transactionClient.parcel.updateMany.mockResolvedValue({ count: 1 });
+      transactionClient.parcelStatusEvent.create.mockResolvedValue({
+        id: 'picked-up-event',
+      });
+
+      await service.updateDeliveryStatus(COURIER_ID, PARCEL_ID, {
+        status: ParcelStatus.PICKED_UP,
+      });
+
+      expect(outbox.recordParcelStatusChanged).toHaveBeenCalledTimes(1);
+      expect(outbox.recordParcelStatusChanged).toHaveBeenCalledWith(
+        transactionClient,
+        {
+          parcel: assignment.parcel,
+          previousStatus: ParcelStatus.ASSIGNED,
+          newStatus: ParcelStatus.PICKED_UP,
+          failureReason: undefined,
+          courierId: COURIER_ID,
+        },
+      );
+    });
+
+    it('records no event when the status update conflicts', async () => {
+      const { service, transactionClient, outbox } = createHarness();
+      transactionClient.deliveryAssignment.findFirst.mockResolvedValue(
+        activeAssignment(ParcelStatus.ASSIGNED),
+      );
+      transactionClient.parcel.updateMany.mockResolvedValue({ count: 0 });
+
+      await expect(
+        service.updateDeliveryStatus(COURIER_ID, PARCEL_ID, {
+          status: ParcelStatus.PICKED_UP,
+        }),
+      ).rejects.toThrow(ConflictException);
+      expect(outbox.recordParcelStatusChanged).not.toHaveBeenCalled();
     });
 
     it('requires proof before a delivered transition', async () => {
@@ -506,6 +568,155 @@ describe('CourierService', () => {
         service.uploadProof(COURIER_ID, PARCEL_ID, validPng),
       ).rejects.toThrow('database unavailable');
       expect(storage.delete).toHaveBeenCalledWith('random-proof.png');
+    });
+  });
+
+  describe('assignCourier', () => {
+    it('creates assignment, updates parcel, records outbox and notifies customer and courier', async () => {
+      const { service, transactionClient, outbox } = createHarness();
+      const mockParcel = {
+        id: PARCEL_ID,
+        customerId: 'customer-123',
+        trackingNumber: 'SD-ASSIGNED123',
+        status: ParcelStatus.PENDING,
+      };
+      transactionClient.parcel.findUnique.mockResolvedValue(mockParcel);
+      transactionClient.deliveryAssignment.create.mockResolvedValue({
+        id: ASSIGNMENT_ID,
+        parcelId: PARCEL_ID,
+        courierId: COURIER_ID,
+      });
+      transactionClient.parcel.update.mockResolvedValue({
+        ...mockParcel,
+        status: ParcelStatus.ASSIGNED,
+      });
+
+      const result = await service.assignCourier(
+        PARCEL_ID,
+        COURIER_ID,
+        'dispatcher-1',
+      );
+
+      expect(result).toEqual({
+        id: ASSIGNMENT_ID,
+        parcelId: PARCEL_ID,
+        courierId: COURIER_ID,
+      });
+      expect(outbox.recordParcelStatusChanged).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          newStatus: ParcelStatus.ASSIGNED,
+          courierId: COURIER_ID,
+        }),
+      );
+      expect(transactionClient.notification.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          channel: 'IN_APP',
+          recipientUserId: 'customer-123',
+          template: 'parcel_assigned',
+          title: 'Courier assigned',
+        }),
+      });
+      expect(transactionClient.notification.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          channel: 'IN_APP',
+          recipientUserId: COURIER_ID,
+          template: 'courier_new_assignment',
+          title: 'New delivery assigned',
+        }),
+      });
+    });
+
+    it('notifies previous courier when parcel is reassigned to another courier', async () => {
+      const { service, transactionClient } = createHarness();
+      const mockParcel = {
+        id: PARCEL_ID,
+        customerId: 'customer-123',
+        trackingNumber: 'SD-ASSIGNED123',
+        status: ParcelStatus.ASSIGNED,
+      };
+      transactionClient.parcel.findUnique.mockResolvedValue(mockParcel);
+      transactionClient.deliveryAssignment.findFirst.mockResolvedValue({
+        courierId: 'previous-courier-id',
+      });
+      transactionClient.deliveryAssignment.create.mockResolvedValue({
+        id: ASSIGNMENT_ID,
+        parcelId: PARCEL_ID,
+        courierId: COURIER_ID,
+      });
+      transactionClient.parcel.update.mockResolvedValue(mockParcel);
+
+      await service.assignCourier(PARCEL_ID, COURIER_ID, 'dispatcher-1');
+
+      expect(transactionClient.notification.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          channel: 'IN_APP',
+          recipientUserId: 'previous-courier-id',
+          template: 'courier_assignment_reassigned',
+          title: 'Assignment updated',
+          description: `Delivery ${mockParcel.trackingNumber} was unassigned from your route.`,
+        }),
+      });
+    });
+
+    it('throws NotFoundException when parcel does not exist', async () => {
+      const { service, transactionClient } = createHarness();
+      transactionClient.parcel.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.assignCourier('non-existent', COURIER_ID, 'dispatcher-1'),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('unassignCourier', () => {
+    it('unassigns courier and creates in-app notification', async () => {
+      const { service, transactionClient } = createHarness();
+      const mockParcel = {
+        id: PARCEL_ID,
+        trackingNumber: 'SD-UNASSIGN456',
+      };
+      transactionClient.parcel.findUnique.mockResolvedValue(mockParcel);
+      transactionClient.deliveryAssignment.findFirst.mockResolvedValue({
+        courierId: COURIER_ID,
+      });
+
+      const result = await service.unassignCourier(PARCEL_ID, 'dispatcher-1');
+
+      expect(result).toEqual({ message: 'Parcel unassigned successfully' });
+      expect(
+        transactionClient.deliveryAssignment.updateMany,
+      ).toHaveBeenCalledWith({
+        where: { parcelId: PARCEL_ID, endedAt: null },
+        data: { endedAt: expect.any(Date) },
+      });
+      expect(transactionClient.notification.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          channel: 'IN_APP',
+          recipientUserId: COURIER_ID,
+          template: 'courier_assignment_reassigned',
+          title: 'Assignment updated',
+          description: `Delivery ${mockParcel.trackingNumber} was unassigned from your route.`,
+        }),
+      });
+    });
+
+    it('returns message when no active assignment exists', async () => {
+      const { service, transactionClient } = createHarness();
+      transactionClient.parcel.findUnique.mockResolvedValue({ id: PARCEL_ID });
+      transactionClient.deliveryAssignment.findFirst.mockResolvedValue(null);
+
+      const result = await service.unassignCourier(PARCEL_ID, 'dispatcher-1');
+      expect(result).toEqual({ message: 'Parcel has no active assignment' });
+    });
+
+    it('throws NotFoundException when parcel does not exist', async () => {
+      const { service, transactionClient } = createHarness();
+      transactionClient.parcel.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.unassignCourier('non-existent', 'dispatcher-1'),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });

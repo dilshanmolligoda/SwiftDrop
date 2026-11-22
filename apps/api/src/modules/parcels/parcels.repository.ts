@@ -1,6 +1,13 @@
+import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
+import { OutboxWriter } from '../../infrastructure/outbox/outbox.writer.js';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
-import { ParcelStatus, PackageSize } from '../../generated/prisma/enums.js';
+import {
+  ParcelStatus,
+  PackageSize,
+  NotificationChannel,
+  NotificationStatus,
+} from '../../generated/prisma/enums.js';
 
 export interface CustomerParcelRecord {
   id: string;
@@ -35,9 +42,29 @@ export interface CustomerMetrics {
   needsAttention: number;
 }
 
+interface TxWithNotification {
+  notification?: {
+    create: (args: {
+      data: {
+        eventId: string;
+        channel: NotificationChannel;
+        recipientUserId: string;
+        template: string;
+        title: string;
+        description: string;
+        status: NotificationStatus;
+        sentAt: Date;
+      };
+    }) => Promise<unknown>;
+  };
+}
+
 @Injectable()
 export class ParcelsRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly outbox: OutboxWriter,
+  ) {}
 
   async createParcel(data: {
     trackingNumber: string;
@@ -52,31 +79,56 @@ export class ParcelsRepository {
     costLkr: number;
     note?: string;
   }): Promise<CustomerParcelRecord> {
-    const parcel = await this.prisma.parcel.create({
-      data: {
-        trackingNumber: data.trackingNumber,
-        customerId: data.customerId,
-        senderName: data.senderName,
-        senderAddress: data.senderAddress,
-        recipientName: data.recipientName,
-        recipientAddress: data.recipientAddress,
-        recipientPhone: data.recipientPhone,
-        packageSize: data.packageSize,
-        weightKg: data.weightKg,
-        costLkr: data.costLkr,
-        status: ParcelStatus.PENDING,
-        statusHistory: {
-          create: {
-            status: ParcelStatus.PENDING,
-            note: data.note ?? 'Delivery request created by customer.',
+    // Same transaction: the parcel.created event exists only if the parcel does.
+    const parcel = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.parcel.create({
+        data: {
+          trackingNumber: data.trackingNumber,
+          customerId: data.customerId,
+          senderName: data.senderName,
+          senderAddress: data.senderAddress,
+          recipientName: data.recipientName,
+          recipientAddress: data.recipientAddress,
+          recipientPhone: data.recipientPhone,
+          packageSize: data.packageSize,
+          weightKg: data.weightKg,
+          costLkr: data.costLkr,
+          status: ParcelStatus.PENDING,
+          statusHistory: {
+            create: {
+              status: ParcelStatus.PENDING,
+              note: data.note ?? 'Delivery request created by customer.',
+            },
           },
         },
-      },
-      include: {
-        statusHistory: {
-          orderBy: { createdAt: 'asc' },
+        include: {
+          statusHistory: {
+            orderBy: { createdAt: 'asc' },
+          },
         },
-      },
+      });
+      await this.outbox.recordParcelCreated(tx, {
+        parcel: created,
+        status: ParcelStatus.PENDING,
+      });
+
+      const txNotif = tx as unknown as TxWithNotification;
+      if (txNotif.notification) {
+        await txNotif.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.IN_APP,
+            recipientUserId: data.customerId,
+            template: 'parcel_created',
+            title: 'Delivery created',
+            description: `Your delivery request ${data.trackingNumber} has been confirmed.`,
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+      }
+
+      return created;
     });
 
     return {
@@ -206,6 +258,70 @@ export class ParcelsRepository {
       activeDeliveries,
       deliveredThisMonth,
       needsAttention,
+    };
+  }
+
+  async cancelParcel(
+    customerId: string,
+    parcelId: string,
+  ): Promise<CustomerParcelRecord> {
+    const parcel = await this.prisma.$transaction(async (tx) => {
+      const existing = await tx.parcel.findUnique({
+        where: { id: parcelId },
+      });
+      if (!existing || existing.customerId !== customerId) {
+        throw new Error('Parcel not found');
+      }
+
+      const updated = await tx.parcel.update({
+        where: { id: parcelId },
+        data: {
+          status: ParcelStatus.RETURNED,
+          statusHistory: {
+            create: {
+              status: ParcelStatus.RETURNED,
+              note: 'Delivery cancelled by customer before pickup.',
+            },
+          },
+        },
+        include: {
+          statusHistory: {
+            orderBy: { createdAt: 'asc' },
+          },
+        },
+      });
+
+      await this.outbox.recordParcelStatusChanged(tx, {
+        parcel: updated,
+        previousStatus: existing.status,
+        newStatus: ParcelStatus.RETURNED,
+        failureReason: null,
+        courierId: null,
+      });
+
+      const txNotif = tx as unknown as TxWithNotification;
+      if (txNotif.notification) {
+        await txNotif.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.IN_APP,
+            recipientUserId: customerId,
+            template: 'parcel_cancelled',
+            title: 'Delivery cancelled',
+            description: `Delivery request ${updated.trackingNumber} was cancelled.`,
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+      }
+
+      return updated;
+    });
+
+    return {
+      ...parcel,
+      weightKg: Number(parcel.weightKg),
+      costLkr: Number(parcel.costLkr),
     };
   }
 }

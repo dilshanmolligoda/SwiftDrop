@@ -56,10 +56,16 @@ export const ModelName = {
   ParcelStatusEvent: 'ParcelStatusEvent',
   DeliveryProof: 'DeliveryProof',
   MerchantProfile: 'MerchantProfile',
+  MerchantBusinessUpdateRequest: 'MerchantBusinessUpdateRequest',
   CourierProfile: 'CourierProfile',
   MerchantOrder: 'MerchantOrder',
   Parcel: 'Parcel',
-  ParcelStatusHistory: 'ParcelStatusHistory'
+  ParcelStatusHistory: 'ParcelStatusHistory',
+  OutboxEvent: 'OutboxEvent',
+  ProcessedEvent: 'ProcessedEvent',
+  WebhookEndpoint: 'WebhookEndpoint',
+  WebhookDelivery: 'WebhookDelivery',
+  Notification: 'Notification'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -88,6 +94,12 @@ export const UserScalarFieldEnum = {
   approvalStatus: 'approvalStatus',
   isActive: 'isActive',
   googleSubject: 'googleSubject',
+  twoFactorEnabled: 'twoFactorEnabled',
+  deliveryStatusNotifications: 'deliveryStatusNotifications',
+  failedDeliveryNotifications: 'failedDeliveryNotifications',
+  storeConnectionNotifications: 'storeConnectionNotifications',
+  language: 'language',
+  timeZone: 'timeZone',
   reviewedAt: 'reviewedAt',
   reviewedBy: 'reviewedBy',
   rejectionReason: 'rejectionReason',
@@ -148,11 +160,31 @@ export const MerchantProfileScalarFieldEnum = {
   businessName: 'businessName',
   businessAddress: 'businessAddress',
   businessType: 'businessType',
+  registrationNumber: 'registrationNumber',
+  website: 'website',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type MerchantProfileScalarFieldEnum = (typeof MerchantProfileScalarFieldEnum)[keyof typeof MerchantProfileScalarFieldEnum]
+
+
+export const MerchantBusinessUpdateRequestScalarFieldEnum = {
+  id: 'id',
+  merchantUserId: 'merchantUserId',
+  businessName: 'businessName',
+  businessAddress: 'businessAddress',
+  businessType: 'businessType',
+  registrationNumber: 'registrationNumber',
+  website: 'website',
+  status: 'status',
+  createdAt: 'createdAt',
+  reviewedAt: 'reviewedAt',
+  reviewedBy: 'reviewedBy',
+  rejectionReason: 'rejectionReason'
+} as const
+
+export type MerchantBusinessUpdateRequestScalarFieldEnum = (typeof MerchantBusinessUpdateRequestScalarFieldEnum)[keyof typeof MerchantBusinessUpdateRequestScalarFieldEnum]
 
 
 export const CourierProfileScalarFieldEnum = {
@@ -206,6 +238,7 @@ export const ParcelScalarFieldEnum = {
   failedDeliveryAttempts: 'failedDeliveryAttempts',
   deliveredAt: 'deliveredAt',
   deliveredProofId: 'deliveredProofId',
+  merchantOrderId: 'merchantOrderId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -225,12 +258,96 @@ export const ParcelStatusHistoryScalarFieldEnum = {
 export type ParcelStatusHistoryScalarFieldEnum = (typeof ParcelStatusHistoryScalarFieldEnum)[keyof typeof ParcelStatusHistoryScalarFieldEnum]
 
 
+export const OutboxEventScalarFieldEnum = {
+  id: 'id',
+  sequence: 'sequence',
+  aggregateType: 'aggregateType',
+  aggregateId: 'aggregateId',
+  eventType: 'eventType',
+  routingKey: 'routingKey',
+  payload: 'payload',
+  createdAt: 'createdAt',
+  publishedAt: 'publishedAt',
+  attempts: 'attempts',
+  nextAttemptAt: 'nextAttemptAt',
+  lastError: 'lastError'
+} as const
+
+export type OutboxEventScalarFieldEnum = (typeof OutboxEventScalarFieldEnum)[keyof typeof OutboxEventScalarFieldEnum]
+
+
+export const ProcessedEventScalarFieldEnum = {
+  eventId: 'eventId',
+  consumer: 'consumer',
+  processedAt: 'processedAt'
+} as const
+
+export type ProcessedEventScalarFieldEnum = (typeof ProcessedEventScalarFieldEnum)[keyof typeof ProcessedEventScalarFieldEnum]
+
+
+export const WebhookEndpointScalarFieldEnum = {
+  id: 'id',
+  merchantUserId: 'merchantUserId',
+  url: 'url',
+  secretEncrypted: 'secretEncrypted',
+  secretHint: 'secretHint',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type WebhookEndpointScalarFieldEnum = (typeof WebhookEndpointScalarFieldEnum)[keyof typeof WebhookEndpointScalarFieldEnum]
+
+
+export const WebhookDeliveryScalarFieldEnum = {
+  id: 'id',
+  endpointId: 'endpointId',
+  eventId: 'eventId',
+  eventType: 'eventType',
+  trackingNumber: 'trackingNumber',
+  attempt: 'attempt',
+  status: 'status',
+  requestUrl: 'requestUrl',
+  responseStatus: 'responseStatus',
+  durationMs: 'durationMs',
+  errorMessage: 'errorMessage',
+  nextAttemptAt: 'nextAttemptAt',
+  createdAt: 'createdAt'
+} as const
+
+export type WebhookDeliveryScalarFieldEnum = (typeof WebhookDeliveryScalarFieldEnum)[keyof typeof WebhookDeliveryScalarFieldEnum]
+
+
+export const NotificationScalarFieldEnum = {
+  id: 'id',
+  eventId: 'eventId',
+  channel: 'channel',
+  recipientUserId: 'recipientUserId',
+  template: 'template',
+  title: 'title',
+  description: 'description',
+  status: 'status',
+  errorMessage: 'errorMessage',
+  createdAt: 'createdAt',
+  sentAt: 'sentAt'
+} as const
+
+export type NotificationScalarFieldEnum = (typeof NotificationScalarFieldEnum)[keyof typeof NotificationScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
 } as const
 
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
+
+
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
 
 
 export const QueryMode = {
@@ -247,4 +364,13 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 

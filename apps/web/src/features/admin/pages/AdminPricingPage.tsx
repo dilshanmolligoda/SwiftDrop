@@ -10,6 +10,7 @@ import {
 import type { ZonePricingItem } from '../types/admin-pricing.types'
 import { MOCK_ZONES } from '../config/admin-pricing.mock'
 import { ZoneModal } from '../components/ZoneModal'
+import { AdminFilterSelect } from '../components/AdminFilterSelect'
 import styles from './AdminPricingPage.module.css'
 
 export const AdminPricingPage: React.FC = () => {
@@ -104,16 +105,16 @@ export const AdminPricingPage: React.FC = () => {
           </div>
 
           <div className={styles.rightFilters}>
-            <select
-              className={styles.filterSelect}
+            <AdminFilterSelect
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
-              aria-label="Filter status"
-            >
-              <option value="all">All statuses</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
+              onChange={(val) => setStatusFilter(val as 'all' | 'active' | 'inactive')}
+              ariaLabel="Filter status"
+              options={[
+                { value: 'all', label: 'All statuses' },
+                { value: 'active', label: 'Active' },
+                { value: 'inactive', label: 'Inactive' },
+              ]}
+            />
 
             <span className={styles.currencyIndicator}>Currency: LKR</span>
           </div>

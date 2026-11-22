@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { LiveIndicator } from '../../../lib/realtime/LiveIndicator'
+import { useParcelRealtime } from '../../../lib/realtime/useParcelRealtime'
 import { AlertTriangle, Check, Circle, Package, RotateCcw, Search, Truck, X } from 'lucide-react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { env } from '../../../lib/env'
@@ -138,6 +140,11 @@ function CustomerTrackingContent({ onAccessError, updates }: {
   )
   const refreshTracking = useCallback(() => { refresh(); refreshSummary() }, [refresh, refreshSummary])
   useCustomerTrackingUpdates(updates, parcel?.id, refreshTracking)
+  // Reuse dev's shared client; an injected source replaces it to avoid duplicate subscriptions.
+  const { state: liveState } = useParcelRealtime({
+    subscription: !updates && parcel ? { scope: 'parcel', parcelId: parcel.id } : null,
+    onChange: refreshTracking,
+  })
   const handleTrack = (number: string) => {
     const next = new URLSearchParams(params)
     next.set('trackingNumber', number)
@@ -174,6 +181,7 @@ function CustomerTrackingContent({ onAccessError, updates }: {
         <TrackingSearchForm key={queryNumber ?? ''} initialNumber={queryNumber ?? ''} onTrack={handleTrack} />
         <div className="customer-tracking-search-feedback" role="status" aria-atomic="true">{loading && (refreshing ? 'Refreshing parcel tracking…' : 'Loading parcel tracking…')}</div>
         {(queryError || error) && <p className="customer-tracking-error" role="alert">{parcel && error && 'Showing the last loaded result. '}{queryError || error} {error && <button className="customer-tracking-link customer-tracking-summary-retry" type="button" onClick={retry}>Try again</button>}</p>}
+        {parcel && !updates && <div className="customer-tracking-live"><LiveIndicator state={liveState} /></div>}
         <div aria-busy={loading}><ParcelDetails parcel={parcel} /></div>
       </div>
     </div>

@@ -16,6 +16,7 @@ import {
   Bookmark,
 } from 'lucide-react'
 import { useCustomerDeliveries } from '../context/useCustomerDeliveries'
+import { useCustomerProfile } from '../context/useCustomerProfile'
 import './AddressBookPage.css'
 
 export type AddressCategory = 'Home' | 'Work' | 'Family' | 'Other'
@@ -55,31 +56,92 @@ const INITIAL_FORM_FIELDS: AddressFormFields = {
  */
 export const AddressBookPage: React.FC = () => {
   const { metrics, openCreateModal } = useCustomerDeliveries()
+  const { profile } = useCustomerProfile()
 
-  // Load addresses from localStorage with fallback to DEFAULT_ADDRESSES
+  const userKey = profile.email
+    ? `swiftdrop_customer_addresses_${profile.email.toLowerCase()}`
+    : null
+
+  // Load addresses scoped to logged-in user with migration from legacy global key
   const [addresses, setAddresses] = useState<CustomerAddress[]>(() => {
     try {
-      const persistedJson = localStorage.getItem(STORAGE_KEY)
-      if (persistedJson !== null) {
-        const parsed = JSON.parse(persistedJson) as CustomerAddress[]
-        if (Array.isArray(parsed)) {
-          return parsed
+      const email = profile.email?.toLowerCase()
+      if (email) {
+        const specificKey = `swiftdrop_customer_addresses_${email}`
+        const persistedJson = localStorage.getItem(specificKey)
+        if (persistedJson !== null) {
+          const parsed = JSON.parse(persistedJson) as CustomerAddress[]
+          if (Array.isArray(parsed)) return parsed
+        }
+
+        // Migrate existing addresses from legacy shared key to this account
+        const legacyJson = localStorage.getItem(STORAGE_KEY)
+        if (legacyJson !== null) {
+          const parsed = JSON.parse(legacyJson) as CustomerAddress[]
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            localStorage.setItem(specificKey, legacyJson)
+            localStorage.removeItem(STORAGE_KEY)
+            return parsed
+          }
         }
       }
     } catch {
-      // Graceful fallback to initial mockup addresses
+      // Graceful fallback
     }
     return [...DEFAULT_ADDRESSES]
   })
 
-  // Synchronize addresses to localStorage
+  // Reload addresses whenever the logged-in customer account changes
   useEffect(() => {
+    const email = profile.email?.toLowerCase()
+    if (!email) {
+      // oxlint-disable-next-line react/set-state-in-effect
+      setAddresses([...DEFAULT_ADDRESSES])
+      return
+    }
+
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(addresses))
+      const specificKey = `swiftdrop_customer_addresses_${email}`
+      const persistedJson = localStorage.getItem(specificKey)
+      if (persistedJson !== null) {
+        const parsed = JSON.parse(persistedJson) as CustomerAddress[]
+        if (Array.isArray(parsed)) {
+          // oxlint-disable-next-line react/set-state-in-effect
+          setAddresses(parsed)
+          return
+        }
+      }
+
+      // If user has no specific key yet, check if legacy key should be migrated
+      const legacyJson = localStorage.getItem(STORAGE_KEY)
+      if (legacyJson !== null) {
+        const parsed = JSON.parse(legacyJson) as CustomerAddress[]
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          localStorage.setItem(specificKey, legacyJson)
+          localStorage.removeItem(STORAGE_KEY)
+          // oxlint-disable-next-line react/set-state-in-effect
+          setAddresses(parsed)
+          return
+        }
+      }
+
+      // oxlint-disable-next-line react/set-state-in-effect
+      setAddresses([...DEFAULT_ADDRESSES])
+    } catch {
+      // oxlint-disable-next-line react/set-state-in-effect
+      setAddresses([...DEFAULT_ADDRESSES])
+    }
+  }, [profile.email])
+
+  // Synchronize addresses to user-specific localStorage key
+  useEffect(() => {
+    if (!userKey) return
+    try {
+      localStorage.setItem(userKey, JSON.stringify(addresses))
     } catch {
       // Gracefully handle storage quota or private browsing limits
     }
-  }, [addresses])
+  }, [addresses, userKey])
 
   // Modal State for Add & Edit
   const [isModalOpen, setIsModalOpen] = useState(false)

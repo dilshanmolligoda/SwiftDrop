@@ -1,0 +1,476 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  color: #172033;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.heading h1 {
+  margin: 0 0 4px;
+  color: #101828;
+  font-size: 28px;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.heading p {
+  margin: 0;
+  color: #75839a;
+  font-size: 13px;
+}
+
+.settingsGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.primaryColumn,
+.secondaryColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.card {
+  border: 1px solid #e7ecf2;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(18 38 63 / 2%);
+  padding: 18px;
+}
+
+.cardHeader,
+.cardTitle,
+.settingRow,
+.inlineStatus,
+.cardActions,
+.modalActions,
+.modalHeader {
+  display: flex;
+  align-items: center;
+}
+
+.cardHeader {
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.cardTitle {
+  gap: 10px;
+}
+
+.sectionIcon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  flex: 0 0 34px;
+  place-items: center;
+  border-radius: 50%;
+  background: #edf8f3;
+  color: #0b7546;
+}
+
+.cardTitle h2,
+.modalHeader h2 {
+  margin: 0;
+  color: #182237;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.approved {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 8px;
+  border-radius: 12px;
+  background: #edf8f3;
+  color: #1f8060;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.businessDetails {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 16px;
+}
+
+.businessDetails div {
+  display: grid;
+  grid-template-columns: 44% 56%;
+  align-items: center;
+  min-height: 16px;
+}
+
+.businessDetails dt,
+.businessDetails dd,
+.cardDescription,
+.helpText {
+  margin: 0;
+  font-size: 10px;
+}
+
+.businessDetails dt,
+.cardDescription,
+.helpText {
+  color: #7e8ba1;
+}
+
+.businessDetails dd {
+  color: #34425b;
+  font-weight: 500;
+}
+
+.inlineLink,
+.inlineButton,
+.outlineButton,
+.outlineButtonCompact,
+.primaryButton,
+.cancelButton {
+  border-radius: 6px;
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.inlineLink,
+.inlineButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #0d7043;
+  font-weight: 700;
+}
+
+.helpText {
+  margin: 9px 0 9px;
+  color: #9a7a65;
+}
+
+.outlineButton,
+.outlineButtonCompact {
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid #83bea2;
+  background: #fff;
+  color: #0d7043;
+  font-weight: 700;
+}
+
+.cardDescription {
+  margin: -4px 0 14px;
+}
+
+.contactFields {
+  display: grid;
+  gap: 10px;
+}
+
+.contactFields label,
+.preferenceGrid label,
+.passwordForm label {
+  display: grid;
+  gap: 6px;
+  color: #718099;
+  font-size: 9px;
+}
+
+.contactFields label {
+  grid-template-columns: 44% 56%;
+  align-items: center;
+}
+
+.contactFields input,
+.preferenceGrid select,
+.passwordForm input {
+  width: 100%;
+  height: 34px;
+  box-sizing: border-box;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #fff;
+  color: #34425b;
+  font: inherit;
+  font-size: 10px;
+  outline: none;
+  padding: 0 10px;
+}
+
+.contactFields input:focus,
+.preferenceGrid select:focus,
+.passwordForm input:focus {
+  border-color: #70b69a;
+  box-shadow: 0 0 0 2px #edf8f3;
+}
+
+.emailRow {
+  grid-column: 1 / -1;
+}
+
+.inputWithAction {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.inputWithAction input {
+  border-right: 0;
+  border-radius: 6px 0 0 6px;
+}
+
+.inputWithAction button {
+  height: 34px;
+  border: 1px solid #e2e8f0;
+  border-left: 0;
+  border-radius: 0 6px 6px 0;
+  background: #fff;
+  color: #0d7043;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 0 10px;
+  cursor: pointer;
+}
+
+.cardActions {
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+.primaryButton {
+  min-height: 34px;
+  border: 1px solid #0d7043;
+  background: #0d7043;
+  color: #fff;
+  font-weight: 700;
+  padding: 0 11px;
+}
+
+.primaryButton:disabled,
+.inputWithAction button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.settingRows {
+  display: grid;
+  gap: 2px;
+}
+
+.settingRow {
+  min-height: 36px;
+  justify-content: space-between;
+  gap: 10px;
+  color: #718099;
+  font-size: 10px;
+}
+
+.outlineButtonCompact {
+  min-height: 30px;
+  padding: 0 9px;
+}
+
+.inlineStatus {
+  gap: 8px;
+}
+
+.statusOff,
+.statusOn {
+  color: #718099;
+  font-size: 9px;
+}
+
+.statusOn {
+  color: #0d7043;
+  font-weight: 700;
+}
+
+.preferenceGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.preferenceGrid select {
+  height: 34px;
+}
+
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: rgb(15 23 42 / 42%);
+  padding: 16px;
+}
+
+.modal {
+  width: min(420px, 100%);
+  box-sizing: border-box;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 20px 50px rgb(15 23 42 / 18%);
+  padding: 18px;
+}
+
+.modalHeader {
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.modalHeader button {
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: #7e8ba1;
+  cursor: pointer;
+}
+
+.passwordForm {
+  display: grid;
+  gap: 12px;
+}
+
+.passwordForm label {
+  grid-template-columns: 38% 62%;
+  align-items: center;
+}
+
+.passwordForm label div {
+  position: relative;
+}
+
+.passwordError {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #fef2f2;
+  color: #b42318;
+  font-size: 10px;
+}
+
+.modalActions {
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.cancelButton {
+  min-height: 34px;
+  border: 0;
+  background: transparent;
+  color: #718099;
+  padding: 0 10px;
+}
+
+.toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 110;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+  border: 1px solid #dfe8e3;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgb(15 23 42 / 12%);
+  color: #34425b;
+  font-size: 11px;
+  padding: 0 12px;
+}
+
+.toast button {
+  display: grid;
+  border: 0;
+  background: transparent;
+  color: #718099;
+  cursor: pointer;
+}
+
+:global(.merchant-setting-row) {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #718099;
+  font-size: 10px;
+}
+
+:global(.merchant-toggle) {
+  width: 34px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 12px;
+  background: #cbd5e1;
+  padding: 2px;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+:global(.merchant-toggle span) {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(15 23 42 / 22%);
+  transition: transform 150ms ease;
+}
+
+:global(.merchant-toggleOn) {
+  background: #0b7043;
+}
+
+:global(.merchant-toggleOn span) {
+  transform: translateX(16px);
+}
+
+:global(.password-eye) {
+  position: absolute;
+  right: 7px;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: #718099;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  .settingsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .preferenceGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .contactFields label,
+  .passwordForm label {
+    grid-template-columns: 1fr;
+  }
+
+  .businessDetails div {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+}

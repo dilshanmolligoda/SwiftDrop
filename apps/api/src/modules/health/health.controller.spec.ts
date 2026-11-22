@@ -8,7 +8,8 @@ const report = (database: 'up' | 'down'): HealthReport => ({
   status: database === 'up' ? 'ok' : 'error',
   uptime: 1,
   timestamp: new Date().toISOString(),
-  checks: { database },
+  checks: { database, messaging: 'up' },
+  outbox: { pending: 0, oldestPendingSeconds: null },
 });
 
 const dbReport: DatabaseReport = {

@@ -23,6 +23,7 @@ import { CourierLayout } from './features/courier/components/CourierLayout.tsx'
 import { CourierDashboardPage } from './features/courier/pages/CourierDashboardPage.tsx'
 import { MyDeliveriesPage as CourierMyDeliveriesPage } from './features/courier/pages/MyDeliveriesPage.tsx'
 import { DeliveryDetailsPage } from './features/courier/pages/DeliveryDetailsPage.tsx'
+import { CourierSettingsPage } from './features/courier/pages/CourierSettingsPage.tsx'
 import { HelpSupportPage } from './features/customer/pages/HelpSupportPage.tsx'
 import { NotificationsPage } from './features/customer/pages/NotificationsPage.tsx'
 import CustomerDashboard from './features/customer/pages/CustomerDashboard.tsx'
@@ -42,6 +43,9 @@ import { MerchantLayout } from './features/merchant/components/MerchantLayout';
 import AdminLandingPage from './features/admin/pages/AdminLandingPage';
 import MerchantTrackParcelPage from './features/merchant/pages/MerchantTrackParcelPage';
 import MerchantPricingPage from './features/merchant/pages/MerchantPricingPage';
+import MerchantSettingsPage from './features/merchant/pages/MerchantSettingsPage';
+import MerchantWebhookPage from './features/merchant/pages/MerchantWebhookPage';
+import './features/merchant/components/MerchantTypography.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -117,6 +121,7 @@ createRoot(document.getElementById('root')!).render(
               <Route path="dashboard" element={<CourierDashboardPage />} />
               <Route path="deliveries" element={<CourierMyDeliveriesPage />} />
               <Route path="deliveries/:parcelId" element={<DeliveryDetailsPage />} />
+              <Route path="settings" element={<CourierSettingsPage />} />
               <Route path="*" element={<Navigate to="/courier/dashboard" replace />} />
             </Route>
             <Route
@@ -192,6 +197,8 @@ createRoot(document.getElementById('root')!).render(
               <Route path="track/:trackingNumber" element={<MerchantTrackParcelPage />} />
               <Route path="pricing" element={<MerchantPricingPage />} />
               <Route path="pricing/:date" element={<MerchantPricingPage />} />
+              <Route path="connections" element={<MerchantWebhookPage />} />
+              <Route path="settings" element={<MerchantSettingsPage />} />
             </Route>
             {/* /courier/* is served by the Courier Portal routes above. */}
             <Route path="/admin-landing" element={<AdminLandingPage />} />

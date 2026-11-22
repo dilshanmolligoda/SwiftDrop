@@ -1,11 +1,11 @@
 /* Status palette shared by badges, summary cards and the timeline. */
 .courier-shell {
-  --cp-tone-neutral: #475569;
-  --cp-tone-neutral-bg: #f1f5f9;
-  --cp-tone-pending: #475569;
-  --cp-tone-pending-bg: #f1f5f9;
-  --cp-tone-picked: #4338ca;
-  --cp-tone-picked-bg: #eef2ff;
+  --cp-tone-neutral: #4b5563;
+  --cp-tone-neutral-bg: #f3f4f6;
+  --cp-tone-pending: #4b5563;
+  --cp-tone-pending-bg: #f3f4f6;
+  --cp-tone-picked: #6d28d9;
+  --cp-tone-picked-bg: #f5f3ff;
   --cp-tone-transit: #0369a1;
   --cp-tone-transit-bg: #e0f2fe;
   --cp-tone-out: #b45309;

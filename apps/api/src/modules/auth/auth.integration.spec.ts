@@ -32,6 +32,8 @@ import { ApprovalGuard } from './guards/approval.guard.js';
 import { RolesGuard } from './guards/roles.guard.js';
 import { CsrfGuard } from './guards/csrf.guard.js';
 import { PasswordService } from './password.service.js';
+import { EmailService } from '../email/email.service.js';
+import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 import {
   cookieParserMiddleware,
   AUTH_COOKIE_NAME,
@@ -89,8 +91,34 @@ describe('Global Authentication and Authorization (Integration)', () => {
     createCourier: jest.Mock;
   };
   let passwordService: PasswordService;
+  let emailService: {
+    sendCustomerWelcomeEmail: jest.Mock;
+    sendWelcomeEmail: jest.Mock;
+    sendPasswordResetEmail: jest.Mock;
+    sendPasswordResetConfirmationEmail: jest.Mock;
+  };
+  let prismaService: {
+    user: { update: jest.Mock };
+    notification: { create: jest.Mock };
+  };
 
   beforeAll(async () => {
+    emailService = {
+      sendCustomerWelcomeEmail: jest.fn().mockResolvedValue(undefined),
+      sendWelcomeEmail: jest.fn().mockResolvedValue(undefined),
+      sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
+      sendPasswordResetConfirmationEmail: jest
+        .fn()
+        .mockResolvedValue(undefined),
+    };
+    prismaService = {
+      user: {
+        update: jest.fn().mockResolvedValue({}),
+      },
+      notification: {
+        create: jest.fn().mockResolvedValue({ id: 'mock-notif-uuid' }),
+      },
+    };
     usersService = {
       findById: jest.fn().mockImplementation((id: string) =>
         Promise.resolve({
@@ -138,6 +166,8 @@ describe('Global Authentication and Authorization (Integration)', () => {
         AuthService,
         PasswordService,
         { provide: UsersService, useValue: usersService },
+        { provide: EmailService, useValue: emailService },
+        { provide: PrismaService, useValue: prismaService },
         // Execution order: CsrfGuard first, then JwtAuthGuard, then ApprovalGuard, then RolesGuard
         { provide: APP_GUARD, useClass: CsrfGuard },
         { provide: APP_GUARD, useClass: JwtAuthGuard },
@@ -1109,6 +1139,121 @@ describe('Global Authentication and Authorization (Integration)', () => {
 
       const body = res.body as Record<string, unknown>;
       expect(body['message']).toBe('authenticated-ok');
+    });
+  });
+
+  describe('Password Reset Endpoints', () => {
+    describe('POST /auth/reset-password', () => {
+      it('successfully consumes reset token, hashes password, updates user, and dispatches security email', async () => {
+        const resetUser = {
+          id: 'reset-user-uuid',
+          email: 'resetuser@swiftdrop.local',
+          fullName: 'Reset User',
+          role: Role.CUSTOMER,
+          approvalStatus: ApprovalStatus.APPROVED,
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        usersService.findById.mockResolvedValue(resetUser);
+
+        const resetToken = createToken({
+          sub: resetUser.id,
+          userId: resetUser.id,
+          purpose: 'password_reset',
+        });
+
+        const res = await request(getHttpApp())
+          .post('/auth/reset-password')
+          .send({
+            token: resetToken,
+            newPassword: 'BrandNewSecurePassword123!',
+          })
+          .expect(200);
+
+        const body = res.body as { message: string };
+        expect(body.message).toBe('Password has been reset successfully');
+
+        const updateCalls = prismaService.user.update.mock.calls as Array<
+          [{ where: { id: string }; data: { passwordHash: string } }]
+        >;
+        expect(updateCalls.length).toBeGreaterThan(0);
+        expect(updateCalls[0][0].where.id).toBe(resetUser.id);
+        expect(typeof updateCalls[0][0].data.passwordHash).toBe('string');
+
+        expect(
+          emailService.sendPasswordResetConfirmationEmail,
+        ).toHaveBeenCalledWith(resetUser.email, resetUser.fullName);
+      });
+
+      it('rejects already consumed reset token to prevent token reuse', async () => {
+        const resetUser = {
+          id: 'consumed-user-uuid',
+          email: 'consumed@swiftdrop.local',
+          fullName: 'Consumed User',
+          role: Role.CUSTOMER,
+          approvalStatus: ApprovalStatus.APPROVED,
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        usersService.findById.mockResolvedValue(resetUser);
+
+        const resetToken = createToken({
+          sub: resetUser.id,
+          userId: resetUser.id,
+          purpose: 'password_reset',
+        });
+
+        // First consumption
+        await request(getHttpApp())
+          .post('/auth/reset-password')
+          .send({
+            token: resetToken,
+            newPassword: 'FirstNewPassword123!',
+          })
+          .expect(200);
+
+        // Second attempt with same token must fail
+        const res = await request(getHttpApp())
+          .post('/auth/reset-password')
+          .send({
+            token: resetToken,
+            newPassword: 'SecondNewPassword123!',
+          })
+          .expect(400);
+
+        const body = res.body as ErrorResponse;
+        expect(body.message).toBe('Password reset token has already been used');
+      });
+
+      it('rejects invalid or expired reset token with HTTP 400', async () => {
+        const res = await request(getHttpApp())
+          .post('/auth/reset-password')
+          .send({
+            token: 'invalid-expired-jwt-token',
+            newPassword: 'ValidPassword123!',
+          })
+          .expect(400);
+
+        const body = res.body as ErrorResponse;
+        expect(body.message).toBe('Invalid or expired password reset token');
+      });
+
+      it('rejects passwords shorter than 12 characters with HTTP 400', async () => {
+        const res = await request(getHttpApp())
+          .post('/auth/reset-password')
+          .send({
+            token: 'any-token',
+            newPassword: 'short',
+          })
+          .expect(400);
+
+        const body = res.body as ErrorResponse;
+        expect(body.message).toContain(
+          'Password must be at least 12 characters long',
+        );
+      });
     });
   });
 });

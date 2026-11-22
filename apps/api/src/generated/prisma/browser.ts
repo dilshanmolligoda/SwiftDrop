@@ -43,6 +43,11 @@ export type DeliveryProof = Prisma.DeliveryProofModel
  */
 export type MerchantProfile = Prisma.MerchantProfileModel
 /**
+ * Model MerchantBusinessUpdateRequest
+ * 
+ */
+export type MerchantBusinessUpdateRequest = Prisma.MerchantBusinessUpdateRequestModel
+/**
  * Model CourierProfile
  * 
  */
@@ -62,3 +67,30 @@ export type Parcel = Prisma.ParcelModel
  * 
  */
 export type ParcelStatusHistory = Prisma.ParcelStatusHistoryModel
+/**
+ * Model OutboxEvent
+ * Transactional outbox: written in the same transaction as the business
+ * change, then published to RabbitMQ by the relay.
+ */
+export type OutboxEvent = Prisma.OutboxEventModel
+/**
+ * Model ProcessedEvent
+ * Idempotent consumers: one row per (event, consumer) already handled.
+ */
+export type ProcessedEvent = Prisma.ProcessedEventModel
+/**
+ * Model WebhookEndpoint
+ * One webhook URL per merchant. The signing secret is AES-256-GCM encrypted
+ * (merchant-integration/domain/webhook-secret.ts), never stored in plain text.
+ */
+export type WebhookEndpoint = Prisma.WebhookEndpointModel
+/**
+ * Model WebhookDelivery
+ * One row per delivery attempt, shown in the merchant dashboard.
+ */
+export type WebhookDelivery = Prisma.WebhookDeliveryModel
+/**
+ * Model Notification
+ * One row per (event, channel, recipient); the unique key stops duplicates.
+ */
+export type Notification = Prisma.NotificationModel

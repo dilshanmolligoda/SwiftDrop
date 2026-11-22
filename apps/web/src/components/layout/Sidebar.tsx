@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import { ADMIN_NAV_ITEMS, DEFAULT_ADMIN_USER } from '../../features/admin/config/admin-nav.config'
 import type { AuthenticatedUser } from '../../features/admin/context/AdminAuthContext'
+import { adminApi } from '../../features/admin/api/admin-api'
 import {
   getUserInitials,
   formatUserRole,
@@ -24,6 +25,42 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const displayInitials = user ? getUserInitials(user.fullName) : DEFAULT_ADMIN_USER.initials
   const displayFullName = user ? user.fullName : DEFAULT_ADMIN_USER.fullName
   const displayRole = user ? formatUserRole(user.role) : DEFAULT_ADMIN_USER.role
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(() => {
+    return localStorage.getItem('swiftdrop_admin_avatar') || null
+  })
+  const [pendingApprovalsCount, setPendingApprovalsCount] = useState<number | null>(null)
+
+  useEffect(() => {
+    let isMounted = true
+    const fetchPendingCount = () => {
+      adminApi
+        .getApplications({ status: 'PENDING', limit: 1 })
+        .then((res) => {
+          if (isMounted) {
+            setPendingApprovalsCount(res.pagination.total)
+          }
+        })
+        .catch(() => {
+          // fallback
+        })
+    }
+
+    fetchPendingCount()
+
+    // Listen for custom approval events and avatar changes
+    const handleAvatarUpdate = () => {
+      setAvatarUrl(localStorage.getItem('swiftdrop_admin_avatar') || null)
+    }
+
+    window.addEventListener('swiftdrop:approvals-updated', fetchPendingCount)
+    window.addEventListener('storage', handleAvatarUpdate)
+
+    return () => {
+      isMounted = false
+      window.removeEventListener('swiftdrop:approvals-updated', fetchPendingCount)
+      window.removeEventListener('storage', handleAvatarUpdate)
+    }
+  }, [])
 
   const handleLogoutClick = () => {
     if (onLogout) {
@@ -55,30 +92,43 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Navigation Items */}
         <nav className={styles.navMenu}>
-          {ADMIN_NAV_ITEMS.map((item) => (
-            <NavLink
-              key={item.id}
-              to={item.path}
-              onClick={onCloseMobile}
-              className={({ isActive }) =>
-                `${styles.navItem} ${isActive ? styles.navItemActive : ''}`
-              }
-            >
-              <span className={styles.itemIcon} aria-hidden="true">
-                {renderIcon(item.icon)}
-              </span>
-              <span className={styles.itemLabel}>{item.label}</span>
-              {item.badge !== undefined && (
-                <span className={styles.badge}>{item.badge}</span>
-              )}
-            </NavLink>
-          ))}
+          {ADMIN_NAV_ITEMS.map((item) => {
+            const badgeValue = item.id === 'users' ? pendingApprovalsCount : item.badge
+            return (
+              <NavLink
+                key={item.id}
+                to={item.path}
+                onClick={onCloseMobile}
+                className={({ isActive }) =>
+                  `${styles.navItem} ${isActive ? styles.navItemActive : ''}`
+                }
+              >
+                <span className={styles.itemIcon} aria-hidden="true">
+                  {renderIcon(item.icon)}
+                </span>
+                <span className={styles.itemLabel}>{item.label}</span>
+                {badgeValue !== null && badgeValue !== undefined && Number(badgeValue) > 0 && (
+                  <span className={styles.badge}>{badgeValue}</span>
+                )}
+              </NavLink>
+            )
+          })}
         </nav>
 
         {/* User Profile & Footer Actions */}
         <div className={styles.footer}>
           <div className={styles.userProfile}>
-            <div className={styles.avatar}>{displayInitials}</div>
+            <div className={styles.avatar} style={{ overflow: 'hidden' }}>
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={displayFullName}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : (
+                displayInitials
+              )}
+            </div>
             <div className={styles.userInfo}>
               <span className={styles.userName}>{displayFullName}</span>
               <span className={styles.userRole}>{displayRole}</span>
