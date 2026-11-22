@@ -133,6 +133,59 @@ export class NotificationConsumer implements ParcelEventConsumer {
     ) {
       await this.handleRecipientPickedUpSms(event);
     }
+
+    if (
+      event.eventType === 'parcel.status.changed' &&
+      event.newStatus === 'OUT_FOR_DELIVERY'
+    ) {
+      await this.handleRecipientOutForDeliverySms(event);
+    }
+  }
+
+  private async handleRecipientOutForDeliverySms(
+    event: ParcelStatusChangedV1,
+  ): Promise<void> {
+    const parcel = await this.repository.findParcel(event.parcelId);
+    if (!parcel || !parcel.recipientPhone) return;
+
+    const recipientEventId = this.deterministicUuid(
+      `${event.eventId}:recipient:out-for-delivery:sms`,
+    );
+    const recipientUser = await this.repository.findUserByPhone(
+      parcel.recipientPhone,
+    );
+    const recipientUserId = recipientUser?.id ?? parcel.customerId;
+
+    if (
+      await this.repository.alreadyHandled(
+        recipientEventId,
+        'SMS',
+        recipientUserId,
+      )
+    ) {
+      return;
+    }
+
+    const message = `SwiftDrop Alert: Your package ${event.trackingNumber} is out for delivery today to your address. Please ensure someone is available.`;
+
+    const smsChannel = this.channels.find((c) => c.channel === 'SMS');
+    if (!smsChannel) return;
+
+    const result = await smsChannel.send({
+      to: parcel.recipientPhone,
+      message,
+    });
+
+    await this.repository.record({
+      eventId: recipientEventId,
+      channel: 'SMS',
+      recipientUserId,
+      template: 'recipient_out_for_delivery',
+      title: 'Out for delivery today',
+      description: message,
+      status: result.status,
+      errorMessage: result.status === 'SENT' ? null : result.reason,
+    });
   }
 
   private async handleRecipientPickedUpSms(

@@ -51,15 +51,7 @@ function channel(
 function setup(channels = [channel('EMAIL'), channel('SMS')]) {
   const repository = {
     findRecipient: jest.fn().mockResolvedValue(CUSTOMER),
-    findParcel: jest.fn().mockResolvedValue({
-      id: '0b6a3f0e-7d2c-4f1a-8e9b-1c2d3e4f5a6b',
-      trackingNumber: 'SD-0123456789ABCDEF0123456789ABCDEF',
-      customerId: CUSTOMER.userId,
-      senderName: 'Sender Bob',
-      recipientName: 'Recipient Alice',
-      recipientPhone: '+94771112233',
-      recipientAddress: '123 Main St, Colombo',
-    }),
+    findParcel: jest.fn().mockResolvedValue(null),
     findUserByPhone: jest.fn().mockResolvedValue(null),
     alreadyHandled: jest.fn().mockResolvedValue(false),
     record: jest.fn().mockResolvedValue(undefined),
@@ -285,6 +277,15 @@ describe('NotificationConsumer', () => {
 
   it('dispatches recipient SMS alert when parcel status changes to PICKED_UP (Scenario 15)', async () => {
     const { consumer, repository, channels } = setup();
+    repository.findParcel.mockResolvedValue({
+      id: '0b6a3f0e-7d2c-4f1a-8e9b-1c2d3e4f5a6b',
+      trackingNumber: 'SD-0123456789ABCDEF0123456789ABCDEF',
+      customerId: CUSTOMER.userId,
+      senderName: 'Sender Bob',
+      recipientName: 'Recipient Alice',
+      recipientPhone: '+94771112233',
+      recipientAddress: '123 Main St, Colombo',
+    });
     const pickedUpEvent: ParcelStatusChangedV1 = {
       ...EVENT,
       newStatus: 'PICKED_UP',
@@ -326,6 +327,53 @@ describe('NotificationConsumer', () => {
     expect(recipientRecord?.[0].description).toContain(
       'Hello! Sender Bob has sent you a package via SwiftDrop',
     );
+    expect(recipientRecord?.[0].status).toBe('SENT');
+  });
+
+  it('dispatches recipient SMS alert when parcel status changes to OUT_FOR_DELIVERY (Scenario 16)', async () => {
+    const { consumer, repository, channels } = setup();
+    repository.findParcel.mockResolvedValue({
+      id: '0b6a3f0e-7d2c-4f1a-8e9b-1c2d3e4f5a6b',
+      trackingNumber: 'SD-0123456789ABCDEF0123456789ABCDEF',
+      customerId: CUSTOMER.userId,
+      senderName: 'Sender Bob',
+      recipientName: 'Recipient Alice',
+      recipientPhone: '+94771112233',
+      recipientAddress: '123 Main St, Colombo',
+    });
+
+    await consumer.handle(EVENT); // EVENT has newStatus: 'OUT_FOR_DELIVERY'
+
+    const smsChannel = channels.find((c) => c.channel === 'SMS');
+    const smsCalls = (smsChannel?.send as jest.Mock).mock.calls as Array<
+      [{ to: string; message: string }]
+    >;
+    const recipientCall = smsCalls.find(
+      (call) => call[0].to === '+94771112233',
+    );
+    expect(recipientCall).toBeDefined();
+    expect(recipientCall?.[0].message).toBe(
+      `SwiftDrop Alert: Your package ${EVENT.trackingNumber} is out for delivery today to your address. Please ensure someone is available.`,
+    );
+
+    const recordCalls = repository.record.mock.calls as Array<
+      [
+        {
+          channel: string;
+          template: string;
+          title: string;
+          description: string;
+          status: string;
+        },
+      ]
+    >;
+    const recipientRecord = recordCalls.find(
+      (call) =>
+        call[0].channel === 'SMS' &&
+        call[0].template === 'recipient_out_for_delivery',
+    );
+    expect(recipientRecord).toBeDefined();
+    expect(recipientRecord?.[0].title).toBe('Out for delivery today');
     expect(recipientRecord?.[0].status).toBe('SENT');
   });
 });
