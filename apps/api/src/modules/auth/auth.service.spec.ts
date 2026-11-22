@@ -42,10 +42,12 @@ describe('AuthService', () => {
     sendPasswordResetConfirmationEmail: jest.Mock;
     sendGoogleLinkedEmail: jest.Mock;
     sendCourierRegistrationReceivedEmail: jest.Mock;
+    sendMerchantRegistrationReceivedEmail: jest.Mock;
+    sendAdminAccountAwaitingReviewEmail: jest.Mock;
   };
   let prismaService: {
-    user: { update: jest.Mock };
-    notification: { create: jest.Mock };
+    user: { update: jest.Mock; findMany: jest.Mock };
+    notification: { create: jest.Mock; createMany: jest.Mock };
   };
 
   const validUser: User = {
@@ -104,13 +106,18 @@ describe('AuthService', () => {
       sendMerchantRegistrationReceivedEmail: jest
         .fn()
         .mockResolvedValue(undefined),
+      sendAdminAccountAwaitingReviewEmail: jest
+        .fn()
+        .mockResolvedValue(undefined),
     };
     prismaService = {
       user: {
         update: jest.fn().mockResolvedValue(validUser),
+        findMany: jest.fn().mockResolvedValue([]),
       },
       notification: {
         create: jest.fn().mockResolvedValue({ id: 'notif-uuid' }),
+        createMany: jest.fn().mockResolvedValue({ count: 2 }),
       },
     };
     configService = {
@@ -562,6 +569,67 @@ describe('AuthService', () => {
             call[0].data.template === 'merchant_registration_submitted',
         ),
       ).toBe(true);
+    });
+
+    it('notifies admins when a new merchant registers (Scenario 30)', async () => {
+      usersService.findByEmail.mockResolvedValue(null);
+      passwordService.hash.mockResolvedValue('$2b$12$hashedMerchantPassword');
+      jwtService.signAsync.mockResolvedValue('signed-merchant-token');
+
+      prismaService.user.findMany.mockResolvedValue([
+        {
+          id: 'admin-1',
+          email: 'admin@swiftdrop.com',
+          fullName: 'Super Admin',
+        },
+      ]);
+
+      const createdMerchant = {
+        ...validUser,
+        id: 'merchant-uuid-2',
+        fullName: 'Jane Merchant',
+        email: 'jane@shop.com',
+        role: Role.MERCHANT,
+        approvalStatus: ApprovalStatus.PENDING,
+      };
+      usersService.createMerchant.mockResolvedValue(createdMerchant);
+
+      await authService.registerMerchant({
+        fullName: 'Jane Merchant',
+        email: 'jane@shop.com',
+        phoneNumber: '0779998877',
+        password: 'Password123!',
+        businessName: 'Jane Store',
+        businessAddress: 'Colombo 05',
+        businessType: 'Fashion',
+      });
+
+      expect(
+        emailService.sendAdminAccountAwaitingReviewEmail,
+      ).toHaveBeenCalledWith(
+        'admin@swiftdrop.com',
+        'Super Admin',
+        'Jane Merchant',
+        'Merchant',
+      );
+
+      const createManyCalls = prismaService.notification.createMany.mock
+        .calls as unknown as Array<
+        [
+          {
+            data: Array<{
+              recipientUserId: string;
+              template: string;
+              title: string;
+            }>;
+          },
+        ]
+      >;
+      expect(createManyCalls.length).toBeGreaterThan(0);
+      const adminNotifs = createManyCalls[0]?.[0]?.data ?? [];
+      expect(adminNotifs[0]?.recipientUserId).toBe('admin-1');
+      expect(adminNotifs[0]?.template).toBe('admin_account_awaiting_review');
+      expect(adminNotifs[0]?.title).toBe('New registration awaiting review');
     });
   });
 

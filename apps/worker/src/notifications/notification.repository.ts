@@ -65,11 +65,51 @@ export class NotificationRepository {
     id: string;
     phoneNumber: string | null;
     fullName: string;
+    email: string | null;
   } | null> {
     return this.prisma.user.findUnique({
       where: { id },
-      select: { id: true, phoneNumber: true, fullName: true },
+      select: { id: true, phoneNumber: true, fullName: true, email: true },
     });
+  }
+
+  /** Finds the merchant order reference for a parcel */
+  async findMerchantOrderRef(
+    parcelId: string,
+    merchantUserId: string,
+  ): Promise<string | null> {
+    const parcel = await this.prisma.parcel.findUnique({
+      where: { id: parcelId },
+      select: {
+        merchantOrder: { select: { reference: true, merchantUserId: true } },
+      },
+    });
+    const order = parcel?.merchantOrder;
+    return order && order.merchantUserId === merchantUserId
+      ? order.reference
+      : null;
+  }
+
+  /** Counts the number of failed delivery attempts recorded for a parcel */
+  async countFailedAttempts(parcelId: string): Promise<number> {
+    return this.prisma.parcelStatusEvent.count({
+      where: {
+        parcelId,
+        status: 'FAILED',
+      },
+    });
+  }
+
+  /** Finds IDs of all active admins and dispatchers */
+  async findAdminAndDispatcherIds(): Promise<string[]> {
+    const users = await this.prisma.user.findMany({
+      where: {
+        role: { in: ['ADMIN', 'DISPATCHER'] },
+        isActive: true,
+      },
+      select: { id: true },
+    });
+    return users.map((u) => u.id);
   }
 
   /** True when this channel already has a result for the event. */

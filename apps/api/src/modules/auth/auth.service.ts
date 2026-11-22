@@ -535,6 +535,8 @@ export class AuthService {
         }
       }
 
+      await this.notifyAdminsNewRegistration(user.fullName, 'Merchant');
+
       return this.createAuthSession({
         id: user.id,
         email: user.email,
@@ -629,6 +631,8 @@ export class AuthService {
         }
       }
 
+      await this.notifyAdminsNewRegistration(user.fullName, 'Courier');
+
       return this.createAuthSession({
         id: user.id,
         email: user.email,
@@ -648,6 +652,70 @@ export class AuthService {
         );
       }
       throw error;
+    }
+  }
+
+  private async notifyAdminsNewRegistration(
+    applicantName: string,
+    accountType: 'Courier' | 'Merchant',
+  ): Promise<void> {
+    if (!this.prisma) return;
+
+    try {
+      const admins = await this.prisma.user.findMany({
+        where: { role: Role.ADMIN, isActive: true },
+        select: { id: true, email: true, fullName: true },
+      });
+
+      for (const admin of admins) {
+        if (this.emailService) {
+          try {
+            await this.emailService.sendAdminAccountAwaitingReviewEmail(
+              admin.email,
+              admin.fullName,
+              applicantName,
+              accountType,
+            );
+          } catch (emailErr) {
+            this.logger.error(
+              `Failed to send admin notification email to ${admin.email}: ${(emailErr as Error).message}`,
+            );
+          }
+        }
+
+        const eventId = randomUUID();
+        const description = `Action required: New registration from ${applicantName} awaiting review.`;
+
+        await this.prisma.notification.createMany({
+          data: [
+            {
+              eventId,
+              channel: NotificationChannel.EMAIL,
+              recipientUserId: admin.id,
+              template: 'admin_account_awaiting_review',
+              title: 'New registration awaiting review',
+              description,
+              status: NotificationStatus.SENT,
+              sentAt: new Date(),
+            },
+            {
+              eventId,
+              channel: NotificationChannel.IN_APP,
+              recipientUserId: admin.id,
+              template: 'admin_account_awaiting_review',
+              title: 'New registration awaiting review',
+              description,
+              status: NotificationStatus.SENT,
+              sentAt: new Date(),
+            },
+          ],
+          skipDuplicates: true,
+        });
+      }
+    } catch (err: unknown) {
+      this.logger.error(
+        `Failed to notify admins of new registration for ${applicantName}: ${(err as Error).message}`,
+      );
     }
   }
 

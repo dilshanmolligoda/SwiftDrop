@@ -14,7 +14,10 @@ import {
   type NotificationChannel,
 } from '../notifications/notification-channel.js';
 import { NotificationRepository } from '../notifications/notification.repository.js';
-import { renderNotification } from '../notifications/templates.js';
+import {
+  renderNotification,
+  renderMerchantDeliveryFailedEmail,
+} from '../notifications/templates.js';
 
 /**
  * Tells the customer who booked a parcel about its progress, on every
@@ -180,6 +183,128 @@ export class NotificationConsumer implements ParcelEventConsumer {
         event.failureReason === 'UNABLE_TO_CONTACT')
     ) {
       await this.handleRecipientMissedDeliverySms(event);
+    }
+
+    if (
+      event.eventType === 'parcel.status.changed' &&
+      event.newStatus === 'FAILED' &&
+      event.merchantId
+    ) {
+      await this.handleMerchantDeliveryFailed(event);
+    }
+
+    if (
+      event.eventType === 'parcel.status.changed' &&
+      event.newStatus === 'FAILED'
+    ) {
+      await this.handleDeliveryEscalation(event);
+    }
+  }
+
+  private async handleDeliveryEscalation(
+    event: ParcelStatusChangedV1,
+  ): Promise<void> {
+    const failedCount = await this.repository.countFailedAttempts(
+      event.parcelId,
+    );
+    if (failedCount >= 2) {
+      const recipientIds = await this.repository.findAdminAndDispatcherIds();
+      for (const adminId of recipientIds) {
+        const escalationEventId = this.deterministicUuid(
+          `${event.eventId}:escalation:${adminId}`,
+        );
+        if (
+          !(await this.repository.alreadyHandled(
+            escalationEventId,
+            'IN_APP',
+            adminId,
+          ))
+        ) {
+          await this.repository.record({
+            eventId: escalationEventId,
+            channel: 'IN_APP',
+            recipientUserId: adminId,
+            template: 'admin_delivery_escalation',
+            title: 'Delivery issue escalation',
+            description: `Escalation: Parcel ${event.trackingNumber} has failed 2 delivery attempts.`,
+            status: 'SENT',
+            errorMessage: null,
+          });
+        }
+      }
+    }
+  }
+
+  private async handleMerchantDeliveryFailed(
+    event: ParcelStatusChangedV1,
+  ): Promise<void> {
+    if (!event.merchantId) return;
+
+    const merchantUser = await this.repository.findUserById(event.merchantId);
+    if (!merchantUser) return;
+
+    const orderRef =
+      (await this.repository.findMerchantOrderRef(
+        event.parcelId,
+        event.merchantId,
+      )) ?? event.trackingNumber;
+
+    const emailChannel = this.channels.find((c) => c.channel === 'EMAIL');
+    if (
+      emailChannel &&
+      !(await this.repository.alreadyHandled(
+        event.eventId,
+        'EMAIL',
+        merchantUser.id,
+      ))
+    ) {
+      const emailContent = renderMerchantDeliveryFailedEmail(
+        merchantUser.fullName,
+        orderRef,
+        event.trackingNumber,
+        this.config.notifications.webAppUrl,
+      );
+
+      const emailResult = await emailChannel.send(
+        {
+          userId: merchantUser.id,
+          fullName: merchantUser.fullName,
+          email: merchantUser.email,
+          phoneNumber: merchantUser.phoneNumber,
+        },
+        emailContent,
+      );
+
+      const errorMessage = 'reason' in emailResult ? emailResult.reason : null;
+      await this.repository.record({
+        eventId: event.eventId,
+        channel: 'EMAIL',
+        recipientUserId: merchantUser.id,
+        template: 'merchant_order_delivery_failed',
+        title: `Order ${orderRef} delivery failed`,
+        description: `Delivery failed for Merchant Order Ref: ${orderRef} (Tracking: ${event.trackingNumber}).`,
+        status: emailResult.status,
+        errorMessage,
+      });
+    }
+
+    if (
+      !(await this.repository.alreadyHandled(
+        event.eventId,
+        'IN_APP',
+        merchantUser.id,
+      ))
+    ) {
+      await this.repository.record({
+        eventId: event.eventId,
+        channel: 'IN_APP',
+        recipientUserId: merchantUser.id,
+        template: 'merchant_order_delivery_failed',
+        title: `Order ${orderRef} delivery failed`,
+        description: `Delivery failed for Merchant Order Ref: ${orderRef} (Tracking: ${event.trackingNumber}).`,
+        status: 'SENT',
+        errorMessage: null,
+      });
     }
   }
 
