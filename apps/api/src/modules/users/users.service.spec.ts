@@ -23,6 +23,7 @@ describe('UsersService', () => {
   let repository: {
     findByEmail: jest.Mock;
     findById: jest.Mock;
+    findMerchantById: jest.Mock;
     createCustomer: jest.Mock;
     createMerchant: jest.Mock;
     createCourier: jest.Mock;
@@ -40,6 +41,7 @@ describe('UsersService', () => {
     sendProfileUpdatedEmail: jest.Mock;
     sendCourierApprovedEmail: jest.Mock;
     sendCourierRejectedEmail: jest.Mock;
+    sendMerchantApprovedEmail: jest.Mock;
   };
   let prismaService: {
     notification: { create: jest.Mock };
@@ -72,6 +74,7 @@ describe('UsersService', () => {
     repository = {
       findByEmail: jest.fn(),
       findById: jest.fn(),
+      findMerchantById: jest.fn(),
       createCustomer: jest.fn(),
       createMerchant: jest.fn(),
       createCourier: jest.fn(),
@@ -89,6 +92,7 @@ describe('UsersService', () => {
       sendProfileUpdatedEmail: jest.fn().mockResolvedValue(undefined),
       sendCourierApprovedEmail: jest.fn().mockResolvedValue(undefined),
       sendCourierRejectedEmail: jest.fn().mockResolvedValue(undefined),
+      sendMerchantApprovedEmail: jest.fn().mockResolvedValue(undefined),
     };
     prismaService = {
       notification: {
@@ -622,6 +626,87 @@ describe('UsersService', () => {
       await expect(
         service.rejectCourier(mockUser.id, 'Reason'),
       ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('approveMerchant', () => {
+    const mockMerchant: User & { merchantProfile: { businessName: string } } = {
+      ...mockUser,
+      id: 'merchant-uuid-1',
+      role: Role.MERCHANT,
+      approvalStatus: ApprovalStatus.PENDING,
+      merchantProfile: {
+        businessName: 'Super Mart',
+      },
+    };
+
+    it('approves merchant, sends email, and logs in-app and email notifications', async () => {
+      repository.findMerchantById.mockResolvedValue(mockMerchant);
+      const approvedMerchant = {
+        ...mockMerchant,
+        approvalStatus: ApprovalStatus.APPROVED,
+        reviewedAt: new Date(),
+        reviewedBy: 'admin-uuid-1',
+      };
+      repository.approveUser.mockResolvedValue(approvedMerchant);
+
+      const result = await service.approveMerchant(
+        'merchant-uuid-1',
+        'admin-uuid-1',
+      );
+
+      expect(result.approvalStatus).toBe(ApprovalStatus.APPROVED);
+      expect(repository.approveUser).toHaveBeenCalledWith(
+        'merchant-uuid-1',
+        'admin-uuid-1',
+      );
+      expect(emailService.sendMerchantApprovedEmail).toHaveBeenCalledWith(
+        mockMerchant.email,
+        mockMerchant.fullName,
+        'Super Mart',
+      );
+      expect(prismaService.notification.create).toHaveBeenCalledTimes(2);
+
+      const calls = prismaService.notification.create.mock.calls as Array<
+        [
+          {
+            data: {
+              recipientUserId: string;
+              channel: NotificationChannel;
+              template: string;
+              title: string;
+            };
+          },
+        ]
+      >;
+      expect(calls[0][0].data).toMatchObject({
+        recipientUserId: 'merchant-uuid-1',
+        channel: NotificationChannel.IN_APP,
+        template: 'merchant_approved',
+        title: 'Your merchant account is now approved!',
+      });
+      expect(calls[1][0].data).toMatchObject({
+        recipientUserId: 'merchant-uuid-1',
+        channel: NotificationChannel.EMAIL,
+        template: 'merchant_approved',
+        title: 'Your merchant account is now approved!',
+      });
+    });
+
+    it('throws NotFoundException if merchant does not exist', async () => {
+      repository.findMerchantById.mockResolvedValue(null);
+
+      await expect(service.approveMerchant('unknown-merchant')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('throws BadRequestException if user is not a merchant', async () => {
+      repository.findMerchantById.mockResolvedValue(mockUser);
+
+      await expect(service.approveMerchant(mockUser.id)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 });

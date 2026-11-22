@@ -55,6 +55,15 @@ export class UsersRepository {
     });
   }
 
+  async findMerchantById(
+    id: string,
+  ): Promise<(User & { merchantProfile: MerchantProfile | null }) | null> {
+    return this.prisma.user.findUnique({
+      where: { id },
+      include: { merchantProfile: true },
+    });
+  }
+
   async findByGoogleSubject(googleSubject: string): Promise<User | null> {
     const trimmed = googleSubject?.trim();
     if (!trimmed) {

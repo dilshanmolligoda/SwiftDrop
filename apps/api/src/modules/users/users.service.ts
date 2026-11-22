@@ -413,4 +413,74 @@ export class UsersService {
 
     return updatedUser;
   }
+
+  async approveMerchant(
+    merchantId: string,
+    reviewedBy?: string,
+  ): Promise<User> {
+    const user = await this.usersRepository.findMerchantById(merchantId);
+    if (!user) {
+      throw new NotFoundException('Merchant not found');
+    }
+    if (user.role !== Role.MERCHANT) {
+      throw new BadRequestException('User is not a merchant');
+    }
+
+    const updatedUser = await this.usersRepository.approveUser(
+      merchantId,
+      reviewedBy,
+    );
+
+    if (this.emailService) {
+      try {
+        await this.emailService.sendMerchantApprovedEmail(
+          updatedUser.email,
+          updatedUser.fullName,
+          user.merchantProfile?.businessName,
+        );
+      } catch (emailErr) {
+        this.logger.error(
+          `Failed to send merchant approval email to ${updatedUser.email}: ${(emailErr as Error).message}`,
+        );
+      }
+    }
+
+    if (this.prisma) {
+      try {
+        await this.prisma.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.IN_APP,
+            recipientUserId: updatedUser.id,
+            template: 'merchant_approved',
+            title: 'Your merchant account is now approved!',
+            description:
+              'Log in to access API keys, manage orders, and set up webhooks.',
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+
+        await this.prisma.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.EMAIL,
+            recipientUserId: updatedUser.id,
+            template: 'merchant_approved',
+            title: 'Your merchant account is now approved!',
+            description:
+              'Log in to access API keys, manage orders, and set up webhooks.',
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+      } catch (notifErr) {
+        this.logger.error(
+          `Failed to record merchant approval notification for ${updatedUser.id}: ${(notifErr as Error).message}`,
+        );
+      }
+    }
+
+    return updatedUser;
+  }
 }

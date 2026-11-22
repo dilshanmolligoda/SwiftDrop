@@ -64,4 +64,24 @@ export class AdminController {
       },
     };
   }
+
+  @Patch('merchants/:id/approve')
+  @Roles(Role.ADMIN, Role.DISPATCHER)
+  @HttpCode(HttpStatus.OK)
+  async approveMerchant(
+    @Param('id') merchantId: string,
+    @CurrentUser() admin: AuthenticatedUser,
+  ) {
+    const user = await this.usersService.approveMerchant(merchantId, admin.id);
+    return {
+      message: 'Merchant approved successfully',
+      user: {
+        id: user.id,
+        email: user.email,
+        fullName: user.fullName,
+        role: user.role,
+        approvalStatus: user.approvalStatus,
+      },
+    };
+  }
 }
