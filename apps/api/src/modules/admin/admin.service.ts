@@ -747,7 +747,9 @@ export class AdminService {
 
     const baseWhere: Prisma.ParcelWhereInput = {
       updatedAt: { gte: startDate, lte: endDate },
-      ...(query.status ? { status: query.status } : {}),
+      status: query.status
+        ? query.status
+        : { in: [ParcelStatus.DELIVERED, ParcelStatus.FAILED] },
       ...(query.courierId
         ? { assignments: { some: { courierId: query.courierId } } }
         : {}),

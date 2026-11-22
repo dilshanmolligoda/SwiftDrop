@@ -4,7 +4,6 @@ import {
   Home,
   ChevronRight,
   ArrowLeft,
-  FileText,
   Loader2,
   AlertCircle,
   CheckCircle2,
@@ -284,36 +283,6 @@ export const AdminReviewApplicationPage: React.FC = () => {
                 </span>
               </div>
             )}
-          </div>
-        </div>
-      </div>
-
-      {/* Submitted documents Section */}
-      <div className={styles.documentsCard}>
-        <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>Submitted documents</h2>
-          <span className={styles.sectionSubtitle}>
-            Administrative identity verification documents.
-          </span>
-        </div>
-
-        <div className={styles.documentsList}>
-          <div className={styles.docItem}>
-            <div className={styles.docLeft}>
-              <div className={styles.pdfIcon}>
-                <FileText size={18} aria-hidden="true" />
-              </div>
-              <div className={styles.docMeta}>
-                <span className={styles.docName}>
-                  {application.role === 'MERCHANT'
-                    ? 'business-registration-doc.pdf'
-                    : 'driving-license-scan.pdf'}
-                </span>
-                <span className={styles.docSub}>
-                  {application.role === 'MERCHANT' ? 'Business registration' : 'Driving license'} • Verified
-                </span>
-              </div>
-            </div>
           </div>
         </div>
       </div>

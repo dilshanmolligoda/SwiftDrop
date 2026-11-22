@@ -338,15 +338,24 @@ export const AdminReportsPage: React.FC = () => {
                       <td>
                         <span
                           className={`${styles.outcomePill} ${
-                            isDelivered ? styles.outcomeDelivered : styles.outcomeFailed
+                            isDelivered
+                              ? styles.outcomeDelivered
+                              : item.status === 'FAILED'
+                                ? styles.outcomeFailed
+                                : ''
                           }`}
                         >
-                          {isDelivered ? 'Delivered' : 'Failed'}
+                          {isDelivered ? 'Delivered' : item.status === 'FAILED' ? 'Failed' : item.status}
                         </span>
                       </td>
                       <td>
                         <span className={styles.failureReason}>
-                          {item.failureReason || (isDelivered ? 'Successful delivery' : 'No reason provided')}
+                          {item.failureReason ||
+                            (isDelivered
+                              ? 'Successful delivery'
+                              : item.status === 'FAILED'
+                                ? 'No reason provided'
+                                : '—')}
                         </span>
                       </td>
                     </tr>
