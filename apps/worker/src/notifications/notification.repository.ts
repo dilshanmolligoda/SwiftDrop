@@ -60,6 +60,18 @@ export class NotificationRepository {
     });
   }
 
+  /** Finds an active user by ID */
+  async findUserById(id: string): Promise<{
+    id: string;
+    phoneNumber: string | null;
+    fullName: string;
+  } | null> {
+    return this.prisma.user.findUnique({
+      where: { id },
+      select: { id: true, phoneNumber: true, fullName: true },
+    });
+  }
+
   /** True when this channel already has a result for the event. */
   async alreadyHandled(
     eventId: string,

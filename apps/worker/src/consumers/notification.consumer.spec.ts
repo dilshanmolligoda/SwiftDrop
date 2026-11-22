@@ -53,6 +53,7 @@ function setup(channels = [channel('EMAIL'), channel('SMS')]) {
     findRecipient: jest.fn().mockResolvedValue(CUSTOMER),
     findParcel: jest.fn().mockResolvedValue(null),
     findUserByPhone: jest.fn().mockResolvedValue(null),
+    findUserById: jest.fn().mockResolvedValue(null),
     alreadyHandled: jest.fn().mockResolvedValue(false),
     record: jest.fn().mockResolvedValue(undefined),
   };
@@ -185,6 +186,8 @@ describe('NotificationConsumer', () => {
     });
     const repository = {
       findRecipient: jest.fn().mockResolvedValue(CUSTOMER),
+      findParcel: jest.fn().mockResolvedValue(null),
+      findUserById: jest.fn().mockResolvedValue(null),
       alreadyHandled: jest.fn().mockResolvedValue(false),
       record: jest.fn().mockResolvedValue(undefined),
     };
@@ -220,6 +223,8 @@ describe('NotificationConsumer', () => {
       channel: 'IN_APP',
       recipientUserId: 'courier-uuid-1',
       template: 'courier_new_assignment',
+      title: 'New delivery assigned',
+      description: `New delivery assigned: ${assignedEvent.trackingNumber} added to today's deliveries.`,
       status: 'SENT',
       errorMessage: null,
     });
@@ -479,5 +484,63 @@ describe('NotificationConsumer', () => {
     expect(recipientRecord).toBeDefined();
     expect(recipientRecord?.[0].title).toBe('Missed delivery attempt');
     expect(recipientRecord?.[0].status).toBe('SENT');
+  });
+
+  it('sends in-app notification and SMS to courier when parcel is ASSIGNED', async () => {
+    const { consumer, repository, channels } = setup();
+    repository.findUserById.mockResolvedValue({
+      id: 'courier-uuid-1',
+      fullName: 'Kamal Courier',
+      phoneNumber: '+94719876543',
+    });
+
+    const assignedEvent: ParcelStatusChangedV1 = {
+      ...EVENT,
+      newStatus: 'ASSIGNED',
+      courierId: 'courier-uuid-1',
+    };
+
+    await consumer.handle(assignedEvent);
+
+    const smsChannel = channels.find((c) => c.channel === 'SMS');
+    const smsCalls = (smsChannel?.send as jest.Mock).mock.calls as Array<
+      [{ to: string; message: string }]
+    >;
+    const courierSmsCall = smsCalls.find(
+      (call) => call[0].to === '+94719876543',
+    );
+    expect(courierSmsCall).toBeDefined();
+    expect(courierSmsCall?.[0].message).toBe(
+      `SwiftDrop: New delivery assigned: ${assignedEvent.trackingNumber} added to today's deliveries.`,
+    );
+
+    const recordCalls = repository.record.mock.calls as Array<
+      [
+        {
+          recipientUserId: string;
+          channel: string;
+          template: string;
+          title?: string;
+          description?: string;
+        },
+      ]
+    >;
+    const inAppRecord = recordCalls.find(
+      (c) =>
+        c[0].channel === 'IN_APP' &&
+        c[0].recipientUserId === 'courier-uuid-1' &&
+        c[0].template === 'courier_new_assignment',
+    );
+    expect(inAppRecord).toBeDefined();
+    expect(inAppRecord?.[0].title).toBe('New delivery assigned');
+
+    const smsRecord = recordCalls.find(
+      (c) =>
+        c[0].channel === 'SMS' &&
+        c[0].recipientUserId === 'courier-uuid-1' &&
+        c[0].template === 'courier_new_assignment',
+    );
+    expect(smsRecord).toBeDefined();
+    expect(smsRecord?.[0].title).toBe('New delivery assigned');
   });
 });

@@ -64,44 +64,65 @@ export class NotificationConsumer implements ParcelEventConsumer {
             });
           }
         }
+        return;
+      }
+      if (event.newStatus === 'ASSIGNED' && event.courierId) {
+        if (
+          !(await this.repository.alreadyHandled(
+            event.eventId,
+            'IN_APP',
+            event.courierId,
+          ))
+        ) {
+          await this.repository.record({
+            eventId: event.eventId,
+            channel: 'IN_APP',
+            recipientUserId: event.courierId,
+            template: 'courier_new_assignment',
+            title: 'New delivery assigned',
+            description: `New delivery assigned: ${event.trackingNumber} added to today's deliveries.`,
+            status: 'SENT',
+            errorMessage: null,
+          });
+        }
+        await this.handleCourierAssignedSms(event);
       }
       return;
     }
 
     const recipient = await this.repository.findRecipient(event.parcelId);
-    if (!recipient) {
-      this.logger.debug(`No active customer for event ${event.eventId}`);
-      return;
-    }
-
-    const message = renderNotification(event, {
-      recipientName: recipient.fullName,
-      webAppUrl: notifications.webAppUrl,
-      notifyStatuses: notifications.notifyStatuses,
-    });
-    if (!message) return;
-
-    // Channels run one after another; a thrown error stops here and the
-    // whole message is retried — channels already recorded are skipped then.
-    for (const channel of this.channels) {
-      if (
-        await this.repository.alreadyHandled(
-          event.eventId,
-          channel.channel,
-          recipient.userId,
-        )
-      ) {
-        continue;
-      }
-      const result = await channel.send(recipient, message);
-      await this.repository.record({
-        eventId: event.eventId,
-        channel: channel.channel,
-        recipientUserId: recipient.userId,
-        template: message.template,
-        status: result.status,
-        errorMessage: result.status === 'SENT' ? null : result.reason,
+    if (recipient) {
+      const message = renderNotification(event, {
+        recipientName: recipient.fullName,
+        webAppUrl: notifications.webAppUrl,
+        notifyStatuses: notifications.notifyStatuses,
       });
+      if (message) {
+        // Channels run one after another; a thrown error stops here and the
+        // whole message is retried — channels already recorded are skipped then.
+        for (const channel of this.channels) {
+          if (
+            await this.repository.alreadyHandled(
+              event.eventId,
+              channel.channel,
+              recipient.userId,
+            )
+          ) {
+            continue;
+          }
+          const result = await channel.send(recipient, message);
+          await this.repository.record({
+            eventId: event.eventId,
+            channel: channel.channel,
+            recipientUserId: recipient.userId,
+            template: message.template,
+            status: result.status,
+            errorMessage: result.status === 'SENT' ? null : result.reason,
+          });
+        }
+      }
+    } else {
+      this.logger.debug(`No active customer for event ${event.eventId}`);
     }
 
     if (
@@ -121,10 +142,14 @@ export class NotificationConsumer implements ParcelEventConsumer {
           channel: 'IN_APP',
           recipientUserId: event.courierId,
           template: 'courier_new_assignment',
+          title: 'New delivery assigned',
+          description: `New delivery assigned: ${event.trackingNumber} added to today's deliveries.`,
           status: 'SENT',
           errorMessage: null,
         });
       }
+
+      await this.handleCourierAssignedSms(event);
     }
 
     if (
@@ -341,6 +366,52 @@ export class NotificationConsumer implements ParcelEventConsumer {
       recipientUserId,
       template: 'recipient_parcel_dispatched',
       title: 'Shipment dispatched',
+      description: message,
+      status: result.status,
+      errorMessage: result.status === 'SENT' ? null : result.reason,
+    });
+  }
+
+  private async handleCourierAssignedSms(
+    event: ParcelStatusChangedV1,
+  ): Promise<void> {
+    if (!event.courierId) return;
+
+    const courier = await this.repository.findUserById(event.courierId);
+    if (!courier?.phoneNumber) {
+      return;
+    }
+
+    const courierSmsEventId = this.deterministicUuid(
+      `${event.eventId}:courier:sms`,
+    );
+
+    if (
+      await this.repository.alreadyHandled(
+        courierSmsEventId,
+        'SMS',
+        event.courierId,
+      )
+    ) {
+      return;
+    }
+
+    const message = `SwiftDrop: New delivery assigned: ${event.trackingNumber} added to today's deliveries.`;
+
+    const smsChannel = this.channels.find((c) => c.channel === 'SMS');
+    if (!smsChannel) return;
+
+    const result = await smsChannel.send({
+      to: courier.phoneNumber,
+      message,
+    });
+
+    await this.repository.record({
+      eventId: courierSmsEventId,
+      channel: 'SMS',
+      recipientUserId: event.courierId,
+      template: 'courier_new_assignment',
+      title: 'New delivery assigned',
       description: message,
       status: result.status,
       errorMessage: result.status === 'SENT' ? null : result.reason,
