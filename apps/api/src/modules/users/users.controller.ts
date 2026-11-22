@@ -10,6 +10,7 @@ import type { Request } from 'express';
 import { UsersService } from './users.service.js';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
 import { UpdateProfileDto } from './dto/update-profile.dto.js';
+import { UpdateNotificationPreferencesDto } from './dto/update-notification-preferences.dto.js';
 import {
   CurrentUser,
   type AuthenticatedUser,
@@ -40,5 +41,15 @@ export class UsersController {
   ): Promise<{ message: string }> {
     const userAgent = req.headers['user-agent'];
     return this.usersService.changePassword(user.id, dto, userAgent);
+  }
+
+  @AllowUnapproved()
+  @Patch('me/notifications')
+  @HttpCode(HttpStatus.OK)
+  async updateNotificationPreferences(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: UpdateNotificationPreferencesDto,
+  ) {
+    return this.usersService.updateNotificationPreferences(user.id, dto);
   }
 }

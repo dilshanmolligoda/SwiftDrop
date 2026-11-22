@@ -45,6 +45,7 @@ describe('UsersService', () => {
     sendMerchantRejectedEmail: jest.Mock;
   };
   let prismaService: {
+    user: { findUnique: jest.Mock; update: jest.Mock };
     notification: { create: jest.Mock };
   };
 
@@ -97,6 +98,10 @@ describe('UsersService', () => {
       sendMerchantRejectedEmail: jest.fn().mockResolvedValue(undefined),
     };
     prismaService = {
+      user: {
+        findUnique: jest.fn(),
+        update: jest.fn(),
+      },
       notification: {
         create: jest.fn().mockResolvedValue({ id: 'notif-uuid' }),
       },
@@ -791,6 +796,62 @@ describe('UsersService', () => {
       await expect(
         service.rejectMerchant(mockUser.id, 'Reason'),
       ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('updateNotificationPreferences (Scenario 33)', () => {
+    it('updates user notification flags and records in-app notification', async () => {
+      prismaService.user.findUnique.mockResolvedValue(mockUser);
+      prismaService.user.update.mockResolvedValue({
+        ...mockUser,
+        deliveryStatusNotifications: false,
+        failedDeliveryNotifications: true,
+      });
+
+      const result = await service.updateNotificationPreferences(mockUser.id, {
+        deliveryStatusNotifications: false,
+        failedDeliveryNotifications: true,
+      });
+
+      expect(result).toMatchObject({
+        deliveryStatusNotifications: false,
+        failedDeliveryNotifications: true,
+        message: 'Your notification preferences have been saved.',
+      });
+
+      const calls = prismaService.notification.create.mock.calls as Array<
+        [
+          {
+            data: {
+              channel: NotificationChannel;
+              template: string;
+              title: string;
+              description: string;
+            };
+          },
+        ]
+      >;
+      const notif = calls.find(
+        (c) =>
+          c[0].data.recipientUserId === mockUser.id &&
+          c[0].data.channel === NotificationChannel.IN_APP &&
+          c[0].data.template === 'preferences_updated',
+      );
+      expect(notif).toBeDefined();
+      expect(notif?.[0].data.title).toBe('Preferences updated');
+      expect(notif?.[0].data.description).toBe(
+        'Your notification preferences have been saved.',
+      );
+    });
+
+    it('throws NotFoundException if user is not found', async () => {
+      prismaService.user.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.updateNotificationPreferences('non-existent-user', {
+          deliveryStatusNotifications: false,
+        }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });

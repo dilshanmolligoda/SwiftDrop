@@ -9,6 +9,8 @@ import { PermanentFailure } from '../messaging/parcel-event-consumer.js';
 import { testWorkerConfig } from '../testing/worker-config.fixture.js';
 import type { WorkerPublisher } from '../messaging/worker-publisher.js';
 import type { WebhookDeliveryRepository } from '../webhooks/webhook-delivery.repository.js';
+import type { NotificationRepository } from '../notifications/notification.repository.js';
+import type { EmailChannel } from '../notifications/email.channel.js';
 import {
   postWebhook,
   type WebhookHttpResult,
@@ -63,12 +65,32 @@ function setup(
     recordAttempt: jest.fn().mockResolvedValue(undefined),
   };
   const publisher = { sendToQueue: jest.fn().mockResolvedValue(undefined) };
+  const notificationRepository = {
+    findUserById: jest.fn().mockResolvedValue({
+      id: MERCHANT,
+      fullName: 'Merchant Partner',
+      phoneNumber: '+94771234567',
+      email: 'merchant@example.com',
+    }),
+    record: jest.fn().mockResolvedValue(undefined),
+  };
+  const emailChannel = {
+    send: jest.fn().mockResolvedValue({ status: 'SENT' }),
+  };
   const consumer = new WebhookConsumer(
     repository as unknown as WebhookDeliveryRepository,
     publisher as unknown as WorkerPublisher,
     config(options.webhooks),
+    notificationRepository as unknown as NotificationRepository,
+    emailChannel as unknown as EmailChannel,
   );
-  return { consumer, repository, publisher };
+  return {
+    consumer,
+    repository,
+    publisher,
+    notificationRepository,
+    emailChannel,
+  };
 }
 
 const delivery = (attempt?: number) => ({
@@ -180,7 +202,13 @@ describe('WebhookConsumer', () => {
   });
 
   it('dead-letters after the last attempt fails', async () => {
-    const { consumer, repository, publisher } = setup();
+    const {
+      consumer,
+      repository,
+      publisher,
+      emailChannel,
+      notificationRepository,
+    } = setup();
     post.mockResolvedValue(respond(500));
 
     await expect(consumer.handle(EVENT, delivery(6))).resolves.toBeUndefined();
@@ -192,6 +220,20 @@ describe('WebhookConsumer', () => {
       'webhooks.dead-letter',
       expect.any(Buffer),
       expect.objectContaining({ messageId: EVENT.eventId }),
+    );
+    expect(emailChannel.send).toHaveBeenCalledWith(
+      expect.objectContaining({ email: 'merchant@example.com' }),
+      expect.objectContaining({
+        template: 'merchant_webhook_dead_letter',
+        subject: 'Urgent: Webhook Delivery Failure - SwiftDrop',
+      }),
+    );
+    expect(notificationRepository.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        template: 'merchant_webhook_dead_letter',
+        channel: 'IN_APP',
+        title: 'Webhook delivery failed: Check your webhook endpoint.',
+      }),
     );
   });
 

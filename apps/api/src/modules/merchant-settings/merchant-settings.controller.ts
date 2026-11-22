@@ -12,6 +12,7 @@ import { UpdateMerchantNotificationsDto } from './dto/update-notifications.dto.j
 import { UpdateMerchantPreferencesDto } from './dto/update-preferences.dto.js';
 import { UpdateTwoFactorDto } from './dto/update-two-factor.dto.js';
 import { RequestMerchantBusinessUpdateDto } from './dto/request-business-update.dto.js';
+import { NotifyApiKeyUpdatedDto } from './dto/notify-api-key-updated.dto.js';
 
 @Controller('merchant/settings')
 @Roles(Role.MERCHANT)
@@ -79,5 +80,17 @@ export class MerchantSettingsController {
   @Get('verification-documents')
   getVerificationDocuments(@CurrentUser() user: AuthenticatedUser) {
     return this.settingsService.getVerificationDocuments(user.id);
+  }
+
+  @Post('api-keys/notify')
+  notifyApiKeyUpdated(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: NotifyApiKeyUpdatedDto,
+  ) {
+    return this.settingsService.notifyApiKeyUpdated(
+      user.id,
+      dto.action,
+      dto.keyPrefix,
+    );
   }
 }

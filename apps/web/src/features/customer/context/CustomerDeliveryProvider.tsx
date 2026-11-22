@@ -1,20 +1,22 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { env } from '../../../lib/env'
 import {
   type CustomerDelivery,
   type CustomerDeliveryContextValue,
   CustomerDeliveryContext,
-  type DeliveryMetrics,
   type DeliveryStatus,
   type NewDeliveryInput,
   type PackageSize,
+  type VerifiedDeliveryCustomer,
 } from './CustomerDeliveryContext'
+
+import { calculateDeliveryMetrics } from './customerDeliveryModel'
+import { createCustomerDeliveryStore } from './customerDeliveryStore'
 
 const STORAGE_KEY = 'swiftdrop_customer_deliveries_v5'
 
-const INITIAL_DELIVERIES: readonly CustomerDelivery[] = []
-
 interface ApiParcel {
+  readonly customerId: string
   readonly id: string
   readonly trackingNumber: string
   readonly senderName: string
@@ -31,170 +33,38 @@ interface ApiParcel {
 }
 
 export const CustomerDeliveryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [deliveries, setDeliveries] = useState<CustomerDelivery[]>(() => {
-    try {
-      const persistedJson = localStorage.getItem(STORAGE_KEY)
-      if (persistedJson !== null) {
-        const parsed = JSON.parse(persistedJson) as CustomerDelivery[]
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed
-        }
+  const store = useMemo(() => createCustomerDeliveryStore({
+    apiBaseUrl: env.apiBaseUrl,
+    clearLegacyCache: () => {
+      try {
+        // The old cache had no verified owner. Never restore or persist private data there.
+        localStorage.removeItem(STORAGE_KEY)
+      } catch {
+        // Storage may be unavailable in private browsing.
       }
-    } catch {
-      // Fallback to initial seeds
-    }
-    return [...INITIAL_DELIVERIES]
-  })
-
-  const [apiMetrics, setApiMetrics] = useState<DeliveryMetrics | null>(null)
-  const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [error, setError] = useState<string | null>(null)
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false)
-
+    },
+  }), [])
+  const { deliveries, metrics: apiMetrics, isLoading, error, authorizationFailed } =
+    useSyncExternalStore(store.subscribe, store.getSnapshot)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const openCreateModal = useCallback(() => setIsCreateModalOpen(true), [])
   const closeCreateModal = useCallback(() => setIsCreateModalOpen(false), [])
+  const clearDeliveries = useCallback(() => {
+    store.clear()
+    setIsCreateModalOpen(false)
+  }, [store])
+  const setVerifiedCustomer = useCallback((customer: VerifiedDeliveryCustomer) => {
+    if (store.getScope() && store.getScope()?.customerId !== customer.id) closeCreateModal()
+    store.setVerifiedCustomer(customer)
+  }, [store, closeCreateModal])
+  const refreshDeliveries = store.refresh
 
-  // Synchronize deliveries to localStorage for offline fallback
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(deliveries))
-    } catch {
-      // Handle storage quota
-    }
-  }, [deliveries])
+  useEffect(() => () => store.clear(), [store])
 
-  // Fetch deliveries and metrics from backend API
-  const refreshDeliveries = useCallback(async (): Promise<void> => {
-    setIsLoading(true)
-    setError(null)
-    try {
-      const [parcelsResponse, metricsResponse] = await Promise.all([
-        fetch(`${env.apiBaseUrl}/parcels/me`, {
-          method: 'GET',
-          credentials: 'include',
-        }),
-        fetch(`${env.apiBaseUrl}/parcels/metrics`, {
-          method: 'GET',
-          credentials: 'include',
-        }),
-      ])
-
-      if (parcelsResponse.ok) {
-        const apiData = (await parcelsResponse.json()) as ApiParcel[]
-        if (Array.isArray(apiData)) {
-          const mapped: CustomerDelivery[] = apiData.map((p) => ({
-            id: p.id,
-            trackingNumber: p.trackingNumber,
-            senderName: p.senderName,
-            senderAddress: p.senderAddress,
-            recipientName: p.recipientName,
-            recipientAddress: p.recipientAddress,
-            recipientPhone: p.recipientPhone,
-            packageSize: p.packageSize,
-            weightKg: Number(p.weightKg),
-            costLkr: Number(p.costLkr),
-            status: p.status,
-            deliveredAt: p.deliveredAt ?? undefined,
-            createdAt: p.createdAt,
-          }))
-          setDeliveries(mapped)
-        }
-      }
-
-      if (metricsResponse.ok) {
-        const metricsData = (await metricsResponse.json()) as DeliveryMetrics
-        setApiMetrics(metricsData)
-      }
-    } catch (err) {
-      // Graceful offline fallback
-      setError(err instanceof Error ? err.message : 'Failed to reach API')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    let isCancelled = false
-
-    const loadInitialData = async (): Promise<void> => {
-      try {
-        const [parcelsResponse, metricsResponse] = await Promise.all([
-          fetch(`${env.apiBaseUrl}/parcels/me`, {
-            method: 'GET',
-            credentials: 'include',
-          }),
-          fetch(`${env.apiBaseUrl}/parcels/metrics`, {
-            method: 'GET',
-            credentials: 'include',
-          }),
-        ])
-
-        if (isCancelled) return
-
-        if (parcelsResponse.ok) {
-          const apiData = (await parcelsResponse.json()) as ApiParcel[]
-          if (Array.isArray(apiData) && !isCancelled) {
-            const mapped: CustomerDelivery[] = apiData.map((p) => ({
-              id: p.id,
-              trackingNumber: p.trackingNumber,
-              senderName: p.senderName,
-              senderAddress: p.senderAddress,
-              recipientName: p.recipientName,
-              recipientAddress: p.recipientAddress,
-              recipientPhone: p.recipientPhone,
-              packageSize: p.packageSize,
-              weightKg: Number(p.weightKg),
-              costLkr: Number(p.costLkr),
-              status: p.status,
-              deliveredAt: p.deliveredAt ?? undefined,
-              createdAt: p.createdAt,
-            }))
-            setDeliveries(mapped)
-          }
-        }
-
-        if (metricsResponse.ok && !isCancelled) {
-          const metricsData = (await metricsResponse.json()) as DeliveryMetrics
-          setApiMetrics(metricsData)
-        }
-      } catch (err) {
-        if (!isCancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to reach API')
-        }
-      }
-    }
-
-    void loadInitialData()
-
-    return () => {
-      isCancelled = true
-    }
-  }, [])
-
-  // Dynamically compute delivery metrics (preferring API metrics when available)
-  const metrics = useMemo<DeliveryMetrics>(() => {
-    if (apiMetrics) {
-      return apiMetrics
-    }
-
-    const activeDeliveries = deliveries.filter((item) =>
-      ['PENDING', 'ACCEPTED', 'PICKED_UP', 'IN_TRANSIT', 'OUT_FOR_DELIVERY'].includes(item.status),
-    ).length
-
-    const deliveredThisMonth = deliveries.filter((item) => item.status === 'DELIVERED').length
-
-    const needsAttention = deliveries.filter((item) =>
-      ['FAILED', 'RETURNED'].includes(item.status),
-    ).length
-
-    return {
-      activeDeliveries,
-      deliveredThisMonth,
-      needsAttention,
-    }
-  }, [deliveries, apiMetrics])
+  const metrics = useMemo(() => apiMetrics ?? calculateDeliveryMetrics(deliveries), [apiMetrics, deliveries])
 
   const createDelivery = async (input: NewDeliveryInput): Promise<CustomerDelivery> => {
+    const scope = store.getScope()
     try {
       const response = await fetch(`${env.apiBaseUrl}/parcels`, {
         method: 'POST',
@@ -213,8 +83,11 @@ export const CustomerDeliveryProvider: React.FC<{ children: React.ReactNode }> =
         }),
       })
 
+      if (response.status === 401 || response.status === 403) store.rejectAccess(scope, response.status)
+
       if (response.ok) {
         const created = (await response.json()) as ApiParcel
+        if (created.customerId !== scope?.customerId) store.rejectAccess(scope, 403)
         const newDelivery: CustomerDelivery = {
           id: created.id,
           trackingNumber: created.trackingNumber,
@@ -229,8 +102,9 @@ export const CustomerDeliveryProvider: React.FC<{ children: React.ReactNode }> =
           status: created.status,
           createdAt: created.createdAt,
         }
-        setDeliveries((previous) => [newDelivery, ...previous])
-        void refreshDeliveries()
+        if (store.updateDeliveries(scope, previous => [newDelivery, ...previous.filter(item => item.id !== newDelivery.id)])) {
+          void refreshDeliveries()
+        }
         return newDelivery
       }
     } catch {
@@ -253,12 +127,12 @@ export const CustomerDeliveryProvider: React.FC<{ children: React.ReactNode }> =
       createdAt: new Date().toISOString(),
     }
 
-    setDeliveries((previous) => [fallbackDelivery, ...previous])
+    store.updateDeliveries(scope, previous => [fallbackDelivery, ...previous])
     return fallbackDelivery
   }
 
   const updateDeliveryStatus = (id: string, status: DeliveryStatus): void => {
-    setDeliveries((previous) =>
+    store.updateDeliveries(store.getScope(), (previous) =>
       previous.map((item) => {
         if (item.id === id) {
           return {
@@ -277,12 +151,15 @@ export const CustomerDeliveryProvider: React.FC<{ children: React.ReactNode }> =
     metrics,
     isLoading,
     error,
+    authorizationFailed,
     isCreateModalOpen,
     openCreateModal,
     closeCreateModal,
     createDelivery,
     updateDeliveryStatus,
     refreshDeliveries,
+    setVerifiedCustomer,
+    clearDeliveries,
   }
 
   return (

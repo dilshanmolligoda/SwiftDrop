@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   Home,
   Package,
@@ -59,7 +59,8 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
   const location = useLocation()
   const navigate = useNavigate()
   const { profile, refreshProfile, clearProfile } = useCustomerProfile()
-  const { openCreateModal, refreshDeliveries } = useCustomerDeliveries()
+  const { openCreateModal, refreshDeliveries, setVerifiedCustomer, clearDeliveries, authorizationFailed } = useCustomerDeliveries()
+  const verification = useRef<AbortController | null>(null)
   const [isVerifying, setIsVerifying] = useState(true)
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
@@ -75,64 +76,71 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
 
   // Session verification and role protection
   useEffect(() => {
-    let isMounted = true
+    const controller = new AbortController()
+    verification.current = controller
+    const redirect = (path: string): void => {
+      clearDeliveries()
+      navigate(path, { replace: true })
+    }
 
     const verifySession = async (): Promise<void> => {
       try {
         const response = await fetch(`${env.apiBaseUrl}/auth/me`, {
           method: 'GET',
           credentials: 'include',
+          cache: 'no-store',
+          signal: controller.signal,
         })
 
-        if (!isMounted) return
-
-        if (response.status === 401) {
-          navigate('/login', { replace: true })
-          return
-        }
+        if (controller.signal.aborted) return
 
         if (!response.ok) {
-          navigate('/login', { replace: true })
+          redirect('/login')
           return
         }
 
         const userProfile = (await response.json()) as AuthenticatedCustomer
-        if (!isMounted) return
+        if (controller.signal.aborted) return
+        if (!userProfile || typeof userProfile.id !== 'string' || !userProfile.id.trim() || !userProfile.isActive) {
+          redirect('/login')
+          return
+        }
 
         // Application approval status check
         if (userProfile.approvalStatus === 'PENDING' || userProfile.approvalStatus === 'REJECTED') {
-          navigate('/application-status', { replace: true })
+          redirect('/application-status')
           return
         }
 
         // Role authorization check
         if (userProfile.role === 'MERCHANT') {
-          navigate('/merchant/dashboard', { replace: true })
+          redirect('/merchant/dashboard')
           return
         }
 
         if (userProfile.role === 'COURIER') {
-          navigate('/courier/dashboard', { replace: true })
+          redirect('/courier/dashboard')
           return
         }
 
         if (userProfile.role === 'ADMIN' || userProfile.role === 'DISPATCHER') {
-          navigate('/admin/dashboard', { replace: true })
+          redirect('/admin/dashboard')
           return
         }
 
-        if (userProfile.role !== 'CUSTOMER') {
-          navigate('/login', { replace: true })
+        if (userProfile.role !== 'CUSTOMER' || userProfile.approvalStatus !== 'APPROVED' || userProfile.isActive !== true) {
+          redirect('/login')
           return
         }
 
         // Authorized as CUSTOMER
+        setVerifiedCustomer({ id: userProfile.id, role: 'CUSTOMER', approvalStatus: 'APPROVED', isActive: true })
         setIsVerifying(false)
         void refreshProfile()
         void refreshDeliveries()
       } catch {
-        if (isMounted) {
-          navigate('/login', { replace: true })
+        if (!controller.signal.aborted) {
+          redirect('/login')
         }
       }
     }
@@ -140,9 +148,19 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
     void verifySession()
 
     return () => {
-      isMounted = false
+      controller.abort()
     }
-  }, [navigate, refreshProfile, refreshDeliveries])
+  }, [navigate, refreshProfile, refreshDeliveries, setVerifiedCustomer, clearDeliveries])
+
+  useEffect(() => () => clearDeliveries(), [clearDeliveries])
+
+  useEffect(() => {
+    if (authorizationFailed) {
+      verification.current?.abort()
+      clearProfile()
+      navigate('/login', { replace: true })
+    }
+  }, [authorizationFailed, clearProfile, navigate])
 
   const toggleMobileSidebar = (): void => {
     setIsMobileSidebarOpen((previousState) => !previousState)
@@ -157,6 +175,8 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
   }
 
   const handleLogout = async (): Promise<void> => {
+    verification.current?.abort()
+    clearDeliveries()
     try {
       clearProfile()
       await fetch(`${env.apiBaseUrl}/auth/logout`, {
@@ -166,6 +186,7 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
     } catch {
       // Proceed even on network error
     } finally {
+      clearDeliveries()
       clearProfile()
       navigate('/login', { replace: true })
     }
@@ -381,14 +402,16 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
               )}
             </div>
 
-            <button
-              type="button"
-              onClick={openCreateModal}
-              className="customer-topbar__create-btn"
-            >
-              <Plus className="w-4 h-4 mr-1.5" />
-              <span>Create delivery</span>
-            </button>
+            {activePath.replace(/\/+$/, '') !== '/customer/dashboard' && (
+              <button
+                type="button"
+                onClick={openCreateModal}
+                className="customer-topbar__create-btn"
+              >
+                <Plus className="w-4 h-4 mr-1.5" />
+                <span>Create delivery</span>
+              </button>
+            )}
           </div>
         </header>
 

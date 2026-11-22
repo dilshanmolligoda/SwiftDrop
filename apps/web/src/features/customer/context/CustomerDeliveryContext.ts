@@ -1,14 +1,15 @@
 import { createContext } from 'react'
+import type { CustomerDeliveryStatus } from './customerDeliveryModel'
 
-export type DeliveryStatus =
-  | 'PENDING'
-  | 'ACCEPTED'
-  | 'PICKED_UP'
-  | 'IN_TRANSIT'
-  | 'OUT_FOR_DELIVERY'
-  | 'DELIVERED'
-  | 'FAILED'
-  | 'RETURNED'
+export type DeliveryStatus = CustomerDeliveryStatus
+
+/** Established only by a successful /auth/me response in CustomerLayout. */
+export interface VerifiedDeliveryCustomer {
+  readonly id: string
+  readonly role: 'CUSTOMER'
+  readonly approvalStatus: 'APPROVED'
+  readonly isActive: true
+}
 
 export type PackageSize = 'SMALL' | 'MEDIUM' | 'LARGE'
 
@@ -51,12 +52,15 @@ export interface CustomerDeliveryContextValue {
   readonly metrics: DeliveryMetrics
   readonly isLoading: boolean
   readonly error: string | null
+  readonly authorizationFailed: boolean
   readonly isCreateModalOpen: boolean
   readonly openCreateModal: () => void
   readonly closeCreateModal: () => void
   readonly createDelivery: (input: NewDeliveryInput) => Promise<CustomerDelivery>
   readonly updateDeliveryStatus: (id: string, status: DeliveryStatus) => void
   readonly refreshDeliveries: () => Promise<void>
+  readonly setVerifiedCustomer: (customer: VerifiedDeliveryCustomer) => void
+  readonly clearDeliveries: () => void
 }
 
 export const CustomerDeliveryContext = createContext<CustomerDeliveryContextValue | undefined>(

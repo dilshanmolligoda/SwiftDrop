@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import {
   Inject,
   Injectable,
@@ -39,6 +40,9 @@ import {
   postWebhook,
   type WebhookHttpResult,
 } from '../webhooks/webhook-http-client.js';
+import { NotificationRepository } from '../notifications/notification.repository.js';
+import { EmailChannel } from '../notifications/email.channel.js';
+import { renderWebhookDeadLetterEmail } from '../notifications/templates.js';
 
 /**
  * Sends signed webhooks to merchants (ARCHITECTURE.md §7.4).
@@ -66,6 +70,8 @@ export class WebhookConsumer
     private readonly repository: WebhookDeliveryRepository,
     private readonly publisher: WorkerPublisher,
     @Inject(WORKER_CONFIG) private readonly config: WorkerConfig,
+    private readonly notificationRepository: NotificationRepository,
+    private readonly emailChannel: EmailChannel,
   ) {}
 
   onApplicationBootstrap(): void {
@@ -210,8 +216,67 @@ export class WebhookConsumer
           },
         },
       );
+
+      await this.notifyDeadLetter(endpoint);
     }
     return;
+  }
+
+  private async notifyDeadLetter(endpoint: ActiveEndpoint): Promise<void> {
+    try {
+      const merchantUser = await this.notificationRepository.findUserById(
+        endpoint.merchantUserId,
+      );
+      if (!merchantUser) return;
+
+      const emailContent = renderWebhookDeadLetterEmail(
+        merchantUser.fullName,
+        endpoint.url,
+        this.config.notifications.webAppUrl,
+      );
+
+      const emailResult = await this.emailChannel.send(
+        {
+          userId: merchantUser.id,
+          fullName: merchantUser.fullName,
+          email: merchantUser.email,
+          phoneNumber: merchantUser.phoneNumber,
+        },
+        emailContent,
+      );
+
+      const description = `Urgent: Webhook delivery failure for endpoint ${endpoint.url}. Events could not be delivered after 6 attempts.`;
+      const eventId = randomUUID();
+
+      const errorMessage = 'reason' in emailResult ? emailResult.reason : null;
+
+      await this.notificationRepository.record({
+        eventId,
+        channel: 'EMAIL',
+        recipientUserId: merchantUser.id,
+        template: 'merchant_webhook_dead_letter',
+        title: 'Webhook delivery failed: Check your webhook endpoint.',
+        description,
+        status: emailResult.status,
+        errorMessage,
+      });
+
+      await this.notificationRepository.record({
+        eventId,
+        channel: 'IN_APP',
+        recipientUserId: merchantUser.id,
+        template: 'merchant_webhook_dead_letter',
+        title: 'Webhook delivery failed: Check your webhook endpoint.',
+        description,
+        status: 'SENT',
+        errorMessage: null,
+      });
+    } catch (err: unknown) {
+      this.logger.error(
+        `Failed to send dead-letter notification for endpoint ${endpoint.id}`,
+        err instanceof Error ? err.stack : String(err),
+      );
+    }
   }
 
   /**

@@ -10,7 +10,7 @@ import {
   ArrowRight,
   UserCheck,
 } from 'lucide-react'
-import type { DeliveryItem, DeliveryStatus } from '../types/admin-deliveries.types'
+import type { DeliveryItem } from '../types/admin-deliveries.types'
 import { AssignCourierDrawer } from '../components/AssignCourierDrawer'
 import { adminApi, type AdminDashboardKpis, type AdminUnassignedParcel } from '../api/admin-api'
 import styles from './AdminDashboardPage.module.css'
@@ -119,7 +119,7 @@ export const AdminDashboardPage: React.FC = () => {
       weightKg: typeof selectedParcel.weightKg === 'number' ? selectedParcel.weightKg : parseFloat(String(selectedParcel.weightKg)) || 1.0,
       size: (selectedParcel.packageSize as 'Small' | 'Medium' | 'Large') || 'Medium',
       dimensions: 'Standard package',
-      status: (selectedParcel.status as DeliveryStatus) || 'Pending dispatch',
+      status: 'New delivery',
       courierName: null,
       courierId: null,
       waitingTime: calculateWaitingTime(selectedParcel.createdAt),
