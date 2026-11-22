@@ -192,6 +192,47 @@ export class NotificationConsumer implements ParcelEventConsumer {
     ) {
       await this.handleMerchantDeliveryFailed(event);
     }
+
+    if (
+      event.eventType === 'parcel.status.changed' &&
+      event.newStatus === 'FAILED'
+    ) {
+      await this.handleDeliveryEscalation(event);
+    }
+  }
+
+  private async handleDeliveryEscalation(
+    event: ParcelStatusChangedV1,
+  ): Promise<void> {
+    const failedCount = await this.repository.countFailedAttempts(
+      event.parcelId,
+    );
+    if (failedCount >= 2) {
+      const recipientIds = await this.repository.findAdminAndDispatcherIds();
+      for (const adminId of recipientIds) {
+        const escalationEventId = this.deterministicUuid(
+          `${event.eventId}:escalation:${adminId}`,
+        );
+        if (
+          !(await this.repository.alreadyHandled(
+            escalationEventId,
+            'IN_APP',
+            adminId,
+          ))
+        ) {
+          await this.repository.record({
+            eventId: escalationEventId,
+            channel: 'IN_APP',
+            recipientUserId: adminId,
+            template: 'admin_delivery_escalation',
+            title: 'Delivery issue escalation',
+            description: `Escalation: Parcel ${event.trackingNumber} has failed 2 delivery attempts.`,
+            status: 'SENT',
+            errorMessage: null,
+          });
+        }
+      }
+    }
   }
 
   private async handleMerchantDeliveryFailed(

@@ -55,6 +55,8 @@ function setup(channels = [channel('EMAIL'), channel('SMS')]) {
     findUserByPhone: jest.fn().mockResolvedValue(null),
     findUserById: jest.fn().mockResolvedValue(null),
     findMerchantOrderRef: jest.fn().mockResolvedValue(null),
+    countFailedAttempts: jest.fn().mockResolvedValue(0),
+    findAdminAndDispatcherIds: jest.fn().mockResolvedValue([]),
     alreadyHandled: jest.fn().mockResolvedValue(false),
     record: jest.fn().mockResolvedValue(undefined),
   };
@@ -599,5 +601,54 @@ describe('NotificationConsumer', () => {
     );
     expect(inAppRecord).toBeDefined();
     expect(inAppRecord?.[0].title).toBe('Order ORD-9988 delivery failed');
+  });
+
+  it('creates in-app escalation notification for admins and dispatchers when failed attempts >= 2 (Scenario 31)', async () => {
+    const { consumer, repository } = setup();
+
+    repository.countFailedAttempts.mockResolvedValue(2);
+    repository.findAdminAndDispatcherIds.mockResolvedValue([
+      'admin-uuid-1',
+      'dispatcher-uuid-1',
+    ]);
+
+    const failedEvent: ParcelStatusChangedV1 = {
+      ...EVENT,
+      eventId: 'escalation-event-uuid-1',
+      newStatus: 'FAILED',
+      failureReason: 'OTHER',
+    };
+
+    await consumer.handle(failedEvent);
+
+    const recordCalls = repository.record.mock.calls as Array<
+      [
+        {
+          recipientUserId: string;
+          channel: string;
+          template: string;
+          title?: string;
+          description?: string;
+        },
+      ]
+    >;
+    const adminEscalation = recordCalls.find(
+      (c) =>
+        c[0].channel === 'IN_APP' &&
+        c[0].recipientUserId === 'admin-uuid-1' &&
+        c[0].template === 'admin_delivery_escalation',
+    );
+    expect(adminEscalation).toBeDefined();
+    expect(adminEscalation?.[0].description).toBe(
+      `Escalation: Parcel ${failedEvent.trackingNumber} has failed 2 delivery attempts.`,
+    );
+
+    const dispatcherEscalation = recordCalls.find(
+      (c) =>
+        c[0].channel === 'IN_APP' &&
+        c[0].recipientUserId === 'dispatcher-uuid-1' &&
+        c[0].template === 'admin_delivery_escalation',
+    );
+    expect(dispatcherEscalation).toBeDefined();
   });
 });

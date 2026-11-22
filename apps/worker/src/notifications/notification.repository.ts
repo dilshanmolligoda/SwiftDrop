@@ -90,6 +90,28 @@ export class NotificationRepository {
       : null;
   }
 
+  /** Counts the number of failed delivery attempts recorded for a parcel */
+  async countFailedAttempts(parcelId: string): Promise<number> {
+    return this.prisma.parcelStatusEvent.count({
+      where: {
+        parcelId,
+        status: 'FAILED',
+      },
+    });
+  }
+
+  /** Finds IDs of all active admins and dispatchers */
+  async findAdminAndDispatcherIds(): Promise<string[]> {
+    const users = await this.prisma.user.findMany({
+      where: {
+        role: { in: ['ADMIN', 'DISPATCHER'] },
+        isActive: true,
+      },
+      select: { id: true },
+    });
+    return users.map((u) => u.id);
+  }
+
   /** True when this channel already has a result for the event. */
   async alreadyHandled(
     eventId: string,
