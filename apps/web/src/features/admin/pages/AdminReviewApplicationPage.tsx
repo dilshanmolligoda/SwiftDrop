@@ -58,9 +58,10 @@ export const AdminReviewApplicationPage: React.FC = () => {
     setError(null)
     try {
       await adminApi.approveApplication(id)
-      setSuccessMessage(`Application for ${application.fullName} has been approved!`)
+      const msg = `Application for ${application.fullName} has been approved successfully!`
+      setSuccessMessage(msg)
       setTimeout(() => {
-        navigate('/admin/users')
+        navigate('/admin/users', { state: { feedbackMessage: msg } })
       }, 1500)
     } catch (err: any) {
       console.error('Failed to approve application:', err)
@@ -79,9 +80,10 @@ export const AdminReviewApplicationPage: React.FC = () => {
     setError(null)
     try {
       await adminApi.rejectApplication(id, decisionNote.trim())
-      setSuccessMessage(`Application for ${application.fullName} has been rejected.`)
+      const msg = `Application for ${application.fullName} has been rejected.`
+      setSuccessMessage(msg)
       setTimeout(() => {
-        navigate('/admin/users')
+        navigate('/admin/users', { state: { feedbackMessage: msg } })
       }, 1500)
     } catch (err: any) {
       console.error('Failed to reject application:', err)
@@ -316,6 +318,13 @@ export const AdminReviewApplicationPage: React.FC = () => {
             Required when rejecting; included in the decision notification.
           </p>
         </div>
+
+        {successMessage && (
+          <div style={{ backgroundColor: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
+            <CheckCircle2 size={18} />
+            <span>{successMessage}</span>
+          </div>
+        )}
 
         <div className={styles.decisionFooter}>
           <span className={styles.notificationNotice}>

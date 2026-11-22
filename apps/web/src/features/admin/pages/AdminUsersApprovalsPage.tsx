@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import {
   FileText,
   Users,
@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   Loader2,
   AlertCircle,
+  CheckCircle2,
 } from 'lucide-react'
 import type { ApplicationItem, ApplicationType } from '../types/admin-users.types'
 import { adminApi, type AdminApplicationItem, type AdminDashboardKpis } from '../api/admin-api'
@@ -58,6 +59,10 @@ function mapAdminAppToItem(app: AdminApplicationItem): ApplicationItem {
 
 export const AdminUsersApprovalsPage: React.FC = () => {
   const navigate = useNavigate()
+  const location = useLocation()
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(
+    (location.state as { feedbackMessage?: string })?.feedbackMessage || null,
+  )
   const [applications, setApplications] = useState<ApplicationItem[]>([])
   const [kpis, setKpis] = useState<AdminDashboardKpis | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -70,6 +75,13 @@ export const AdminUsersApprovalsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabOption>('pending')
   const [searchQuery, setSearchQuery] = useState('')
   const [typeFilter, setTypeFilter] = useState<'all' | ApplicationType>('all')
+
+  useEffect(() => {
+    if (feedbackMessage) {
+      const timer = setTimeout(() => setFeedbackMessage(null), 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [feedbackMessage])
 
   useEffect(() => {
     let isMounted = true
@@ -151,6 +163,13 @@ export const AdminUsersApprovalsPage: React.FC = () => {
           Review applications and manage customer, merchant and courier accounts.
         </p>
       </div>
+
+      {feedbackMessage && (
+        <div style={{ backgroundColor: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0', borderRadius: '8px', padding: '12px 16px', marginBottom: '20px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
+          <CheckCircle2 size={18} />
+          <span>{feedbackMessage}</span>
+        </div>
+      )}
 
       {error && (
         <div style={{ backgroundColor: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca', borderRadius: '8px', padding: '12px 16px', marginBottom: '20px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
