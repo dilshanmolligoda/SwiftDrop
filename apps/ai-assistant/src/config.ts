@@ -5,7 +5,9 @@ export const config = {
   allowedOrigins: list(process.env.CORS_ORIGINS ?? 'http://localhost:5173'),
   llm: {
     baseURL: process.env.LLM_BASE_URL ?? 'https://generativelanguage.googleapis.com/v1beta/openai/',
-    model: process.env.LLM_MODEL ?? 'gemini-2.5-flash',
+    model: process.env.LLM_MODEL ?? 'gemini-3.8-flash',
+    /** Used when the main model is overloaded (503) or rate-limited (429). Empty = no fallback. */
+    fallbackModel: process.env.LLM_FALLBACK_MODEL ?? 'gemini-3.5-flash',
     apiKey: process.env.LLM_API_KEY?.includes('<change-me') ? '' : (process.env.LLM_API_KEY ?? ''),
   },
 };
