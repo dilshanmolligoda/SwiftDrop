@@ -544,6 +544,41 @@ export class AuthService {
         licenseNumber: dto.licenseNumber?.trim() || null,
       });
 
+      if (this.emailService) {
+        try {
+          await this.emailService.sendCourierRegistrationReceivedEmail(
+            user.email,
+            user.fullName,
+          );
+        } catch (emailErr) {
+          this.logger.error(
+            `Failed to send courier registration confirmation email to ${user.email}: ${(emailErr as Error).message}`,
+          );
+        }
+      }
+
+      if (this.prisma) {
+        try {
+          await this.prisma.notification.create({
+            data: {
+              eventId: randomUUID(),
+              channel: NotificationChannel.IN_APP,
+              recipientUserId: user.id,
+              template: 'courier_registration_submitted',
+              title: 'Application pending admin review',
+              description:
+                'Thank you for applying. Your license and vehicle details are under administrator review.',
+              status: NotificationStatus.SENT,
+              sentAt: new Date(),
+            },
+          });
+        } catch (notifErr) {
+          this.logger.error(
+            `Failed to record in-app notification for courier registration ${user.id}: ${(notifErr as Error).message}`,
+          );
+        }
+      }
+
       return this.createAuthSession({
         id: user.id,
         email: user.email,
