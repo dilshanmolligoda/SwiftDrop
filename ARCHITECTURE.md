@@ -29,14 +29,14 @@
 
 | Goal | What it means for the design |
 |---|---|
-| Visibility for customers | Live parcel tracking (SSE) and a public tracking page |
+| Visibility for customers | Live parcel tracking (WebSocket) and a public tracking page |
 | Merchant integration | Secured REST API with API keys + webhooks with retry |
 | Reliability of events | A status change must always produce a notification/webhook, even if RabbitMQ was briefly down → **transactional outbox** |
 | Security of personal data | Validation, hashed passwords and keys, RBAC, ownership checks, PII-free logs and errors |
 | Team of 10 working in parallel | Clear module boundaries so people rarely edit the same files |
 | Runs anywhere | Every service containerised; one `docker compose up` for the whole system; Kubernetes for the bonus |
 
-**Stack:** React + TypeScript · NestJS · PostgreSQL (Prisma) · RabbitMQ · SSE · Docker Compose ·
+**Stack:** React + TypeScript · NestJS · PostgreSQL (Prisma) · RabbitMQ · WebSocket (Socket.IO) · Docker Compose ·
 Kubernetes/Helm (bonus) · MCP-based AI assistant (bonus).
 
 ---
@@ -125,13 +125,13 @@ flowchart LR
     LLM["LLM provider"]
 
     Browser -->|"HTTPS: static files"| Web
-    Browser -->|"REST /api/v1 + SSE"| API
+    Browser -->|"REST /api/v1 + WebSocket"| API
     Browser -->|"chat"| AI
     Store -->|"REST + X-API-Key"| API
 
     API -->|"SQL"| PG
     API -->|"publish (outbox)"| MQ
-    MQ -->|"tracking fan-out"| API
+    MQ -->|"realtime fan-out"| API
     MQ -->|"consume"| Worker
     Worker -->|"SQL"| PG
     Worker -->|"send"| Mail
@@ -152,7 +152,7 @@ flowchart LR
 | Container | Tech | Responsibility | Scales |
 |---|---|---|---|
 | `web` | React + TS, built by Vite, served by nginx | UI for all roles + public tracking page | Horizontally (stateless) |
-| `api` | NestJS | REST API, auth, business rules, outbox publisher, SSE hub | Horizontally (stateless; SSE fan-out via RabbitMQ) |
+| `api` | NestJS | REST API, auth, business rules, outbox publisher, WebSocket gateway | Horizontally (stateless; WebSocket fan-out via RabbitMQ) |
 | `worker` | NestJS standalone | Notification + webhook consumers, retries | Horizontally (competing consumers) |
 | `ai-assistant` | Node + TS, MCP | Chatbot that calls the API as tools | Horizontally |
 | `postgres` | PostgreSQL 16 | System of record | Single instance (volume) |
@@ -221,7 +221,7 @@ flowchart TB
 | `parcels` | parcels, parcel_status_history, outbox_events | Create parcel, state machine, history, receipts | `pricing` |
 | `dispatch` | (parcels.courier_id) | Unassigned list, atomic assignment, workloads | `parcels`, `users` |
 | `courier` | delivery_proofs | Today's deliveries, status update, proof upload | `parcels` |
-| `tracking` | — (reads) | Public tracking, SSE stream | `parcels` |
+| `tracking` | — (reads) | Public tracking (live updates via the realtime gateway) | `parcels` |
 | `reports` | — (reads) | Deliveries per day, success/failure rate | `parcels` |
 
 Modules talk to each other **only through exported services**, never by importing another
@@ -243,7 +243,7 @@ module's repository.
 | **Idempotent consumer** | `processed_events` keyed by `eventId` | RabbitMQ is at-least-once; duplicates must do nothing |
 | **Retry with exponential backoff + dead-letter queue** | Webhook delivery | Merchant outages don't lose events and don't block other merchants |
 | **Webhook (HTTP callback)** | SwiftDrop → merchant | Merchants get push updates instead of polling |
-| **Server push (SSE)** | API → browser | Live tracking without polling |
+| **Server push (WebSocket)** | API → browser | Live tracking without polling |
 | **Redirect-based delegation (OAuth 2.0 Authorization Code + PKCE)** | API ↔ Google | Users log in with Google without sharing passwords with us |
 
 ### 7.2 RabbitMQ topology
@@ -255,20 +255,20 @@ flowchart LR
 
     QN["notifications.parcel-status"]
     QW["webhooks.parcel-status"]
-    QT["tracking.{instanceId} — exclusive, auto-delete"]
+    QT["realtime.{instanceId} — exclusive, auto-delete"]
 
     NC["Notification consumer — worker"]
     WC["Webhook consumer — worker"]
-    SSE["SSE hub — each api instance"]
+    RT["WebSocket gateway — each api instance"]
 
-    RQ["webhooks.retry.1…5 — TTL delay queues: 30s · 2m · 10m · 30m · 2h"]
+    RQ["webhooks.retry.{delay}ms — TTL delay queues: 30s · 2m · 8m · 32m · ~2h"]
     DLQW["webhooks.dead-letter"]
     DLQN["notifications.dead-letter"]
 
-    OUT -->|"parcel.status.changed"| EX
+    OUT -->|"parcel.created · parcel.status.changed"| EX
     EX --> QN --> NC
     EX --> QW --> WC
-    EX --> QT --> SSE
+    EX --> QT --> RT
 
     WC -->|"attempt failed"| RQ
     RQ -->|"TTL expires → dead-letter back"| QW
@@ -283,47 +283,81 @@ manual setup in RabbitMQ.
 ### 7.3 Event contract
 
 ```jsonc
-// routing key: parcel.status.changed
+// routing key = eventType: parcel.status.changed (also parcel.created)
 {
-  "eventId": "6f1c2c8e-…",          // UUID, used for idempotency
+  "eventId": "6f1c2c8e-…",          // UUID = outbox row id; consumers dedupe on it
   "eventType": "parcel.status.changed",
   "version": 1,
-  "occurredAt": "2026-10-10T08:30:00Z",
+  "occurredAt": "2026-10-10T08:30:00.000Z",
   "parcelId": "…",
-  "trackingNumber": "SD-7K2M9QX4",
-  "merchantId": "…",               // null for customer parcels → no webhook
+  "trackingNumber": "SD-…",
+  "merchantId": "…",               // merchant user; null for customer parcels → no webhook
+  "courierId": "…",                // assigned courier, for live-update routing
+  "sequence": 42,                  // grows per parcel; drop anything not newer
   "previousStatus": "IN_TRANSIT",
   "newStatus": "OUT_FOR_DELIVERY",
-  "failureReason": null
+  "failureReason": null            // only for FAILED
 }
 ```
 
-The TypeScript type lives in `packages/contracts` and is shared by API and worker. Events
-carry **no personal data** (no names, phones or addresses) — consumers look up what they
-need.
+Types, a runtime parser and the queue topology live in `packages/contracts` and are shared
+by API, worker and web. Events carry **no personal data** (no names, phones or addresses)
+— consumers look up what they need. Recording one is a single call inside the business
+transaction: `OutboxWriter.recordParcelStatusChanged(tx, …)` (see
+`apps/api/src/infrastructure/outbox/README.md`).
+
+**Reliability, as built**
+
+| Failure | What happens |
+|---|---|
+| RabbitMQ down | Rows wait in `outbox_events`; the relay retries with backoff; `/health` shows the backlog |
+| API crash after publish, before marking | Event published again → consumers skip it (`processed_events`) |
+| Worker crash mid-message | Unacked message is redelivered → skipped if already handled |
+| Consumer error (DB/SMTP down) | Re-published with `x-swiftdrop-processing-attempt`, waits 5 s → 5 min; DLQ after 10 attempts (RabbitMQ 4 quorum queues don't count requeues toward `x-delivery-limit`, so the worker counts) |
+| Invalid message | Straight to the dead-letter queue |
+| Several API instances | One relay at a time (Postgres advisory lock) keeps publish order |
 
 ### 7.4 Merchant webhook
 
-- `POST {merchant webhook URL}` with JSON body `{ eventId, trackingNumber, merchantOrderRef, status, occurredAt }`.
-- Headers: `X-SwiftDrop-Event-Id`, `X-SwiftDrop-Timestamp`,
-  `X-SwiftDrop-Signature: sha256=<HMAC of timestamp + body with the merchant's secret>`.
-- `2xx` = success. Timeout / `5xx` / `429` = retry. Other `4xx` = no retry, marked failed.
-- Every attempt stored in `webhook_deliveries` (status code, duration, next retry) and shown
-  in the merchant dashboard.
+- Set up by the merchant: `PUT /merchant/webhook { url }` returns the signing secret
+  **once**; `POST /merchant/webhook/rotate-secret`, `DELETE /merchant/webhook`,
+  `GET /merchant/webhook/deliveries`. The secret is stored AES-256-GCM encrypted, bound to
+  the merchant.
+- `POST {merchant webhook URL}` with `MerchantWebhookPayloadV1`:
+  `{ eventId, eventType, version, occurredAt, trackingNumber, merchantOrderRef, status,
+  previousStatus, failureReason, sequence }`.
+- Headers: `X-SwiftDrop-Event-Id`, `-Event-Type`, `-Timestamp`, `-Delivery-Attempt`, and
+  `X-SwiftDrop-Signature: sha256=` + hex HMAC-SHA256 of `<timestamp>.<raw body>`. Merchants
+  reject timestamps older than 5 minutes and ignore a lower `sequence`.
+- `2xx` = delivered. Timeout / network / `408` / `429` / `5xx` = retry after 30 s · 2 m ·
+  8 m · 32 m · ~2 h (`webhooks.retry.{delay}ms` TTL queues), then `webhooks.dead-letter`.
+  Other `4xx` = no retry, marked failed.
+- **SSRF protection:** URLs are checked when saved and the worker refuses to connect to
+  private, loopback or link-local addresses (checked after DNS, no redirects). Dev switch
+  `WEBHOOK_ALLOW_PRIVATE_TARGETS`; production allowlist `WEBHOOK_PRIVATE_HOST_ALLOWLIST`
+  (e.g. `mock-merchant`); https only in production.
+- Every attempt stored in `webhook_deliveries` (status code, duration, next retry).
 
 ---
 
 ## 8. Real-time tracking
 
-- Browser opens `GET /api/v1/tracking/{trackingNumber}/stream` (SSE, `text/event-stream`).
-- `EventSource` can't send an `Authorization` header, so authenticated streams use the
-  httpOnly session cookie or a short-lived stream ticket. The public stream only ever
+> WebSocket (Socket.IO), per [ADR 0002](docs/adr/0002-realtime-websocket.md). Names and
+> payloads live in `packages/contracts/src/realtime`.
+
+- Browser connects with Socket.IO to path `/api/v1/realtime` (under `/api/`, so the
+  reverse proxy forwards it unchanged), WebSocket transport only.
+- Auth uses the same httpOnly access-token cookie as REST, plus an `Origin` check against
+  `CORS_ORIGINS`. Anonymous sockets may only subscribe to public tracking, which only ever
   sends public fields.
-- Each API instance has its own `tracking.{instanceId}` queue. When an event arrives, the
-  instance pushes it to the SSE clients **it** holds for that parcel. This works with any
-  number of API replicas, with no sticky sessions.
-- Heartbeat comment every 25 s keeps proxies from closing idle connections; the browser
-  reconnects automatically and re-reads the current status on reconnect.
+- Rooms: `merchant:{id}`, `courier:{id}` and `dispatch` are joined by role on connect;
+  `parcel:{id}` and `public:{trackingNumber}` are joined with a `subscribe` message after
+  an ownership / tracking-number check.
+- Each API instance has its own `realtime.{instanceId}` queue. When an event arrives, the
+  instance emits it to the sockets **it** holds in the matching rooms. This works with any
+  number of API replicas, with no sticky sessions or Redis.
+- Socket.IO heartbeats detect dead connections; the client reconnects automatically,
+  re-reads the current state over REST, then applies updates with a higher `sequence`.
 
 ---
 
@@ -381,15 +415,16 @@ model owner).
 | `courier_profiles` | user → courier details, home zone, active flag |
 | `merchants` | owner user, business details, status `PENDING / APPROVED / SUSPENDED` |
 | `api_keys` | merchant, key prefix, key hash, last used, revoked_at |
-| `webhook_endpoints` / `webhook_deliveries` | merchant URL + encrypted secret / every attempt |
+| `webhook_endpoints` / `webhook_deliveries` | one per merchant: URL, encrypted secret, last-4 hint, active / one row per attempt: status, response code, duration, next attempt (unique per endpoint + event + attempt) |
 | `zones` | name, list of areas/cities |
 | `pricing_rules` | from-zone, to-zone, base fee, per-kg fee, size multipliers, active dates |
 | `parcels` | tracking number (unique), sender, pickup/drop-off, size, weight, fee, status, customer_id **or** merchant_id, courier_id |
 | `parcel_status_history` | append-only: parcel, status, actor, note, timestamp |
 | `delivery_proofs` | parcel, recipient name, photo path, failure reason |
-| `outbox_events` | event payload, created_at, published_at |
+| `outbox_events` | event payload, monotonic `sequence`, created/published at, publish attempts + next attempt |
 | `processed_events` | eventId + consumer name (idempotency) |
-| `notifications` | channel, recipient, template, result |
+| `notifications` | event, channel (EMAIL/SMS), recipient user, template, result SENT/FAILED/SKIPPED — unique per event + channel + recipient |
+| `parcels.merchantOrderId` | optional link to the merchant order ([ADR 0003](docs/adr/0003-parcel-merchant-link.md)) |
 
 ---
 
@@ -412,8 +447,9 @@ model owner).
 | `POST /pricing/estimate` | public / customer | Fee estimate |
 | `POST /parcels` | customer | Create delivery |
 | `GET /parcels/me` · `GET /parcels/{id}` · `GET /parcels/{id}/receipt` | customer | History, details, PDF receipt |
-| `GET /tracking/{trackingNumber}` · `.../stream` | public | Public tracking + SSE |
-| `POST /merchants/register` · `POST /merchants/me/api-keys` · `PUT /merchants/me/webhook` | merchant | Onboarding |
+| `GET /tracking/{trackingNumber}` · WebSocket `/api/v1/realtime` | public | Public tracking + live updates |
+| `POST /merchants/register` · `POST /merchants/me/api-keys` | merchant | Onboarding |
+| `GET` · `PUT` · `DELETE /merchant/webhook` · `POST /merchant/webhook/rotate-secret` · `GET /merchant/webhook/deliveries` | merchant | Webhook URL, signing secret (shown once), delivery log |
 | `POST /merchant-api/orders` · `GET /merchant-api/orders/{id}` | API key | Merchant integration |
 | `GET /courier/deliveries/today` · `POST /courier/deliveries/{id}/status` | courier | Courier app |
 | `GET /dispatch/parcels/unassigned` · `POST /dispatch/assignments` · `GET /dispatch/workloads` | admin | Dispatching |
@@ -536,8 +572,10 @@ Short records of important decisions. Add new ones as `docs/adr/NNNN-title.md`.
 |---|---|---|
 | 1 | Modular monolith + worker instead of microservices | Accepted |
 | 2 | RabbitMQ (not Kafka): routing, per-message ack, TTL/DLQ retries suit webhooks; lighter to run | Accepted |
-| 3 | SSE (not WebSockets) for tracking: one-way updates, simpler, auto-reconnect | Accepted |
+| 3 | SSE (not WebSockets) for tracking: one-way updates, simpler, auto-reconnect | Superseded by #8 |
 | 4 | Transactional outbox for status events | Accepted |
 | 5 | Prisma as ORM, multi-file schema (one file per module) | Proposed |
 | 6 | npm workspaces monorepo | Accepted |
 | 7 | Four roles; dispatcher and admin share `ADMIN` | Proposed |
+| 8 | WebSocket (Socket.IO) instead of SSE for real-time updates — replaces #3 ([ADR 0002](docs/adr/0002-realtime-websocket.md)) | Accepted |
+| 9 | Link `Parcel` → `MerchantOrder`; `Parcel.status` is the single source of truth ([ADR 0003](docs/adr/0003-parcel-merchant-link.md)) | Accepted |

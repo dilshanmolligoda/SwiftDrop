@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Package,
@@ -12,6 +12,7 @@ import {
   ArrowRight,
 } from 'lucide-react'
 import { useCustomerDeliveries } from '../context/useCustomerDeliveries'
+import { useCustomerProfile } from '../context/useCustomerProfile'
 import { type CustomerDelivery } from '../context/CustomerDeliveryContext'
 import './NotificationsPage.css'
 
@@ -26,7 +27,6 @@ export interface NotificationItem {
   readonly type: 'out_for_delivery' | 'in_transit' | 'attention' | 'delivered' | 'created'
 }
 
-const READ_STORAGE_KEY = 'swiftdrop_notifications_read_v2'
 
 function deriveNotifications(
   deliveries: readonly CustomerDelivery[],
@@ -113,19 +113,49 @@ function deriveNotifications(
 
 export const NotificationsPage: React.FC = () => {
   const { metrics, deliveries, openCreateModal } = useCustomerDeliveries()
+  const { profile } = useCustomerProfile()
   const navigate = useNavigate()
+
+  const readStorageKey = profile.email
+    ? `swiftdrop_notifications_read_${profile.email.toLowerCase()}`
+    : 'swiftdrop_notifications_read_default'
 
   const [readIds, setReadIds] = useState<Set<string>>(() => {
     try {
-      const stored = localStorage.getItem(READ_STORAGE_KEY)
-      if (stored) {
-        return new Set(JSON.parse(stored) as string[])
+      const email = profile.email?.toLowerCase()
+      if (email) {
+        const stored = localStorage.getItem(`swiftdrop_notifications_read_${email}`)
+        if (stored) {
+          return new Set(JSON.parse(stored) as string[])
+        }
       }
     } catch {
       // Fallback
     }
     return new Set<string>()
   })
+
+  // Reload read state when user switches accounts
+  useEffect(() => {
+    const email = profile.email?.toLowerCase()
+    if (!email) {
+      // oxlint-disable-next-line react/set-state-in-effect
+      setReadIds(new Set<string>())
+      return
+    }
+    try {
+      const stored = localStorage.getItem(`swiftdrop_notifications_read_${email}`)
+      if (stored) {
+        // oxlint-disable-next-line react/set-state-in-effect
+        setReadIds(new Set(JSON.parse(stored) as string[]))
+        return
+      }
+    } catch {
+      // ignore
+    }
+    // oxlint-disable-next-line react/set-state-in-effect
+    setReadIds(new Set<string>())
+  }, [profile.email])
 
   const notifications = useMemo(() => {
     return deriveNotifications(deliveries, readIds)
@@ -140,7 +170,7 @@ export const NotificationsPage: React.FC = () => {
     const allIds = new Set(notifications.map((n) => n.id))
     setReadIds(allIds)
     try {
-      localStorage.setItem(READ_STORAGE_KEY, JSON.stringify(Array.from(allIds)))
+      localStorage.setItem(readStorageKey, JSON.stringify(Array.from(allIds)))
     } catch {
       // Handle storage quota
     }
@@ -152,7 +182,7 @@ export const NotificationsPage: React.FC = () => {
         const next = new Set(prev)
         next.add(item.id)
         try {
-          localStorage.setItem(READ_STORAGE_KEY, JSON.stringify(Array.from(next)))
+          localStorage.setItem(readStorageKey, JSON.stringify(Array.from(next)))
         } catch {
           // Handle storage quota
         }

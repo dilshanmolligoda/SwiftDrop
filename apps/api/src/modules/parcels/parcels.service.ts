@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { ParcelStatus } from '../../generated/prisma/enums.js';
 import {
   ParcelsRepository,
   type CustomerParcelRecord,
@@ -7,6 +12,7 @@ import {
 import { PricingService } from '../pricing/pricing.service.js';
 import type { CreateParcelDto } from './dto/create-parcel.dto.js';
 import type { AuthenticatedUser } from '../auth/decorators/current-user.decorator.js';
+import { generateParcelTrackingNumber } from './parcel-tracking-number.js';
 
 @Injectable()
 export class ParcelsService {
@@ -25,8 +31,7 @@ export class ParcelsService {
       dto.packageSize,
     );
 
-    const randomSuffix = Math.floor(10000 + Math.random() * 90000);
-    const trackingNumber = `SD-${randomSuffix}`;
+    const trackingNumber = generateParcelTrackingNumber();
 
     return this.parcelsRepository.createParcel({
       trackingNumber,
@@ -47,6 +52,10 @@ export class ParcelsService {
     return this.parcelsRepository.findCustomerParcels(customerId);
   }
 
+  listForCustomerTracking(customerId: string) {
+    return this.parcelsRepository.findCustomerTrackingParcels(customerId);
+  }
+
   getMetrics(customerId: string): Promise<CustomerMetrics> {
     return this.parcelsRepository.getCustomerMetrics(customerId);
   }
@@ -63,5 +72,27 @@ export class ParcelsService {
       throw new NotFoundException('Parcel not found');
     }
     return parcel;
+  }
+
+  async cancel(
+    customerId: string,
+    parcelId: string,
+  ): Promise<CustomerParcelRecord> {
+    const parcel = await this.parcelsRepository.findCustomerParcelById(
+      customerId,
+      parcelId,
+    );
+    if (!parcel) {
+      throw new NotFoundException('Parcel not found');
+    }
+    if (
+      parcel.status !== ParcelStatus.PENDING &&
+      parcel.status !== ParcelStatus.ASSIGNED
+    ) {
+      throw new ConflictException(
+        `Cannot cancel delivery with status ${parcel.status}. Cancellation is only allowed before courier pickup.`,
+      );
+    }
+    return this.parcelsRepository.cancelParcel(customerId, parcelId);
   }
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Lock, CheckCircle, AlertCircle, X, Eye, EyeOff } from 'lucide-react'
 import { ToggleSwitch } from '../components/ToggleSwitch'
 import { useCustomerProfile } from '../context/useCustomerProfile'
@@ -49,6 +49,32 @@ export const SettingsPage: React.FC = () => {
     isEmailUpdatesEnabled: customerProfile.notifications.isEmailUpdatesEnabled,
     isSmsUpdatesEnabled: customerProfile.notifications.isSmsUpdatesEnabled,
   })
+
+  // Synchronize form inputs whenever customerProfile updates from backend auth session
+  useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect
+    setProfile((prev) => {
+      if (
+        prev.fullName === customerProfile.fullName &&
+        prev.email === customerProfile.email &&
+        prev.phoneNumber === customerProfile.phoneNumber
+      ) {
+        return prev
+      }
+      return {
+        fullName: customerProfile.fullName,
+        email: customerProfile.email,
+        phoneNumber: customerProfile.phoneNumber,
+      }
+    })
+    setPersistedProfile({
+      fullName: customerProfile.fullName,
+      email: customerProfile.email,
+      phoneNumber: customerProfile.phoneNumber,
+    })
+    setNotifications(customerProfile.notifications)
+    setPersistedNotifications(customerProfile.notifications)
+  }, [customerProfile.fullName, customerProfile.email, customerProfile.phoneNumber, customerProfile.notifications])
 
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)

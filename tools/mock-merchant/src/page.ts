@@ -34,7 +34,7 @@ export function renderPage(): string {
   ul { list-style:none; margin:0; padding:0; }
   li { border-top:1px solid var(--line); padding:8px 0; }
   .tag { font-weight:600; font-size:12px; }
-  .ACCEPTED, .s2 { color:var(--ok); } .DUPLICATE, .FAIL_MODE { color:var(--warn); }
+  .ACCEPTED, .s2 { color:var(--ok); } .DUPLICATE, .STALE, .FAIL_MODE { color:var(--warn); }
   .BAD_SIGNATURE, .s4, .s5 { color:var(--bad); }
   pre { margin:4px 0 0; padding:8px; background:var(--bg); border-radius:6px; overflow:auto; font-size:12px; }
   .muted { color:var(--muted); }
@@ -75,6 +75,7 @@ export function renderPage(): string {
   </section>
 
   <section class="wide"><h2>Orders sent to SwiftDrop</h2><ul id="orders"></ul></section>
+  <section class="wide"><h2>Your orders — status from webhooks</h2><ul id="parcels"></ul></section>
   <section class="wide"><h2>Webhooks received</h2><ul id="webhooks"></ul></section>
 </main>
 <script>
@@ -114,8 +115,11 @@ export function renderPage(): string {
     renderList($('orders'), state.orders,
       (o) => item(String(o.status), 's' + String(o.status)[0], o.merchantOrderRef + ' · ' + new Date(o.sentAt).toLocaleTimeString(), o.response),
       'No orders yet.');
+    renderList($('parcels'), state.parcels,
+      (p) => item(p.status, 'ACCEPTED', (p.merchantOrderRef ? p.merchantOrderRef + ' · ' : '') + p.trackingNumber + ' · event #' + p.sequence + ' · ' + new Date(p.updatedAt).toLocaleTimeString(), p),
+      'No status updates yet.');
     renderList($('webhooks'), state.webhooks,
-      (w) => item(w.result, w.result, 'replied ' + w.respondedWith + ' · ' + w.eventId + ' · ' + new Date(w.receivedAt).toLocaleTimeString(), w.payload),
+      (w) => item(w.result, w.result, 'replied ' + w.respondedWith + (w.attempt ? ' · attempt ' + w.attempt : '') + ' · ' + w.eventId + ' · ' + new Date(w.receivedAt).toLocaleTimeString(), w.payload),
       'No webhooks yet. Register the webhook URL above in SwiftDrop, then change a parcel status.');
   }
 

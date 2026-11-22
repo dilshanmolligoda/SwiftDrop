@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight, RefreshCw } from 'lucide-react'
 import { useSession } from '../../../app/auth/session'
+import { LiveIndicator } from '../../../lib/realtime/LiveIndicator'
+import { useLiveParcelEvents } from '../../../lib/realtime/useParcelRealtime'
 import { DeliveryListPanel } from '../components/DeliveryListPanel'
 import { ErrorState } from '../components/StateViews'
 import { SummaryCards } from '../components/SummaryCards'
@@ -28,6 +30,8 @@ export function CourierDashboardPage() {
     dashboard.reload()
     deliveries.reload()
   }
+  // Live: reload when one of this courier's parcels changes (e.g. from another device).
+  const { state: liveState } = useLiveParcelEvents(refreshAll)
 
   return (
     <div className="cp-page">
@@ -43,6 +47,7 @@ export function CourierDashboardPage() {
           </p>
         </div>
         <div className="cp-page-header__actions">
+          <LiveIndicator state={liveState} />
           <button type="button" className="cp-btn cp-btn--ghost" onClick={refreshAll} disabled={isRefreshing}>
             <RefreshCw className={isRefreshing ? 'cp-spin' : undefined} aria-hidden="true" />
             Refresh

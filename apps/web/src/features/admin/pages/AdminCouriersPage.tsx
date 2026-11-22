@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   ShieldCheck,
@@ -9,21 +9,105 @@ import {
   ChevronRight,
   ChevronLeft,
   ArrowRight,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react'
 import type { CourierDetailItem } from '../types/admin-couriers.types'
-import { MOCK_COURIER_DETAILS } from '../config/admin-couriers.mock'
 import { CourierDetailsDrawer } from '../components/CourierDetailsDrawer'
+import { AdminFilterSelect } from '../components/AdminFilterSelect'
+import { adminApi, type AdminCourierItem, type AdminDashboardKpis } from '../api/admin-api'
 import styles from './AdminCouriersPage.module.css'
+
+function mapAdminCourierToDetail(c: AdminCourierItem): CourierDetailItem {
+  const initials = c.fullName
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+
+  const vehicle = c.courierProfile?.vehicleType || 'Vehicle'
+  let maxKg = 25
+  if (vehicle.toLowerCase().includes('van')) maxKg = 200
+  else if (vehicle.toLowerCase().includes('three-wheeler') || vehicle.toLowerCase().includes('tuk')) maxKg = 60
+
+  return {
+    id: c.id,
+    courierCode: `CR-${c.id.slice(0, 6).toUpperCase()}`,
+    name: c.fullName,
+    initials: initials || 'CR',
+    phone: c.phoneNumber || 'Not provided',
+    email: c.email,
+    serviceZones: c.courierProfile?.licensePlate ? [c.courierProfile.licensePlate] : ['All zones'],
+    vehicleType: vehicle,
+    vehicleOwnership: 'Registered',
+    vehicleRegistration: c.courierProfile?.licensePlate || 'Pending registration',
+    maxParcelLoadKg: maxKg,
+    cargoSpaceDimensions: 'Standard cargo',
+    coveredStorage: true,
+    isApproved: c.approvalStatus === 'APPROVED',
+    isAvailable: c.isActive,
+    activeDeliveriesCount: c.activeDeliveriesCount,
+    verifiedDocumentsCount: c.courierProfile?.licenseNumber ? 2 : 1,
+    activeDeliveriesList: [],
+  }
+}
 
 export const AdminCouriersPage: React.FC = () => {
   const navigate = useNavigate()
-  const [couriers] = useState<readonly CourierDetailItem[]>(MOCK_COURIER_DETAILS)
+  const [couriers, setCouriers] = useState<CourierDetailItem[]>([])
+  const [kpis, setKpis] = useState<AdminDashboardKpis | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalCount, setTotalCount] = useState(0)
+
   const [searchQuery, setSearchQuery] = useState('')
   const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'available' | 'unavailable'>('all')
-  const [zoneFilter, setZoneFilter] = useState('all')
   const [vehicleFilter, setVehicleFilter] = useState('all')
   const [selectedCourier, setSelectedCourier] = useState<CourierDetailItem | null>(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+
+  useEffect(() => {
+    let isMounted = true
+    const controller = new AbortController()
+
+    async function fetchCouriers() {
+      try {
+        const [couriersRes, dashboardRes] = await Promise.all([
+          adminApi.getCouriers({
+            page,
+            limit,
+            search: searchQuery.trim() || undefined,
+          }),
+          adminApi.getDashboard(controller.signal),
+        ])
+        if (!isMounted) return
+        const mapped = (couriersRes.data || []).map(mapAdminCourierToDetail)
+        setCouriers(mapped)
+        setTotalPages(couriersRes.pagination?.totalPages || 1)
+        setTotalCount(couriersRes.pagination?.total || 0)
+        setKpis(dashboardRes.kpis)
+      } catch (err: unknown) {
+        if (!isMounted) return
+        if (err instanceof DOMException && err.name === 'AbortError') return
+        console.error('Failed to load couriers:', err)
+        setError('Could not load couriers from backend.')
+        setCouriers([])
+      } finally {
+        if (isMounted) setIsLoading(false)
+      }
+    }
+
+    void fetchCouriers()
+
+    return () => {
+      isMounted = false
+      controller.abort()
+    }
+  }, [page, limit, searchQuery])
 
   const filteredCouriers = useMemo(() => {
     return couriers.filter((c) => {
@@ -31,36 +115,27 @@ export const AdminCouriersPage: React.FC = () => {
       if (availabilityFilter === 'available' && !c.isAvailable) return false
       if (availabilityFilter === 'unavailable' && c.isAvailable) return false
 
-      // Zone filter
-      if (zoneFilter !== 'all' && !c.serviceZones.some((z) => z.toLowerCase().includes(zoneFilter.toLowerCase()))) {
-        return false
-      }
-
       // Vehicle filter
       if (vehicleFilter !== 'all' && !c.vehicleType.toLowerCase().includes(vehicleFilter.toLowerCase())) {
         return false
       }
 
-      // Search query
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase()
-        const matchesName = c.name.toLowerCase().includes(query)
-        const matchesCode = c.courierCode.toLowerCase().includes(query)
-        const matchesPhone = c.phone.toLowerCase().includes(query)
-        if (!matchesName && !matchesCode && !matchesPhone) return false
-      }
-
       return true
     })
-  }, [couriers, availabilityFilter, zoneFilter, vehicleFilter, searchQuery])
+  }, [couriers, availabilityFilter, vehicleFilter])
 
   const handleOpenDetails = (courier: CourierDetailItem) => {
     setSelectedCourier(courier)
     setIsDrawerOpen(true)
   }
 
-  // Pre-assigned avatar background colors
   const avatarColors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b']
+
+  const availableCount = useMemo(() => couriers.filter((c) => c.isAvailable).length, [couriers])
+  const activeDeliveriesTotal = useMemo(
+    () => couriers.reduce((sum, c) => sum + c.activeDeliveriesCount, 0),
+    [couriers],
+  )
 
   return (
     <div className={styles.pageContainer}>
@@ -75,6 +150,13 @@ export const AdminCouriersPage: React.FC = () => {
         <p className={styles.pageSubtitle}>Check availability and balance delivery workloads.</p>
       </div>
 
+      {error && (
+        <div style={{ backgroundColor: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca', borderRadius: '8px', padding: '12px 16px', marginBottom: '20px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <AlertCircle size={16} />
+          <span>{error}</span>
+        </div>
+      )}
+
       {/* 3 Metric Cards */}
       <div className={styles.metricsGrid}>
         <div className={styles.metricCard}>
@@ -83,7 +165,7 @@ export const AdminCouriersPage: React.FC = () => {
           </div>
           <div className={styles.metricInfo}>
             <span className={styles.metricLabel}>Approved couriers</span>
-            <span className={styles.metricValue}>16</span>
+            <span className={styles.metricValue}>{totalCount}</span>
             <span className={styles.metricSubtext}>Ready for dispatch management</span>
           </div>
         </div>
@@ -94,7 +176,7 @@ export const AdminCouriersPage: React.FC = () => {
           </div>
           <div className={styles.metricInfo}>
             <span className={styles.metricLabel}>Available now</span>
-            <span className={styles.metricValue}>12</span>
+            <span className={styles.metricValue}>{availableCount}</span>
             <span className={styles.metricSubtext}>Accepting new assignments</span>
           </div>
         </div>
@@ -105,8 +187,8 @@ export const AdminCouriersPage: React.FC = () => {
           </div>
           <div className={styles.metricInfo}>
             <span className={styles.metricLabel}>Active deliveries</span>
-            <span className={styles.metricValue}>64</span>
-            <span className={styles.metricSubtext}>Across 12 couriers</span>
+            <span className={styles.metricValue}>{kpis?.activeInTransit ?? activeDeliveriesTotal}</span>
+            <span className={styles.metricSubtext}>Across active couriers</span>
           </div>
         </div>
       </div>
@@ -116,7 +198,7 @@ export const AdminCouriersPage: React.FC = () => {
         <div className={styles.cardHeaderRow}>
           <h2 className={styles.cardTitle}>Courier directory</h2>
           <Link to="/admin/users" className={styles.reviewLink}>
-            Review applications (4)
+            Review applications ({kpis?.pendingApprovalsCount ?? 0})
             <ArrowRight size={14} aria-hidden="true" />
           </Link>
         </div>
@@ -130,49 +212,39 @@ export const AdminCouriersPage: React.FC = () => {
               className={styles.searchInput}
               placeholder="Search name, ID or phone"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
+                setPage(1)
+              }}
               aria-label="Search name, ID or phone"
             />
           </div>
 
           <div className={styles.dropdownGroup}>
-            <select
-              className={styles.filterSelect}
+            <AdminFilterSelect
               value={availabilityFilter}
-              onChange={(e) =>
-                setAvailabilityFilter(e.target.value as 'all' | 'available' | 'unavailable')
+              onChange={(val) =>
+                setAvailabilityFilter(val as 'all' | 'available' | 'unavailable')
               }
-              aria-label="Filter availability"
-            >
-              <option value="all">All availability</option>
-              <option value="available">Available</option>
-              <option value="unavailable">Unavailable</option>
-            </select>
+              ariaLabel="Filter availability"
+              options={[
+                { value: 'all', label: 'All availability' },
+                { value: 'available', label: 'Available' },
+                { value: 'unavailable', label: 'Unavailable' },
+              ]}
+            />
 
-            <select
-              className={styles.filterSelect}
-              value={zoneFilter}
-              onChange={(e) => setZoneFilter(e.target.value)}
-              aria-label="Filter zones"
-            >
-              <option value="all">All zones</option>
-              <option value="Colombo">Colombo Central & South</option>
-              <option value="Nugegoda">Nugegoda</option>
-              <option value="Rajagiriya">Rajagiriya</option>
-              <option value="Dehiwala">Dehiwala / Mount Lavinia</option>
-            </select>
-
-            <select
-              className={styles.filterSelect}
+            <AdminFilterSelect
               value={vehicleFilter}
-              onChange={(e) => setVehicleFilter(e.target.value)}
-              aria-label="Filter vehicles"
-            >
-              <option value="all">All vehicles</option>
-              <option value="Motorbike">Motorbike</option>
-              <option value="Three-wheeler">Three-wheeler</option>
-              <option value="Van">Van</option>
-            </select>
+              onChange={setVehicleFilter}
+              ariaLabel="Filter vehicles"
+              options={[
+                { value: 'all', label: 'All vehicles' },
+                { value: 'Motorbike', label: 'Motorbike' },
+                { value: 'Three-wheeler', label: 'Three-wheeler' },
+                { value: 'Van', label: 'Van' },
+              ]}
+            />
           </div>
         </div>
 
@@ -190,10 +262,19 @@ export const AdminCouriersPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredCouriers.length === 0 ? (
+              {isLoading ? (
                 <tr>
                   <td colSpan={6} style={{ textAlign: 'center', padding: '36px', color: '#64748b' }}>
-                    No couriers found matching your filters.
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
+                      <span>Loading couriers...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredCouriers.length === 0 ? (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '36px', color: '#64748b' }}>
+                    No couriers found in the database.
                   </td>
                 </tr>
               ) : (
@@ -242,7 +323,13 @@ export const AdminCouriersPage: React.FC = () => {
                           <button
                             type="button"
                             className={styles.viewDeliveriesLink}
-                            onClick={() => navigate('/admin/deliveries')}
+                            onClick={() =>
+                              navigate(
+                                `/admin/deliveries?courierId=${courier.id}&courierName=${encodeURIComponent(
+                                  courier.name,
+                                )}`,
+                              )
+                            }
                           >
                             View deliveries
                           </button>
@@ -270,26 +357,45 @@ export const AdminCouriersPage: React.FC = () => {
           <p className={styles.footerNote}>Availability shows who is accepting new assignments.</p>
 
           <div className={styles.paginationControls}>
-            <span className={styles.paginationText}>Showing 1-6 of 16 couriers</span>
-            <select className={styles.pageSelect} aria-label="Rows per page" defaultValue="7">
-              <option value="7">7 per page</option>
-              <option value="15">15 per page</option>
-            </select>
+            <span className={styles.paginationText}>
+              Showing {filteredCouriers.length} of {totalCount} couriers
+            </span>
+            <AdminFilterSelect
+              value={String(limit)}
+              onChange={(val) => {
+                setLimit(Number(val))
+                setPage(1)
+              }}
+              ariaLabel="Rows per page"
+              direction="up"
+              compact
+              options={[
+                { value: '5', label: '5 per page' },
+                { value: '10', label: '10 per page' },
+                { value: '20', label: '20 per page' },
+              ]}
+            />
 
             <div className={styles.pagesList}>
-              <button type="button" className={styles.pageBtn} aria-label="Previous page">
+              <button
+                type="button"
+                className={styles.pageBtn}
+                aria-label="Previous page"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
                 <ChevronLeft size={14} aria-hidden="true" />
               </button>
-              <button type="button" className={`${styles.pageBtn} ${styles.pageBtnActive}`}>
-                1
-              </button>
-              <button type="button" className={styles.pageBtn}>
-                2
-              </button>
-              <button type="button" className={styles.pageBtn}>
-                3
-              </button>
-              <button type="button" className={styles.pageBtn} aria-label="Next page">
+              <span style={{ padding: '0 8px', fontSize: '13px', color: '#475569' }}>
+                Page {page} of {Math.max(1, totalPages)}
+              </span>
+              <button
+                type="button"
+                className={styles.pageBtn}
+                aria-label="Next page"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              >
                 <ChevronRight size={14} aria-hidden="true" />
               </button>
             </div>
@@ -306,4 +412,3 @@ export const AdminCouriersPage: React.FC = () => {
     </div>
   )
 }
-

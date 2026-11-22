@@ -10,6 +10,8 @@ export interface SessionUser {
   readonly role: UserRole
   readonly approvalStatus: 'PENDING' | 'APPROVED' | 'REJECTED'
   readonly isActive: boolean
+  /** Present and true when a Google account is linked for sign-in. */
+  readonly isGoogleLinked?: boolean
   readonly createdAt: string
   readonly updatedAt: string
 }

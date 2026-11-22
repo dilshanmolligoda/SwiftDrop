@@ -29,7 +29,7 @@ interface NavigationItem {
 const NAVIGATION_ITEMS: readonly NavigationItem[] = [
   { label: 'Dashboard', path: '/customer/dashboard', icon: Home },
   { label: 'My deliveries', path: '/customer/deliveries', icon: Package },
-  { label: 'Track a parcel', path: '/track', icon: Search },
+  { label: 'Track a parcel', path: '/customer/tracking', icon: Search },
   { label: 'Address book', path: '/customer/addresses', icon: BookOpen },
   { label: 'Notifications', path: '/customer/notifications', icon: Bell },
   { label: 'Help & support', path: '/customer/support', icon: HelpCircle },
@@ -58,8 +58,8 @@ interface AuthenticatedCustomer {
 export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
   const location = useLocation()
   const navigate = useNavigate()
-  const { profile } = useCustomerProfile()
-  const { openCreateModal } = useCustomerDeliveries()
+  const { profile, refreshProfile, clearProfile } = useCustomerProfile()
+  const { openCreateModal, refreshDeliveries } = useCustomerDeliveries()
   const [isVerifying, setIsVerifying] = useState(true)
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
@@ -128,6 +128,8 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
 
         // Authorized as CUSTOMER
         setIsVerifying(false)
+        void refreshProfile()
+        void refreshDeliveries()
       } catch {
         if (isMounted) {
           navigate('/login', { replace: true })
@@ -140,7 +142,7 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
     return () => {
       isMounted = false
     }
-  }, [navigate])
+  }, [navigate, refreshProfile, refreshDeliveries])
 
   const toggleMobileSidebar = (): void => {
     setIsMobileSidebarOpen((previousState) => !previousState)
@@ -156,6 +158,7 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
 
   const handleLogout = async (): Promise<void> => {
     try {
+      clearProfile()
       await fetch(`${env.apiBaseUrl}/auth/logout`, {
         method: 'POST',
         credentials: 'include',
@@ -163,6 +166,7 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
     } catch {
       // Proceed even on network error
     } finally {
+      clearProfile()
       navigate('/login', { replace: true })
     }
   }

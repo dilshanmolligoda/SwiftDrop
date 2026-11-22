@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useParcelRealtime } from '../../../lib/realtime/useParcelRealtime'
 import { Link, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -59,6 +60,8 @@ export function DeliveryDetailsPage() {
 function DeliveryDetailsView({ parcelId }: { readonly parcelId: string }) {
   const { data, error, isLoading, reload } = useDeliveryDetails(parcelId)
   const [notice, setNotice] = useState<string | null>(null)
+  // Live: reload if this parcel changes elsewhere (keeps the current view while loading).
+  useParcelRealtime({ subscription: { scope: 'parcel', parcelId }, onChange: reload })
 
   const handleCompleted = (message: string) => {
     setNotice(message)

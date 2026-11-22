@@ -15,11 +15,15 @@ import { CustomerDeliveryProvider } from './features/customer/context/CustomerDe
 import { CustomerLayout } from './features/customer/components/CustomerLayout.tsx'
 import { SettingsPage } from './features/customer/pages/SettingsPage.tsx'
 import { AddressBookPage } from './features/customer/pages/AddressBookPage.tsx'
+import { PublicTrackingPage } from './features/customer/pages/PublicTrackingPage.tsx'
+import { CustomerTrackingPage } from './features/customer/pages/CustomerTrackingPage.tsx'
+import { DeliveryHistoryPage } from './features/customer/pages/DeliveryHistoryPage.tsx'
 import { RequireRole } from './app/auth/RequireRole.tsx'
 import { CourierLayout } from './features/courier/components/CourierLayout.tsx'
 import { CourierDashboardPage } from './features/courier/pages/CourierDashboardPage.tsx'
 import { MyDeliveriesPage as CourierMyDeliveriesPage } from './features/courier/pages/MyDeliveriesPage.tsx'
 import { DeliveryDetailsPage } from './features/courier/pages/DeliveryDetailsPage.tsx'
+import { CourierSettingsPage } from './features/courier/pages/CourierSettingsPage.tsx'
 import { HelpSupportPage } from './features/customer/pages/HelpSupportPage.tsx'
 import { NotificationsPage } from './features/customer/pages/NotificationsPage.tsx'
 import CustomerDashboard from './features/customer/pages/CustomerDashboard.tsx'
@@ -39,6 +43,9 @@ import { MerchantLayout } from './features/merchant/components/MerchantLayout';
 import AdminLandingPage from './features/admin/pages/AdminLandingPage';
 import MerchantTrackParcelPage from './features/merchant/pages/MerchantTrackParcelPage';
 import MerchantPricingPage from './features/merchant/pages/MerchantPricingPage';
+import MerchantSettingsPage from './features/merchant/pages/MerchantSettingsPage';
+import MerchantWebhookPage from './features/merchant/pages/MerchantWebhookPage';
+import './features/merchant/components/MerchantTypography.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -48,6 +55,23 @@ createRoot(document.getElementById('root')!).render(
           <Routes>
             <Route path="/" element={<LoginPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/track" element={<PublicTrackingPage />} />
+            <Route
+              path="/customer/deliveries"
+              element={
+                <CustomerLayout>
+                  <DeliveryHistoryPage />
+                </CustomerLayout>
+              }
+            />
+            <Route
+              path="/customer/tracking"
+              element={
+                <CustomerLayout>
+                  <CustomerTrackingPage />
+                </CustomerLayout>
+              }
+            />
             <Route path="/register" element={<RegisterRoleSelectPage />} />
             <Route path="/register/customer" element={<RegisterCustomerPage />} />
             <Route path="/register/merchant" element={<RegisterMerchantPage />} />
@@ -97,6 +121,7 @@ createRoot(document.getElementById('root')!).render(
               <Route path="dashboard" element={<CourierDashboardPage />} />
               <Route path="deliveries" element={<CourierMyDeliveriesPage />} />
               <Route path="deliveries/:parcelId" element={<DeliveryDetailsPage />} />
+              <Route path="settings" element={<CourierSettingsPage />} />
               <Route path="*" element={<Navigate to="/courier/dashboard" replace />} />
             </Route>
             <Route
@@ -153,14 +178,6 @@ createRoot(document.getElementById('root')!).render(
               }
             />
             <Route
-              path="/customer/deliveries"
-              element={
-                <CustomerLayout>
-                  <CustomerMyDeliveriesPage />
-                </CustomerLayout>
-              }
-            />
-            <Route
               path="/deliveries"
               element={
                 <CustomerLayout>
@@ -180,6 +197,8 @@ createRoot(document.getElementById('root')!).render(
               <Route path="track/:trackingNumber" element={<MerchantTrackParcelPage />} />
               <Route path="pricing" element={<MerchantPricingPage />} />
               <Route path="pricing/:date" element={<MerchantPricingPage />} />
+              <Route path="connections" element={<MerchantWebhookPage />} />
+              <Route path="settings" element={<MerchantSettingsPage />} />
             </Route>
             {/* /courier/* is served by the Courier Portal routes above. */}
             <Route path="/admin-landing" element={<AdminLandingPage />} />

@@ -18,6 +18,8 @@ export interface CustomerProfile {
 export interface CustomerProfileContextValue {
   profile: CustomerProfile
   updateProfile: (updatedFields: Partial<Omit<CustomerProfile, 'initials'>>) => void
+  refreshProfile: () => Promise<void>
+  clearProfile: () => void
 }
 
 export const CustomerProfileContext = createContext<CustomerProfileContextValue | undefined>(undefined)

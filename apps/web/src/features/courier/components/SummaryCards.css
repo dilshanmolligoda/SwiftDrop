@@ -117,14 +117,14 @@
   height: 26px;
   margin-top: 3px;
   border-radius: 6px;
-  background: linear-gradient(90deg, #eef2f7 25%, #e2e8f0 50%, #eef2f7 75%);
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
   background-size: 200% 100%;
   animation: cp-shimmer 1.2s ease-in-out infinite;
 }
 
 /* Total card: primary-filled, with completion bar */
 .cp-summary-card--primary {
-  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 60%, #3b82f6 100%);
+  background: linear-gradient(135deg, #093c23 0%, #0e5330 55%, #166534 100%);
   border-color: transparent;
   color: #fff;
 }
@@ -229,6 +229,20 @@
   .cp-summary-card {
     gap: 10px;
     padding: 14px;
+  }
+
+  /* Status cards: icon on top, then label and value, so every card has the
+     same shape regardless of label length. The total card keeps its row. */
+  .cp-summary-card:not(.cp-summary-card--primary) {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  .cp-summary-card__label {
+    font-size: 12px;
+    line-height: 1.3;
   }
 
   .cp-summary-card__icon {

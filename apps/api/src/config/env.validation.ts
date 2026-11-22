@@ -41,5 +41,87 @@ export function validateEnv(config: Record<string, unknown>) {
     );
   }
 
+  validateMessagingEnv(config);
+  validateWebhookEnv(config);
+
   return config;
+}
+
+/** Positive-integer settings for the outbox relay, with an upper bound each. */
+const MESSAGING_INT_LIMITS: Record<string, number> = {
+  OUTBOX_POLL_INTERVAL_MS: 60_000,
+  OUTBOX_BATCH_SIZE: 500,
+  OUTBOX_PUBLISH_TIMEOUT_MS: 60_000,
+};
+
+/**
+ * Without RabbitMQ the API still works (events wait in outbox_events), which
+ * is fine for local development but would silently stop notifications and
+ * webhooks in production — so production refuses to start without it.
+ */
+function validateMessagingEnv(config: Record<string, unknown>) {
+  const url =
+    typeof config.RABBITMQ_URL === 'string' ? config.RABBITMQ_URL.trim() : '';
+
+  if (config.NODE_ENV === 'production' && !url) {
+    throw new Error(
+      'RABBITMQ_URL is required in production: without it no notifications or webhooks are sent.',
+    );
+  }
+  if (url && !/^amqps?:\/\//.test(url)) {
+    throw new Error('RABBITMQ_URL must start with amqp:// or amqps://');
+  }
+  // Local RabbitMQ containers often really use the example password, so the
+  // placeholder is only refused in production.
+  if (config.NODE_ENV === 'production' && url && /<change-me/i.test(url)) {
+    throw new Error('RABBITMQ_URL still contains a <change-me> placeholder.');
+  }
+
+  for (const [key, max] of Object.entries(MESSAGING_INT_LIMITS)) {
+    const raw = config[key];
+    if (raw === undefined || raw === '') continue;
+    const value = Number(raw);
+    if (!Number.isInteger(value) || value < 1 || value > max) {
+      throw new Error(`${key} must be a whole number between 1 and ${max}.`);
+    }
+  }
+
+  const relay = config.OUTBOX_RELAY_ENABLED;
+  if (relay !== undefined && relay !== 'true' && relay !== 'false') {
+    throw new Error('OUTBOX_RELAY_ENABLED must be "true" or "false".');
+  }
+}
+
+/**
+ * Merchant webhook settings, shared with apps/worker. In production a missing
+ * key would make every webhook set-up fail, so the API refuses to start.
+ */
+function validateWebhookEnv(config: Record<string, unknown>) {
+  const production = config.NODE_ENV === 'production';
+  const allowPrivate = config.WEBHOOK_ALLOW_PRIVATE_TARGETS;
+
+  if (
+    allowPrivate !== undefined &&
+    allowPrivate !== 'true' &&
+    allowPrivate !== 'false'
+  ) {
+    throw new Error('WEBHOOK_ALLOW_PRIVATE_TARGETS must be "true" or "false".');
+  }
+  if (production && allowPrivate === 'true') {
+    throw new Error(
+      'WEBHOOK_ALLOW_PRIVATE_TARGETS=true is not allowed in production; ' +
+        'list specific hosts in WEBHOOK_PRIVATE_HOST_ALLOWLIST instead.',
+    );
+  }
+  if (production) {
+    const key =
+      typeof config.WEBHOOK_SECRET_ENCRYPTION_KEY === 'string'
+        ? config.WEBHOOK_SECRET_ENCRYPTION_KEY.trim()
+        : '';
+    if (Buffer.from(key, 'base64').length !== 32) {
+      throw new Error(
+        'WEBHOOK_SECRET_ENCRYPTION_KEY must be 32 bytes, base64-encoded, in production.',
+      );
+    }
+  }
 }

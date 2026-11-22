@@ -163,7 +163,13 @@
 }
 .merchant-topbar__user { gap: 8px; padding: 4px 8px 4px 4px; color: #1e293b; font-size: 13px; }
 .merchant-topbar__avatar { width: 28px; height: 28px; font-size: 12px; }
-.merchant-layout__content { width: 100%; max-width: 1120px; padding: 26px 25px 60px; box-sizing: border-box; }
+.merchant-layout__content {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 26px 25px 60px;
+  box-sizing: border-box;
+}
 
 .merchant-layout__loading {
   display: grid;

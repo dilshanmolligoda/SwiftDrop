@@ -47,3 +47,4 @@ Thumbs.db
 # ---------- Docker / k8s local ----------
 docker-compose.override.yml
 .docker-data/
+Swiftdrop resource.pdf

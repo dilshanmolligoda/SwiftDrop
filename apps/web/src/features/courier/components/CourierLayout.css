@@ -4,19 +4,23 @@
  * ============================================================= */
 
 .courier-shell {
-  --cp-primary: #1d4ed8;
-  --cp-primary-hover: #1e40af;
-  --cp-primary-soft: #eff6ff;
-  --cp-primary-border: #bfdbfe;
-  --cp-focus: #93c5fd;
-  --cp-bg: #f4f7fb;
+  /* SwiftDrop brand green, taken from the login page (LoginPage.css). */
+  --cp-primary: #0e5330;
+  --cp-primary-hover: #093c23;
+  --cp-primary-soft: #f0fdf4;
+  --cp-primary-soft-hover: #dcfce7;
+  --cp-primary-border: #bbf7d0;
+  --cp-primary-ink: #093c23;
+  --cp-focus: rgba(14, 83, 48, 0.45);
+  --cp-focus-ring: 0 0 0 3px rgba(14, 83, 48, 0.15);
+  --cp-bg: #f3f4f6;
   --cp-surface: #ffffff;
-  --cp-surface-muted: #f8fafc;
-  --cp-border: #e2e8f0;
-  --cp-border-strong: #cbd5e1;
-  --cp-text: #0f172a;
-  --cp-text-secondary: #334155;
-  --cp-text-muted: #64748b;
+  --cp-surface-muted: #f9fafb;
+  --cp-border: #e5e7eb;
+  --cp-border-strong: #d1d5db;
+  --cp-text: #111827;
+  --cp-text-secondary: #374151;
+  --cp-text-muted: #6b7280;
   --cp-success: #15803d;
   --cp-success-soft: #f0fdf4;
   --cp-success-border: #bbf7d0;
@@ -55,6 +59,9 @@
   margin: 0;
   font-family: var(--cp-font);
   letter-spacing: normal;
+  /* Override the global h1/h2 colour, which turns near-white under a dark
+     system theme; class rules on individual headings still win. */
+  color: inherit;
 }
 
 .courier-shell :where(a, button, input, select, textarea, [tabindex]):focus-visible {
@@ -105,27 +112,19 @@
 
 .cp-sidebar__brand {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
   color: var(--cp-text);
   text-decoration: none;
 }
 
-.cp-sidebar__brand-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.15;
-}
-
-.cp-sidebar__brand-name {
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.3px;
-}
-
 .cp-sidebar__brand-tag {
-  font-size: 12px;
-  font-weight: 600;
+  margin-left: 36px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--cp-primary);
 }
 
@@ -250,7 +249,7 @@
   position: fixed;
   inset: 0;
   z-index: 45;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(17, 24, 39, 0.45);
 }
 
 /* ---------------- Main column ---------------- */
@@ -388,7 +387,7 @@
 }
 
 .cp-btn--soft:hover:not(:disabled) {
-  background: #dbeafe;
+  background: var(--cp-primary-soft-hover);
   border-color: var(--cp-primary-border);
 }
 
@@ -496,7 +495,7 @@
   border: 1px solid var(--cp-primary-border);
   border-radius: var(--cp-radius-sm);
   background: var(--cp-primary-soft);
-  color: #1e3a8a;
+  color: var(--cp-primary-ink);
   font-size: 14px;
 }
 
@@ -587,7 +586,7 @@
 .cp-select:focus,
 .cp-textarea:focus {
   border-color: var(--cp-primary);
-  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15);
+  box-shadow: var(--cp-focus-ring);
   outline: none;
 }
 
@@ -673,5 +672,208 @@
   .cp-card__header,
   .cp-card__body {
     padding: 16px;
+  }
+}
+
+/* ---------------- Mobile navigation (< 768px) ---------------- */
+
+.cp-topbar__brand,
+.cp-bottom-nav,
+.cp-account-sheet,
+.cp-sheet-backdrop {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  /* The bottom navigation replaces the sidebar and drawer on phones. */
+  .cp-sidebar,
+  .cp-backdrop,
+  .cp-icon-btn.cp-topbar__menu {
+    display: none;
+  }
+
+  .cp-topbar__brand {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Keep only the logo mark next to the page title. */
+  .cp-topbar__brand span {
+    display: none;
+  }
+
+  .cp-content {
+    padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Touch-friendly controls; 16px text stops iOS zooming into focused fields. */
+  .cp-btn {
+    min-height: 44px;
+  }
+
+  .cp-btn--sm {
+    min-height: 38px;
+  }
+
+  .cp-icon-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .cp-input,
+  .cp-select,
+  .cp-textarea {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .cp-bottom-nav {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+    background: var(--cp-surface);
+    border-top: 1px solid var(--cp-border);
+    box-shadow: 0 -6px 18px -12px rgba(17, 24, 39, 0.25);
+  }
+
+  .cp-bottom-nav__list {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cp-bottom-nav__item {
+    display: flex;
+    min-width: 0;
+  }
+
+  .cp-bottom-nav__link {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-height: 56px;
+    min-width: 0;
+    padding: 4px 2px;
+    border: 0;
+    border-radius: var(--cp-radius-sm);
+    background: transparent;
+    color: var(--cp-text-muted);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .cp-bottom-nav__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 30px;
+    border-radius: 999px;
+    transition: background-color 0.15s, color 0.15s;
+  }
+
+  .cp-bottom-nav__icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .cp-bottom-nav__label {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .cp-bottom-nav__link--active {
+    color: var(--cp-primary);
+  }
+
+  .cp-bottom-nav__link--active .cp-bottom-nav__icon {
+    background: var(--cp-primary-soft-hover);
+    color: var(--cp-primary);
+  }
+
+  .cp-sheet-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    background: rgba(17, 24, 39, 0.45);
+  }
+
+  .cp-account-sheet {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 16px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+    border-radius: 18px 18px 0 0;
+    background: var(--cp-surface);
+    box-shadow: var(--cp-shadow-lg);
+  }
+
+  .cp-account-sheet:focus {
+    outline: none;
+  }
+
+  .cp-account-sheet__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .cp-account-sheet__title {
+    font-size: 17px;
+    font-weight: 650;
+  }
+
+  .cp-account-sheet__user {
+    padding: 12px;
+    border: 1px solid var(--cp-border);
+    border-radius: var(--cp-radius-sm);
+    background: var(--cp-surface-muted);
+  }
+
+  .cp-account-sheet__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .cp-account-sheet__actions .cp-btn {
+    min-height: 46px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) and (max-width: 767px) {
+  .cp-account-sheet {
+    animation: cp-sheet-in 0.2s ease-out;
+  }
+}
+
+@keyframes cp-sheet-in {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
   }
 }

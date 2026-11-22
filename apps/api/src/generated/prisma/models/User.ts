@@ -34,6 +34,12 @@ export type UserMinAggregateOutputType = {
   approvalStatus: $Enums.ApprovalStatus | null
   isActive: boolean | null
   googleSubject: string | null
+  twoFactorEnabled: boolean | null
+  deliveryStatusNotifications: boolean | null
+  failedDeliveryNotifications: boolean | null
+  storeConnectionNotifications: boolean | null
+  language: string | null
+  timeZone: string | null
   reviewedAt: Date | null
   reviewedBy: string | null
   rejectionReason: string | null
@@ -51,6 +57,12 @@ export type UserMaxAggregateOutputType = {
   approvalStatus: $Enums.ApprovalStatus | null
   isActive: boolean | null
   googleSubject: string | null
+  twoFactorEnabled: boolean | null
+  deliveryStatusNotifications: boolean | null
+  failedDeliveryNotifications: boolean | null
+  storeConnectionNotifications: boolean | null
+  language: string | null
+  timeZone: string | null
   reviewedAt: Date | null
   reviewedBy: string | null
   rejectionReason: string | null
@@ -68,6 +80,12 @@ export type UserCountAggregateOutputType = {
   approvalStatus: number
   isActive: number
   googleSubject: number
+  twoFactorEnabled: number
+  deliveryStatusNotifications: number
+  failedDeliveryNotifications: number
+  storeConnectionNotifications: number
+  language: number
+  timeZone: number
   reviewedAt: number
   reviewedBy: number
   rejectionReason: number
@@ -87,6 +105,12 @@ export type UserMinAggregateInputType = {
   approvalStatus?: true
   isActive?: true
   googleSubject?: true
+  twoFactorEnabled?: true
+  deliveryStatusNotifications?: true
+  failedDeliveryNotifications?: true
+  storeConnectionNotifications?: true
+  language?: true
+  timeZone?: true
   reviewedAt?: true
   reviewedBy?: true
   rejectionReason?: true
@@ -104,6 +128,12 @@ export type UserMaxAggregateInputType = {
   approvalStatus?: true
   isActive?: true
   googleSubject?: true
+  twoFactorEnabled?: true
+  deliveryStatusNotifications?: true
+  failedDeliveryNotifications?: true
+  storeConnectionNotifications?: true
+  language?: true
+  timeZone?: true
   reviewedAt?: true
   reviewedBy?: true
   rejectionReason?: true
@@ -121,6 +151,12 @@ export type UserCountAggregateInputType = {
   approvalStatus?: true
   isActive?: true
   googleSubject?: true
+  twoFactorEnabled?: true
+  deliveryStatusNotifications?: true
+  failedDeliveryNotifications?: true
+  storeConnectionNotifications?: true
+  language?: true
+  timeZone?: true
   reviewedAt?: true
   reviewedBy?: true
   rejectionReason?: true
@@ -211,6 +247,12 @@ export type UserGroupByOutputType = {
   approvalStatus: $Enums.ApprovalStatus
   isActive: boolean
   googleSubject: string | null
+  twoFactorEnabled: boolean
+  deliveryStatusNotifications: boolean
+  failedDeliveryNotifications: boolean
+  storeConnectionNotifications: boolean
+  language: string
+  timeZone: string
   reviewedAt: Date | null
   reviewedBy: string | null
   rejectionReason: string | null
@@ -249,12 +291,19 @@ export type UserWhereInput = {
   approvalStatus?: Prisma.EnumApprovalStatusFilter<"User"> | $Enums.ApprovalStatus
   isActive?: Prisma.BoolFilter<"User"> | boolean
   googleSubject?: Prisma.StringNullableFilter<"User"> | string | null
+  twoFactorEnabled?: Prisma.BoolFilter<"User"> | boolean
+  deliveryStatusNotifications?: Prisma.BoolFilter<"User"> | boolean
+  failedDeliveryNotifications?: Prisma.BoolFilter<"User"> | boolean
+  storeConnectionNotifications?: Prisma.BoolFilter<"User"> | boolean
+  language?: Prisma.StringFilter<"User"> | string
+  timeZone?: Prisma.StringFilter<"User"> | string
   reviewedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   reviewedBy?: Prisma.UuidNullableFilter<"User"> | string | null
   rejectionReason?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   merchantProfile?: Prisma.XOR<Prisma.MerchantProfileNullableScalarRelationFilter, Prisma.MerchantProfileWhereInput> | null
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestListRelationFilter
   courierProfile?: Prisma.XOR<Prisma.CourierProfileNullableScalarRelationFilter, Prisma.CourierProfileWhereInput> | null
   merchantOrders?: Prisma.MerchantOrderListRelationFilter
   parcels?: Prisma.ParcelListRelationFilter
@@ -262,6 +311,8 @@ export type UserWhereInput = {
   createdAssignments?: Prisma.DeliveryAssignmentListRelationFilter
   parcelStatusEvents?: Prisma.ParcelStatusEventListRelationFilter
   deliveryProofs?: Prisma.DeliveryProofListRelationFilter
+  webhookEndpoint?: Prisma.XOR<Prisma.WebhookEndpointNullableScalarRelationFilter, Prisma.WebhookEndpointWhereInput> | null
+  notifications?: Prisma.NotificationListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -274,12 +325,19 @@ export type UserOrderByWithRelationInput = {
   approvalStatus?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   googleSubject?: Prisma.SortOrderInput | Prisma.SortOrder
+  twoFactorEnabled?: Prisma.SortOrder
+  deliveryStatusNotifications?: Prisma.SortOrder
+  failedDeliveryNotifications?: Prisma.SortOrder
+  storeConnectionNotifications?: Prisma.SortOrder
+  language?: Prisma.SortOrder
+  timeZone?: Prisma.SortOrder
   reviewedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   reviewedBy?: Prisma.SortOrderInput | Prisma.SortOrder
   rejectionReason?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   merchantProfile?: Prisma.MerchantProfileOrderByWithRelationInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestOrderByRelationAggregateInput
   courierProfile?: Prisma.CourierProfileOrderByWithRelationInput
   merchantOrders?: Prisma.MerchantOrderOrderByRelationAggregateInput
   parcels?: Prisma.ParcelOrderByRelationAggregateInput
@@ -287,6 +345,8 @@ export type UserOrderByWithRelationInput = {
   createdAssignments?: Prisma.DeliveryAssignmentOrderByRelationAggregateInput
   parcelStatusEvents?: Prisma.ParcelStatusEventOrderByRelationAggregateInput
   deliveryProofs?: Prisma.DeliveryProofOrderByRelationAggregateInput
+  webhookEndpoint?: Prisma.WebhookEndpointOrderByWithRelationInput
+  notifications?: Prisma.NotificationOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -302,12 +362,19 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   role?: Prisma.EnumRoleFilter<"User"> | $Enums.Role
   approvalStatus?: Prisma.EnumApprovalStatusFilter<"User"> | $Enums.ApprovalStatus
   isActive?: Prisma.BoolFilter<"User"> | boolean
+  twoFactorEnabled?: Prisma.BoolFilter<"User"> | boolean
+  deliveryStatusNotifications?: Prisma.BoolFilter<"User"> | boolean
+  failedDeliveryNotifications?: Prisma.BoolFilter<"User"> | boolean
+  storeConnectionNotifications?: Prisma.BoolFilter<"User"> | boolean
+  language?: Prisma.StringFilter<"User"> | string
+  timeZone?: Prisma.StringFilter<"User"> | string
   reviewedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   reviewedBy?: Prisma.UuidNullableFilter<"User"> | string | null
   rejectionReason?: Prisma.StringNullableFilter<"User"> | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   merchantProfile?: Prisma.XOR<Prisma.MerchantProfileNullableScalarRelationFilter, Prisma.MerchantProfileWhereInput> | null
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestListRelationFilter
   courierProfile?: Prisma.XOR<Prisma.CourierProfileNullableScalarRelationFilter, Prisma.CourierProfileWhereInput> | null
   merchantOrders?: Prisma.MerchantOrderListRelationFilter
   parcels?: Prisma.ParcelListRelationFilter
@@ -315,6 +382,8 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   createdAssignments?: Prisma.DeliveryAssignmentListRelationFilter
   parcelStatusEvents?: Prisma.ParcelStatusEventListRelationFilter
   deliveryProofs?: Prisma.DeliveryProofListRelationFilter
+  webhookEndpoint?: Prisma.XOR<Prisma.WebhookEndpointNullableScalarRelationFilter, Prisma.WebhookEndpointWhereInput> | null
+  notifications?: Prisma.NotificationListRelationFilter
 }, "id" | "email" | "googleSubject">
 
 export type UserOrderByWithAggregationInput = {
@@ -327,6 +396,12 @@ export type UserOrderByWithAggregationInput = {
   approvalStatus?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   googleSubject?: Prisma.SortOrderInput | Prisma.SortOrder
+  twoFactorEnabled?: Prisma.SortOrder
+  deliveryStatusNotifications?: Prisma.SortOrder
+  failedDeliveryNotifications?: Prisma.SortOrder
+  storeConnectionNotifications?: Prisma.SortOrder
+  language?: Prisma.SortOrder
+  timeZone?: Prisma.SortOrder
   reviewedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   reviewedBy?: Prisma.SortOrderInput | Prisma.SortOrder
   rejectionReason?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -350,6 +425,12 @@ export type UserScalarWhereWithAggregatesInput = {
   approvalStatus?: Prisma.EnumApprovalStatusWithAggregatesFilter<"User"> | $Enums.ApprovalStatus
   isActive?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   googleSubject?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  twoFactorEnabled?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  deliveryStatusNotifications?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  failedDeliveryNotifications?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  storeConnectionNotifications?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  language?: Prisma.StringWithAggregatesFilter<"User"> | string
+  timeZone?: Prisma.StringWithAggregatesFilter<"User"> | string
   reviewedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   reviewedBy?: Prisma.UuidNullableWithAggregatesFilter<"User"> | string | null
   rejectionReason?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
@@ -367,12 +448,19 @@ export type UserCreateInput = {
   approvalStatus?: $Enums.ApprovalStatus
   isActive?: boolean
   googleSubject?: string | null
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: string
+  timeZone?: string
   reviewedAt?: Date | string | null
   reviewedBy?: string | null
   rejectionReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   merchantProfile?: Prisma.MerchantProfileCreateNestedOneWithoutUserInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestCreateNestedManyWithoutMerchantInput
   courierProfile?: Prisma.CourierProfileCreateNestedOneWithoutUserInput
   merchantOrders?: Prisma.MerchantOrderCreateNestedManyWithoutMerchantInput
   parcels?: Prisma.ParcelCreateNestedManyWithoutCustomerInput
@@ -380,6 +468,8 @@ export type UserCreateInput = {
   createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
   parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
   deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -392,12 +482,19 @@ export type UserUncheckedCreateInput = {
   approvalStatus?: $Enums.ApprovalStatus
   isActive?: boolean
   googleSubject?: string | null
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: string
+  timeZone?: string
   reviewedAt?: Date | string | null
   reviewedBy?: string | null
   rejectionReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   merchantProfile?: Prisma.MerchantProfileUncheckedCreateNestedOneWithoutUserInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUncheckedCreateNestedManyWithoutMerchantInput
   courierProfile?: Prisma.CourierProfileUncheckedCreateNestedOneWithoutUserInput
   merchantOrders?: Prisma.MerchantOrderUncheckedCreateNestedManyWithoutMerchantInput
   parcels?: Prisma.ParcelUncheckedCreateNestedManyWithoutCustomerInput
@@ -405,6 +502,8 @@ export type UserUncheckedCreateInput = {
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
 }
 
 export type UserUpdateInput = {
@@ -417,12 +516,19 @@ export type UserUpdateInput = {
   approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deliveryStatusNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  failedDeliveryNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  storeConnectionNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  timeZone?: Prisma.StringFieldUpdateOperationsInput | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   merchantProfile?: Prisma.MerchantProfileUpdateOneWithoutUserNestedInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUpdateManyWithoutMerchantNestedInput
   courierProfile?: Prisma.CourierProfileUpdateOneWithoutUserNestedInput
   merchantOrders?: Prisma.MerchantOrderUpdateManyWithoutMerchantNestedInput
   parcels?: Prisma.ParcelUpdateManyWithoutCustomerNestedInput
@@ -430,6 +536,8 @@ export type UserUpdateInput = {
   createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
   deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -442,12 +550,19 @@ export type UserUncheckedUpdateInput = {
   approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deliveryStatusNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  failedDeliveryNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  storeConnectionNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  timeZone?: Prisma.StringFieldUpdateOperationsInput | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   merchantProfile?: Prisma.MerchantProfileUncheckedUpdateOneWithoutUserNestedInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUncheckedUpdateManyWithoutMerchantNestedInput
   courierProfile?: Prisma.CourierProfileUncheckedUpdateOneWithoutUserNestedInput
   merchantOrders?: Prisma.MerchantOrderUncheckedUpdateManyWithoutMerchantNestedInput
   parcels?: Prisma.ParcelUncheckedUpdateManyWithoutCustomerNestedInput
@@ -455,6 +570,8 @@ export type UserUncheckedUpdateInput = {
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -467,6 +584,12 @@ export type UserCreateManyInput = {
   approvalStatus?: $Enums.ApprovalStatus
   isActive?: boolean
   googleSubject?: string | null
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: string
+  timeZone?: string
   reviewedAt?: Date | string | null
   reviewedBy?: string | null
   rejectionReason?: string | null
@@ -484,6 +607,12 @@ export type UserUpdateManyMutationInput = {
   approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deliveryStatusNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  failedDeliveryNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  storeConnectionNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  timeZone?: Prisma.StringFieldUpdateOperationsInput | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -501,6 +630,12 @@ export type UserUncheckedUpdateManyInput = {
   approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deliveryStatusNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  failedDeliveryNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  storeConnectionNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  timeZone?: Prisma.StringFieldUpdateOperationsInput | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -518,6 +653,12 @@ export type UserCountOrderByAggregateInput = {
   approvalStatus?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   googleSubject?: Prisma.SortOrder
+  twoFactorEnabled?: Prisma.SortOrder
+  deliveryStatusNotifications?: Prisma.SortOrder
+  failedDeliveryNotifications?: Prisma.SortOrder
+  storeConnectionNotifications?: Prisma.SortOrder
+  language?: Prisma.SortOrder
+  timeZone?: Prisma.SortOrder
   reviewedAt?: Prisma.SortOrder
   reviewedBy?: Prisma.SortOrder
   rejectionReason?: Prisma.SortOrder
@@ -535,6 +676,12 @@ export type UserMaxOrderByAggregateInput = {
   approvalStatus?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   googleSubject?: Prisma.SortOrder
+  twoFactorEnabled?: Prisma.SortOrder
+  deliveryStatusNotifications?: Prisma.SortOrder
+  failedDeliveryNotifications?: Prisma.SortOrder
+  storeConnectionNotifications?: Prisma.SortOrder
+  language?: Prisma.SortOrder
+  timeZone?: Prisma.SortOrder
   reviewedAt?: Prisma.SortOrder
   reviewedBy?: Prisma.SortOrder
   rejectionReason?: Prisma.SortOrder
@@ -552,6 +699,12 @@ export type UserMinOrderByAggregateInput = {
   approvalStatus?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
   googleSubject?: Prisma.SortOrder
+  twoFactorEnabled?: Prisma.SortOrder
+  deliveryStatusNotifications?: Prisma.SortOrder
+  failedDeliveryNotifications?: Prisma.SortOrder
+  storeConnectionNotifications?: Prisma.SortOrder
+  language?: Prisma.SortOrder
+  timeZone?: Prisma.SortOrder
   reviewedAt?: Prisma.SortOrder
   reviewedBy?: Prisma.SortOrder
   rejectionReason?: Prisma.SortOrder
@@ -669,6 +822,20 @@ export type UserUpdateOneRequiredWithoutMerchantProfileNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutMerchantProfileInput, Prisma.UserUpdateWithoutMerchantProfileInput>, Prisma.UserUncheckedUpdateWithoutMerchantProfileInput>
 }
 
+export type UserCreateNestedOneWithoutMerchantBusinessUpdateRequestsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutMerchantBusinessUpdateRequestsInput, Prisma.UserUncheckedCreateWithoutMerchantBusinessUpdateRequestsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutMerchantBusinessUpdateRequestsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutMerchantBusinessUpdateRequestsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutMerchantBusinessUpdateRequestsInput, Prisma.UserUncheckedCreateWithoutMerchantBusinessUpdateRequestsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutMerchantBusinessUpdateRequestsInput
+  upsert?: Prisma.UserUpsertWithoutMerchantBusinessUpdateRequestsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutMerchantBusinessUpdateRequestsInput, Prisma.UserUpdateWithoutMerchantBusinessUpdateRequestsInput>, Prisma.UserUncheckedUpdateWithoutMerchantBusinessUpdateRequestsInput>
+}
+
 export type UserCreateNestedOneWithoutCourierProfileInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutCourierProfileInput, Prisma.UserUncheckedCreateWithoutCourierProfileInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutCourierProfileInput
@@ -711,6 +878,34 @@ export type UserUpdateOneRequiredWithoutParcelsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutParcelsInput, Prisma.UserUpdateWithoutParcelsInput>, Prisma.UserUncheckedUpdateWithoutParcelsInput>
 }
 
+export type UserCreateNestedOneWithoutWebhookEndpointInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutWebhookEndpointInput, Prisma.UserUncheckedCreateWithoutWebhookEndpointInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutWebhookEndpointInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutWebhookEndpointNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutWebhookEndpointInput, Prisma.UserUncheckedCreateWithoutWebhookEndpointInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutWebhookEndpointInput
+  upsert?: Prisma.UserUpsertWithoutWebhookEndpointInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutWebhookEndpointInput, Prisma.UserUpdateWithoutWebhookEndpointInput>, Prisma.UserUncheckedUpdateWithoutWebhookEndpointInput>
+}
+
+export type UserCreateNestedOneWithoutNotificationsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutNotificationsInput, Prisma.UserUncheckedCreateWithoutNotificationsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutNotificationsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutNotificationsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutNotificationsInput, Prisma.UserUncheckedCreateWithoutNotificationsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutNotificationsInput
+  upsert?: Prisma.UserUpsertWithoutNotificationsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutNotificationsInput, Prisma.UserUpdateWithoutNotificationsInput>, Prisma.UserUncheckedUpdateWithoutNotificationsInput>
+}
+
 export type UserCreateWithoutCourierAssignmentsInput = {
   id?: string
   email: string
@@ -721,18 +916,27 @@ export type UserCreateWithoutCourierAssignmentsInput = {
   approvalStatus?: $Enums.ApprovalStatus
   isActive?: boolean
   googleSubject?: string | null
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: string
+  timeZone?: string
   reviewedAt?: Date | string | null
   reviewedBy?: string | null
   rejectionReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   merchantProfile?: Prisma.MerchantProfileCreateNestedOneWithoutUserInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestCreateNestedManyWithoutMerchantInput
   courierProfile?: Prisma.CourierProfileCreateNestedOneWithoutUserInput
   merchantOrders?: Prisma.MerchantOrderCreateNestedManyWithoutMerchantInput
   parcels?: Prisma.ParcelCreateNestedManyWithoutCustomerInput
   createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
   parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
   deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
 }
 
 export type UserUncheckedCreateWithoutCourierAssignmentsInput = {
@@ -745,18 +949,27 @@ export type UserUncheckedCreateWithoutCourierAssignmentsInput = {
   approvalStatus?: $Enums.ApprovalStatus
   isActive?: boolean
   googleSubject?: string | null
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: string
+  timeZone?: string
   reviewedAt?: Date | string | null
   reviewedBy?: string | null
   rejectionReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   merchantProfile?: Prisma.MerchantProfileUncheckedCreateNestedOneWithoutUserInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUncheckedCreateNestedManyWithoutMerchantInput
   courierProfile?: Prisma.CourierProfileUncheckedCreateNestedOneWithoutUserInput
   merchantOrders?: Prisma.MerchantOrderUncheckedCreateNestedManyWithoutMerchantInput
   parcels?: Prisma.ParcelUncheckedCreateNestedManyWithoutCustomerInput
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
 }
 
 export type UserCreateOrConnectWithoutCourierAssignmentsInput = {
@@ -774,18 +987,27 @@ export type UserCreateWithoutCreatedAssignmentsInput = {
   approvalStatus?: $Enums.ApprovalStatus
   isActive?: boolean
   googleSubject?: string | null
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: string
+  timeZone?: string
   reviewedAt?: Date | string | null
   reviewedBy?: string | null
   rejectionReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   merchantProfile?: Prisma.MerchantProfileCreateNestedOneWithoutUserInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestCreateNestedManyWithoutMerchantInput
   courierProfile?: Prisma.CourierProfileCreateNestedOneWithoutUserInput
   merchantOrders?: Prisma.MerchantOrderCreateNestedManyWithoutMerchantInput
   parcels?: Prisma.ParcelCreateNestedManyWithoutCustomerInput
   courierAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutCourierInput
   parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
   deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
 }
 
 export type UserUncheckedCreateWithoutCreatedAssignmentsInput = {
@@ -798,18 +1020,27 @@ export type UserUncheckedCreateWithoutCreatedAssignmentsInput = {
   approvalStatus?: $Enums.ApprovalStatus
   isActive?: boolean
   googleSubject?: string | null
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: string
+  timeZone?: string
   reviewedAt?: Date | string | null
   reviewedBy?: string | null
   rejectionReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   merchantProfile?: Prisma.MerchantProfileUncheckedCreateNestedOneWithoutUserInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUncheckedCreateNestedManyWithoutMerchantInput
   courierProfile?: Prisma.CourierProfileUncheckedCreateNestedOneWithoutUserInput
   merchantOrders?: Prisma.MerchantOrderUncheckedCreateNestedManyWithoutMerchantInput
   parcels?: Prisma.ParcelUncheckedCreateNestedManyWithoutCustomerInput
   courierAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutCourierInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
 }
 
 export type UserCreateOrConnectWithoutCreatedAssignmentsInput = {
@@ -838,18 +1069,27 @@ export type UserUpdateWithoutCourierAssignmentsInput = {
   approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deliveryStatusNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  failedDeliveryNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  storeConnectionNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  timeZone?: Prisma.StringFieldUpdateOperationsInput | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   merchantProfile?: Prisma.MerchantProfileUpdateOneWithoutUserNestedInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUpdateManyWithoutMerchantNestedInput
   courierProfile?: Prisma.CourierProfileUpdateOneWithoutUserNestedInput
   merchantOrders?: Prisma.MerchantOrderUpdateManyWithoutMerchantNestedInput
   parcels?: Prisma.ParcelUpdateManyWithoutCustomerNestedInput
   createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
   deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCourierAssignmentsInput = {
@@ -862,18 +1102,27 @@ export type UserUncheckedUpdateWithoutCourierAssignmentsInput = {
   approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deliveryStatusNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  failedDeliveryNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  storeConnectionNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  timeZone?: Prisma.StringFieldUpdateOperationsInput | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   merchantProfile?: Prisma.MerchantProfileUncheckedUpdateOneWithoutUserNestedInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUncheckedUpdateManyWithoutMerchantNestedInput
   courierProfile?: Prisma.CourierProfileUncheckedUpdateOneWithoutUserNestedInput
   merchantOrders?: Prisma.MerchantOrderUncheckedUpdateManyWithoutMerchantNestedInput
   parcels?: Prisma.ParcelUncheckedUpdateManyWithoutCustomerNestedInput
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserUpsertWithoutCreatedAssignmentsInput = {
@@ -897,18 +1146,27 @@ export type UserUpdateWithoutCreatedAssignmentsInput = {
   approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deliveryStatusNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  failedDeliveryNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  storeConnectionNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  timeZone?: Prisma.StringFieldUpdateOperationsInput | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   merchantProfile?: Prisma.MerchantProfileUpdateOneWithoutUserNestedInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUpdateManyWithoutMerchantNestedInput
   courierProfile?: Prisma.CourierProfileUpdateOneWithoutUserNestedInput
   merchantOrders?: Prisma.MerchantOrderUpdateManyWithoutMerchantNestedInput
   parcels?: Prisma.ParcelUpdateManyWithoutCustomerNestedInput
   courierAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutCourierNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
   deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCreatedAssignmentsInput = {
@@ -921,18 +1179,27 @@ export type UserUncheckedUpdateWithoutCreatedAssignmentsInput = {
   approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deliveryStatusNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  failedDeliveryNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  storeConnectionNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  timeZone?: Prisma.StringFieldUpdateOperationsInput | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   merchantProfile?: Prisma.MerchantProfileUncheckedUpdateOneWithoutUserNestedInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUncheckedUpdateManyWithoutMerchantNestedInput
   courierProfile?: Prisma.CourierProfileUncheckedUpdateOneWithoutUserNestedInput
   merchantOrders?: Prisma.MerchantOrderUncheckedUpdateManyWithoutMerchantNestedInput
   parcels?: Prisma.ParcelUncheckedUpdateManyWithoutCustomerNestedInput
   courierAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutCourierNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserCreateWithoutParcelStatusEventsInput = {
@@ -945,18 +1212,27 @@ export type UserCreateWithoutParcelStatusEventsInput = {
   approvalStatus?: $Enums.ApprovalStatus
   isActive?: boolean
   googleSubject?: string | null
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: string
+  timeZone?: string
   reviewedAt?: Date | string | null
   reviewedBy?: string | null
   rejectionReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   merchantProfile?: Prisma.MerchantProfileCreateNestedOneWithoutUserInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestCreateNestedManyWithoutMerchantInput
   courierProfile?: Prisma.CourierProfileCreateNestedOneWithoutUserInput
   merchantOrders?: Prisma.MerchantOrderCreateNestedManyWithoutMerchantInput
   parcels?: Prisma.ParcelCreateNestedManyWithoutCustomerInput
   courierAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutCourierInput
   createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
   deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
 }
 
 export type UserUncheckedCreateWithoutParcelStatusEventsInput = {
@@ -969,18 +1245,27 @@ export type UserUncheckedCreateWithoutParcelStatusEventsInput = {
   approvalStatus?: $Enums.ApprovalStatus
   isActive?: boolean
   googleSubject?: string | null
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: string
+  timeZone?: string
   reviewedAt?: Date | string | null
   reviewedBy?: string | null
   rejectionReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   merchantProfile?: Prisma.MerchantProfileUncheckedCreateNestedOneWithoutUserInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUncheckedCreateNestedManyWithoutMerchantInput
   courierProfile?: Prisma.CourierProfileUncheckedCreateNestedOneWithoutUserInput
   merchantOrders?: Prisma.MerchantOrderUncheckedCreateNestedManyWithoutMerchantInput
   parcels?: Prisma.ParcelUncheckedCreateNestedManyWithoutCustomerInput
   courierAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutCourierInput
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
 }
 
 export type UserCreateOrConnectWithoutParcelStatusEventsInput = {
@@ -1009,18 +1294,27 @@ export type UserUpdateWithoutParcelStatusEventsInput = {
   approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deliveryStatusNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  failedDeliveryNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  storeConnectionNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  timeZone?: Prisma.StringFieldUpdateOperationsInput | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   merchantProfile?: Prisma.MerchantProfileUpdateOneWithoutUserNestedInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUpdateManyWithoutMerchantNestedInput
   courierProfile?: Prisma.CourierProfileUpdateOneWithoutUserNestedInput
   merchantOrders?: Prisma.MerchantOrderUpdateManyWithoutMerchantNestedInput
   parcels?: Prisma.ParcelUpdateManyWithoutCustomerNestedInput
   courierAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutCourierNestedInput
   createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
   deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserUncheckedUpdateWithoutParcelStatusEventsInput = {
@@ -1033,18 +1327,27 @@ export type UserUncheckedUpdateWithoutParcelStatusEventsInput = {
   approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deliveryStatusNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  failedDeliveryNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  storeConnectionNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  timeZone?: Prisma.StringFieldUpdateOperationsInput | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   merchantProfile?: Prisma.MerchantProfileUncheckedUpdateOneWithoutUserNestedInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUncheckedUpdateManyWithoutMerchantNestedInput
   courierProfile?: Prisma.CourierProfileUncheckedUpdateOneWithoutUserNestedInput
   merchantOrders?: Prisma.MerchantOrderUncheckedUpdateManyWithoutMerchantNestedInput
   parcels?: Prisma.ParcelUncheckedUpdateManyWithoutCustomerNestedInput
   courierAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutCourierNestedInput
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserCreateWithoutDeliveryProofsInput = {
@@ -1057,18 +1360,27 @@ export type UserCreateWithoutDeliveryProofsInput = {
   approvalStatus?: $Enums.ApprovalStatus
   isActive?: boolean
   googleSubject?: string | null
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: string
+  timeZone?: string
   reviewedAt?: Date | string | null
   reviewedBy?: string | null
   rejectionReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   merchantProfile?: Prisma.MerchantProfileCreateNestedOneWithoutUserInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestCreateNestedManyWithoutMerchantInput
   courierProfile?: Prisma.CourierProfileCreateNestedOneWithoutUserInput
   merchantOrders?: Prisma.MerchantOrderCreateNestedManyWithoutMerchantInput
   parcels?: Prisma.ParcelCreateNestedManyWithoutCustomerInput
   courierAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutCourierInput
   createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
   parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
+  webhookEndpoint?: Prisma.WebhookEndpointCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
 }
 
 export type UserUncheckedCreateWithoutDeliveryProofsInput = {
@@ -1081,18 +1393,27 @@ export type UserUncheckedCreateWithoutDeliveryProofsInput = {
   approvalStatus?: $Enums.ApprovalStatus
   isActive?: boolean
   googleSubject?: string | null
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: string
+  timeZone?: string
   reviewedAt?: Date | string | null
   reviewedBy?: string | null
   rejectionReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   merchantProfile?: Prisma.MerchantProfileUncheckedCreateNestedOneWithoutUserInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUncheckedCreateNestedManyWithoutMerchantInput
   courierProfile?: Prisma.CourierProfileUncheckedCreateNestedOneWithoutUserInput
   merchantOrders?: Prisma.MerchantOrderUncheckedCreateNestedManyWithoutMerchantInput
   parcels?: Prisma.ParcelUncheckedCreateNestedManyWithoutCustomerInput
   courierAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutCourierInput
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
 }
 
 export type UserCreateOrConnectWithoutDeliveryProofsInput = {
@@ -1121,18 +1442,27 @@ export type UserUpdateWithoutDeliveryProofsInput = {
   approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deliveryStatusNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  failedDeliveryNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  storeConnectionNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  timeZone?: Prisma.StringFieldUpdateOperationsInput | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   merchantProfile?: Prisma.MerchantProfileUpdateOneWithoutUserNestedInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUpdateManyWithoutMerchantNestedInput
   courierProfile?: Prisma.CourierProfileUpdateOneWithoutUserNestedInput
   merchantOrders?: Prisma.MerchantOrderUpdateManyWithoutMerchantNestedInput
   parcels?: Prisma.ParcelUpdateManyWithoutCustomerNestedInput
   courierAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutCourierNestedInput
   createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDeliveryProofsInput = {
@@ -1145,18 +1475,27 @@ export type UserUncheckedUpdateWithoutDeliveryProofsInput = {
   approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deliveryStatusNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  failedDeliveryNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  storeConnectionNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  timeZone?: Prisma.StringFieldUpdateOperationsInput | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   merchantProfile?: Prisma.MerchantProfileUncheckedUpdateOneWithoutUserNestedInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUncheckedUpdateManyWithoutMerchantNestedInput
   courierProfile?: Prisma.CourierProfileUncheckedUpdateOneWithoutUserNestedInput
   merchantOrders?: Prisma.MerchantOrderUncheckedUpdateManyWithoutMerchantNestedInput
   parcels?: Prisma.ParcelUncheckedUpdateManyWithoutCustomerNestedInput
   courierAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutCourierNestedInput
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserCreateWithoutMerchantProfileInput = {
@@ -1169,11 +1508,18 @@ export type UserCreateWithoutMerchantProfileInput = {
   approvalStatus?: $Enums.ApprovalStatus
   isActive?: boolean
   googleSubject?: string | null
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: string
+  timeZone?: string
   reviewedAt?: Date | string | null
   reviewedBy?: string | null
   rejectionReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestCreateNestedManyWithoutMerchantInput
   courierProfile?: Prisma.CourierProfileCreateNestedOneWithoutUserInput
   merchantOrders?: Prisma.MerchantOrderCreateNestedManyWithoutMerchantInput
   parcels?: Prisma.ParcelCreateNestedManyWithoutCustomerInput
@@ -1181,6 +1527,8 @@ export type UserCreateWithoutMerchantProfileInput = {
   createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
   parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
   deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
 }
 
 export type UserUncheckedCreateWithoutMerchantProfileInput = {
@@ -1193,11 +1541,18 @@ export type UserUncheckedCreateWithoutMerchantProfileInput = {
   approvalStatus?: $Enums.ApprovalStatus
   isActive?: boolean
   googleSubject?: string | null
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: string
+  timeZone?: string
   reviewedAt?: Date | string | null
   reviewedBy?: string | null
   rejectionReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUncheckedCreateNestedManyWithoutMerchantInput
   courierProfile?: Prisma.CourierProfileUncheckedCreateNestedOneWithoutUserInput
   merchantOrders?: Prisma.MerchantOrderUncheckedCreateNestedManyWithoutMerchantInput
   parcels?: Prisma.ParcelUncheckedCreateNestedManyWithoutCustomerInput
@@ -1205,6 +1560,8 @@ export type UserUncheckedCreateWithoutMerchantProfileInput = {
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
 }
 
 export type UserCreateOrConnectWithoutMerchantProfileInput = {
@@ -1233,11 +1590,18 @@ export type UserUpdateWithoutMerchantProfileInput = {
   approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deliveryStatusNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  failedDeliveryNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  storeConnectionNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  timeZone?: Prisma.StringFieldUpdateOperationsInput | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUpdateManyWithoutMerchantNestedInput
   courierProfile?: Prisma.CourierProfileUpdateOneWithoutUserNestedInput
   merchantOrders?: Prisma.MerchantOrderUpdateManyWithoutMerchantNestedInput
   parcels?: Prisma.ParcelUpdateManyWithoutCustomerNestedInput
@@ -1245,6 +1609,8 @@ export type UserUpdateWithoutMerchantProfileInput = {
   createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
   deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMerchantProfileInput = {
@@ -1257,11 +1623,18 @@ export type UserUncheckedUpdateWithoutMerchantProfileInput = {
   approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deliveryStatusNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  failedDeliveryNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  storeConnectionNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  timeZone?: Prisma.StringFieldUpdateOperationsInput | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUncheckedUpdateManyWithoutMerchantNestedInput
   courierProfile?: Prisma.CourierProfileUncheckedUpdateOneWithoutUserNestedInput
   merchantOrders?: Prisma.MerchantOrderUncheckedUpdateManyWithoutMerchantNestedInput
   parcels?: Prisma.ParcelUncheckedUpdateManyWithoutCustomerNestedInput
@@ -1269,6 +1642,156 @@ export type UserUncheckedUpdateWithoutMerchantProfileInput = {
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
+}
+
+export type UserCreateWithoutMerchantBusinessUpdateRequestsInput = {
+  id?: string
+  email: string
+  fullName: string
+  phoneNumber?: string | null
+  passwordHash?: string | null
+  role?: $Enums.Role
+  approvalStatus?: $Enums.ApprovalStatus
+  isActive?: boolean
+  googleSubject?: string | null
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: string
+  timeZone?: string
+  reviewedAt?: Date | string | null
+  reviewedBy?: string | null
+  rejectionReason?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  merchantProfile?: Prisma.MerchantProfileCreateNestedOneWithoutUserInput
+  courierProfile?: Prisma.CourierProfileCreateNestedOneWithoutUserInput
+  merchantOrders?: Prisma.MerchantOrderCreateNestedManyWithoutMerchantInput
+  parcels?: Prisma.ParcelCreateNestedManyWithoutCustomerInput
+  courierAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutCourierInput
+  createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
+  deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
+}
+
+export type UserUncheckedCreateWithoutMerchantBusinessUpdateRequestsInput = {
+  id?: string
+  email: string
+  fullName: string
+  phoneNumber?: string | null
+  passwordHash?: string | null
+  role?: $Enums.Role
+  approvalStatus?: $Enums.ApprovalStatus
+  isActive?: boolean
+  googleSubject?: string | null
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: string
+  timeZone?: string
+  reviewedAt?: Date | string | null
+  reviewedBy?: string | null
+  rejectionReason?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  merchantProfile?: Prisma.MerchantProfileUncheckedCreateNestedOneWithoutUserInput
+  courierProfile?: Prisma.CourierProfileUncheckedCreateNestedOneWithoutUserInput
+  merchantOrders?: Prisma.MerchantOrderUncheckedCreateNestedManyWithoutMerchantInput
+  parcels?: Prisma.ParcelUncheckedCreateNestedManyWithoutCustomerInput
+  courierAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutCourierInput
+  createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
+  deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
+}
+
+export type UserCreateOrConnectWithoutMerchantBusinessUpdateRequestsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutMerchantBusinessUpdateRequestsInput, Prisma.UserUncheckedCreateWithoutMerchantBusinessUpdateRequestsInput>
+}
+
+export type UserUpsertWithoutMerchantBusinessUpdateRequestsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutMerchantBusinessUpdateRequestsInput, Prisma.UserUncheckedUpdateWithoutMerchantBusinessUpdateRequestsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutMerchantBusinessUpdateRequestsInput, Prisma.UserUncheckedCreateWithoutMerchantBusinessUpdateRequestsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutMerchantBusinessUpdateRequestsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutMerchantBusinessUpdateRequestsInput, Prisma.UserUncheckedUpdateWithoutMerchantBusinessUpdateRequestsInput>
+}
+
+export type UserUpdateWithoutMerchantBusinessUpdateRequestsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deliveryStatusNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  failedDeliveryNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  storeConnectionNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  timeZone?: Prisma.StringFieldUpdateOperationsInput | string
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  merchantProfile?: Prisma.MerchantProfileUpdateOneWithoutUserNestedInput
+  courierProfile?: Prisma.CourierProfileUpdateOneWithoutUserNestedInput
+  merchantOrders?: Prisma.MerchantOrderUpdateManyWithoutMerchantNestedInput
+  parcels?: Prisma.ParcelUpdateManyWithoutCustomerNestedInput
+  courierAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutCourierNestedInput
+  createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
+  deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
+}
+
+export type UserUncheckedUpdateWithoutMerchantBusinessUpdateRequestsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deliveryStatusNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  failedDeliveryNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  storeConnectionNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  timeZone?: Prisma.StringFieldUpdateOperationsInput | string
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  merchantProfile?: Prisma.MerchantProfileUncheckedUpdateOneWithoutUserNestedInput
+  courierProfile?: Prisma.CourierProfileUncheckedUpdateOneWithoutUserNestedInput
+  merchantOrders?: Prisma.MerchantOrderUncheckedUpdateManyWithoutMerchantNestedInput
+  parcels?: Prisma.ParcelUncheckedUpdateManyWithoutCustomerNestedInput
+  courierAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutCourierNestedInput
+  createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
+  deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserCreateWithoutCourierProfileInput = {
@@ -1281,18 +1804,27 @@ export type UserCreateWithoutCourierProfileInput = {
   approvalStatus?: $Enums.ApprovalStatus
   isActive?: boolean
   googleSubject?: string | null
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: string
+  timeZone?: string
   reviewedAt?: Date | string | null
   reviewedBy?: string | null
   rejectionReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   merchantProfile?: Prisma.MerchantProfileCreateNestedOneWithoutUserInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestCreateNestedManyWithoutMerchantInput
   merchantOrders?: Prisma.MerchantOrderCreateNestedManyWithoutMerchantInput
   parcels?: Prisma.ParcelCreateNestedManyWithoutCustomerInput
   courierAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutCourierInput
   createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
   parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
   deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
 }
 
 export type UserUncheckedCreateWithoutCourierProfileInput = {
@@ -1305,18 +1837,27 @@ export type UserUncheckedCreateWithoutCourierProfileInput = {
   approvalStatus?: $Enums.ApprovalStatus
   isActive?: boolean
   googleSubject?: string | null
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: string
+  timeZone?: string
   reviewedAt?: Date | string | null
   reviewedBy?: string | null
   rejectionReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   merchantProfile?: Prisma.MerchantProfileUncheckedCreateNestedOneWithoutUserInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUncheckedCreateNestedManyWithoutMerchantInput
   merchantOrders?: Prisma.MerchantOrderUncheckedCreateNestedManyWithoutMerchantInput
   parcels?: Prisma.ParcelUncheckedCreateNestedManyWithoutCustomerInput
   courierAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutCourierInput
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
 }
 
 export type UserCreateOrConnectWithoutCourierProfileInput = {
@@ -1345,18 +1886,27 @@ export type UserUpdateWithoutCourierProfileInput = {
   approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deliveryStatusNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  failedDeliveryNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  storeConnectionNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  timeZone?: Prisma.StringFieldUpdateOperationsInput | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   merchantProfile?: Prisma.MerchantProfileUpdateOneWithoutUserNestedInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUpdateManyWithoutMerchantNestedInput
   merchantOrders?: Prisma.MerchantOrderUpdateManyWithoutMerchantNestedInput
   parcels?: Prisma.ParcelUpdateManyWithoutCustomerNestedInput
   courierAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutCourierNestedInput
   createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
   deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCourierProfileInput = {
@@ -1369,18 +1919,27 @@ export type UserUncheckedUpdateWithoutCourierProfileInput = {
   approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deliveryStatusNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  failedDeliveryNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  storeConnectionNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  timeZone?: Prisma.StringFieldUpdateOperationsInput | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   merchantProfile?: Prisma.MerchantProfileUncheckedUpdateOneWithoutUserNestedInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUncheckedUpdateManyWithoutMerchantNestedInput
   merchantOrders?: Prisma.MerchantOrderUncheckedUpdateManyWithoutMerchantNestedInput
   parcels?: Prisma.ParcelUncheckedUpdateManyWithoutCustomerNestedInput
   courierAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutCourierNestedInput
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserCreateWithoutMerchantOrdersInput = {
@@ -1393,18 +1952,27 @@ export type UserCreateWithoutMerchantOrdersInput = {
   approvalStatus?: $Enums.ApprovalStatus
   isActive?: boolean
   googleSubject?: string | null
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: string
+  timeZone?: string
   reviewedAt?: Date | string | null
   reviewedBy?: string | null
   rejectionReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   merchantProfile?: Prisma.MerchantProfileCreateNestedOneWithoutUserInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestCreateNestedManyWithoutMerchantInput
   courierProfile?: Prisma.CourierProfileCreateNestedOneWithoutUserInput
   parcels?: Prisma.ParcelCreateNestedManyWithoutCustomerInput
   courierAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutCourierInput
   createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
   parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
   deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
 }
 
 export type UserUncheckedCreateWithoutMerchantOrdersInput = {
@@ -1417,18 +1985,27 @@ export type UserUncheckedCreateWithoutMerchantOrdersInput = {
   approvalStatus?: $Enums.ApprovalStatus
   isActive?: boolean
   googleSubject?: string | null
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: string
+  timeZone?: string
   reviewedAt?: Date | string | null
   reviewedBy?: string | null
   rejectionReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   merchantProfile?: Prisma.MerchantProfileUncheckedCreateNestedOneWithoutUserInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUncheckedCreateNestedManyWithoutMerchantInput
   courierProfile?: Prisma.CourierProfileUncheckedCreateNestedOneWithoutUserInput
   parcels?: Prisma.ParcelUncheckedCreateNestedManyWithoutCustomerInput
   courierAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutCourierInput
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
 }
 
 export type UserCreateOrConnectWithoutMerchantOrdersInput = {
@@ -1457,18 +2034,27 @@ export type UserUpdateWithoutMerchantOrdersInput = {
   approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deliveryStatusNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  failedDeliveryNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  storeConnectionNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  timeZone?: Prisma.StringFieldUpdateOperationsInput | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   merchantProfile?: Prisma.MerchantProfileUpdateOneWithoutUserNestedInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUpdateManyWithoutMerchantNestedInput
   courierProfile?: Prisma.CourierProfileUpdateOneWithoutUserNestedInput
   parcels?: Prisma.ParcelUpdateManyWithoutCustomerNestedInput
   courierAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutCourierNestedInput
   createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
   deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMerchantOrdersInput = {
@@ -1481,18 +2067,27 @@ export type UserUncheckedUpdateWithoutMerchantOrdersInput = {
   approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deliveryStatusNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  failedDeliveryNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  storeConnectionNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  timeZone?: Prisma.StringFieldUpdateOperationsInput | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   merchantProfile?: Prisma.MerchantProfileUncheckedUpdateOneWithoutUserNestedInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUncheckedUpdateManyWithoutMerchantNestedInput
   courierProfile?: Prisma.CourierProfileUncheckedUpdateOneWithoutUserNestedInput
   parcels?: Prisma.ParcelUncheckedUpdateManyWithoutCustomerNestedInput
   courierAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutCourierNestedInput
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserCreateWithoutParcelsInput = {
@@ -1505,18 +2100,27 @@ export type UserCreateWithoutParcelsInput = {
   approvalStatus?: $Enums.ApprovalStatus
   isActive?: boolean
   googleSubject?: string | null
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: string
+  timeZone?: string
   reviewedAt?: Date | string | null
   reviewedBy?: string | null
   rejectionReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   merchantProfile?: Prisma.MerchantProfileCreateNestedOneWithoutUserInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestCreateNestedManyWithoutMerchantInput
   courierProfile?: Prisma.CourierProfileCreateNestedOneWithoutUserInput
   merchantOrders?: Prisma.MerchantOrderCreateNestedManyWithoutMerchantInput
   courierAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutCourierInput
   createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
   parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
   deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
 }
 
 export type UserUncheckedCreateWithoutParcelsInput = {
@@ -1529,18 +2133,27 @@ export type UserUncheckedCreateWithoutParcelsInput = {
   approvalStatus?: $Enums.ApprovalStatus
   isActive?: boolean
   googleSubject?: string | null
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: string
+  timeZone?: string
   reviewedAt?: Date | string | null
   reviewedBy?: string | null
   rejectionReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   merchantProfile?: Prisma.MerchantProfileUncheckedCreateNestedOneWithoutUserInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUncheckedCreateNestedManyWithoutMerchantInput
   courierProfile?: Prisma.CourierProfileUncheckedCreateNestedOneWithoutUserInput
   merchantOrders?: Prisma.MerchantOrderUncheckedCreateNestedManyWithoutMerchantInput
   courierAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutCourierInput
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedCreateNestedOneWithoutMerchantInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
 }
 
 export type UserCreateOrConnectWithoutParcelsInput = {
@@ -1569,18 +2182,27 @@ export type UserUpdateWithoutParcelsInput = {
   approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deliveryStatusNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  failedDeliveryNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  storeConnectionNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  timeZone?: Prisma.StringFieldUpdateOperationsInput | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   merchantProfile?: Prisma.MerchantProfileUpdateOneWithoutUserNestedInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUpdateManyWithoutMerchantNestedInput
   courierProfile?: Prisma.CourierProfileUpdateOneWithoutUserNestedInput
   merchantOrders?: Prisma.MerchantOrderUpdateManyWithoutMerchantNestedInput
   courierAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutCourierNestedInput
   createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
   deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
 }
 
 export type UserUncheckedUpdateWithoutParcelsInput = {
@@ -1593,18 +2215,323 @@ export type UserUncheckedUpdateWithoutParcelsInput = {
   approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deliveryStatusNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  failedDeliveryNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  storeConnectionNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  timeZone?: Prisma.StringFieldUpdateOperationsInput | string
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   merchantProfile?: Prisma.MerchantProfileUncheckedUpdateOneWithoutUserNestedInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUncheckedUpdateManyWithoutMerchantNestedInput
   courierProfile?: Prisma.CourierProfileUncheckedUpdateOneWithoutUserNestedInput
   merchantOrders?: Prisma.MerchantOrderUncheckedUpdateManyWithoutMerchantNestedInput
   courierAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutCourierNestedInput
   createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
   parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
   deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedUpdateOneWithoutMerchantNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
+}
+
+export type UserCreateWithoutWebhookEndpointInput = {
+  id?: string
+  email: string
+  fullName: string
+  phoneNumber?: string | null
+  passwordHash?: string | null
+  role?: $Enums.Role
+  approvalStatus?: $Enums.ApprovalStatus
+  isActive?: boolean
+  googleSubject?: string | null
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: string
+  timeZone?: string
+  reviewedAt?: Date | string | null
+  reviewedBy?: string | null
+  rejectionReason?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  merchantProfile?: Prisma.MerchantProfileCreateNestedOneWithoutUserInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestCreateNestedManyWithoutMerchantInput
+  courierProfile?: Prisma.CourierProfileCreateNestedOneWithoutUserInput
+  merchantOrders?: Prisma.MerchantOrderCreateNestedManyWithoutMerchantInput
+  parcels?: Prisma.ParcelCreateNestedManyWithoutCustomerInput
+  courierAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutCourierInput
+  createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
+  deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
+}
+
+export type UserUncheckedCreateWithoutWebhookEndpointInput = {
+  id?: string
+  email: string
+  fullName: string
+  phoneNumber?: string | null
+  passwordHash?: string | null
+  role?: $Enums.Role
+  approvalStatus?: $Enums.ApprovalStatus
+  isActive?: boolean
+  googleSubject?: string | null
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: string
+  timeZone?: string
+  reviewedAt?: Date | string | null
+  reviewedBy?: string | null
+  rejectionReason?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  merchantProfile?: Prisma.MerchantProfileUncheckedCreateNestedOneWithoutUserInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUncheckedCreateNestedManyWithoutMerchantInput
+  courierProfile?: Prisma.CourierProfileUncheckedCreateNestedOneWithoutUserInput
+  merchantOrders?: Prisma.MerchantOrderUncheckedCreateNestedManyWithoutMerchantInput
+  parcels?: Prisma.ParcelUncheckedCreateNestedManyWithoutCustomerInput
+  courierAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutCourierInput
+  createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
+  deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
+}
+
+export type UserCreateOrConnectWithoutWebhookEndpointInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutWebhookEndpointInput, Prisma.UserUncheckedCreateWithoutWebhookEndpointInput>
+}
+
+export type UserUpsertWithoutWebhookEndpointInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutWebhookEndpointInput, Prisma.UserUncheckedUpdateWithoutWebhookEndpointInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutWebhookEndpointInput, Prisma.UserUncheckedCreateWithoutWebhookEndpointInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutWebhookEndpointInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutWebhookEndpointInput, Prisma.UserUncheckedUpdateWithoutWebhookEndpointInput>
+}
+
+export type UserUpdateWithoutWebhookEndpointInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deliveryStatusNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  failedDeliveryNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  storeConnectionNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  timeZone?: Prisma.StringFieldUpdateOperationsInput | string
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  merchantProfile?: Prisma.MerchantProfileUpdateOneWithoutUserNestedInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUpdateManyWithoutMerchantNestedInput
+  courierProfile?: Prisma.CourierProfileUpdateOneWithoutUserNestedInput
+  merchantOrders?: Prisma.MerchantOrderUpdateManyWithoutMerchantNestedInput
+  parcels?: Prisma.ParcelUpdateManyWithoutCustomerNestedInput
+  courierAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutCourierNestedInput
+  createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
+  deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
+}
+
+export type UserUncheckedUpdateWithoutWebhookEndpointInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deliveryStatusNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  failedDeliveryNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  storeConnectionNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  timeZone?: Prisma.StringFieldUpdateOperationsInput | string
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  merchantProfile?: Prisma.MerchantProfileUncheckedUpdateOneWithoutUserNestedInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUncheckedUpdateManyWithoutMerchantNestedInput
+  courierProfile?: Prisma.CourierProfileUncheckedUpdateOneWithoutUserNestedInput
+  merchantOrders?: Prisma.MerchantOrderUncheckedUpdateManyWithoutMerchantNestedInput
+  parcels?: Prisma.ParcelUncheckedUpdateManyWithoutCustomerNestedInput
+  courierAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutCourierNestedInput
+  createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
+  deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
+}
+
+export type UserCreateWithoutNotificationsInput = {
+  id?: string
+  email: string
+  fullName: string
+  phoneNumber?: string | null
+  passwordHash?: string | null
+  role?: $Enums.Role
+  approvalStatus?: $Enums.ApprovalStatus
+  isActive?: boolean
+  googleSubject?: string | null
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: string
+  timeZone?: string
+  reviewedAt?: Date | string | null
+  reviewedBy?: string | null
+  rejectionReason?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  merchantProfile?: Prisma.MerchantProfileCreateNestedOneWithoutUserInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestCreateNestedManyWithoutMerchantInput
+  courierProfile?: Prisma.CourierProfileCreateNestedOneWithoutUserInput
+  merchantOrders?: Prisma.MerchantOrderCreateNestedManyWithoutMerchantInput
+  parcels?: Prisma.ParcelCreateNestedManyWithoutCustomerInput
+  courierAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutCourierInput
+  createdAssignments?: Prisma.DeliveryAssignmentCreateNestedManyWithoutAssignedByInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventCreateNestedManyWithoutActorInput
+  deliveryProofs?: Prisma.DeliveryProofCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointCreateNestedOneWithoutMerchantInput
+}
+
+export type UserUncheckedCreateWithoutNotificationsInput = {
+  id?: string
+  email: string
+  fullName: string
+  phoneNumber?: string | null
+  passwordHash?: string | null
+  role?: $Enums.Role
+  approvalStatus?: $Enums.ApprovalStatus
+  isActive?: boolean
+  googleSubject?: string | null
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: string
+  timeZone?: string
+  reviewedAt?: Date | string | null
+  reviewedBy?: string | null
+  rejectionReason?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  merchantProfile?: Prisma.MerchantProfileUncheckedCreateNestedOneWithoutUserInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUncheckedCreateNestedManyWithoutMerchantInput
+  courierProfile?: Prisma.CourierProfileUncheckedCreateNestedOneWithoutUserInput
+  merchantOrders?: Prisma.MerchantOrderUncheckedCreateNestedManyWithoutMerchantInput
+  parcels?: Prisma.ParcelUncheckedCreateNestedManyWithoutCustomerInput
+  courierAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutCourierInput
+  createdAssignments?: Prisma.DeliveryAssignmentUncheckedCreateNestedManyWithoutAssignedByInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedCreateNestedManyWithoutActorInput
+  deliveryProofs?: Prisma.DeliveryProofUncheckedCreateNestedManyWithoutCourierInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedCreateNestedOneWithoutMerchantInput
+}
+
+export type UserCreateOrConnectWithoutNotificationsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutNotificationsInput, Prisma.UserUncheckedCreateWithoutNotificationsInput>
+}
+
+export type UserUpsertWithoutNotificationsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutNotificationsInput, Prisma.UserUncheckedUpdateWithoutNotificationsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutNotificationsInput, Prisma.UserUncheckedCreateWithoutNotificationsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutNotificationsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutNotificationsInput, Prisma.UserUncheckedUpdateWithoutNotificationsInput>
+}
+
+export type UserUpdateWithoutNotificationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deliveryStatusNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  failedDeliveryNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  storeConnectionNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  timeZone?: Prisma.StringFieldUpdateOperationsInput | string
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  merchantProfile?: Prisma.MerchantProfileUpdateOneWithoutUserNestedInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUpdateManyWithoutMerchantNestedInput
+  courierProfile?: Prisma.CourierProfileUpdateOneWithoutUserNestedInput
+  merchantOrders?: Prisma.MerchantOrderUpdateManyWithoutMerchantNestedInput
+  parcels?: Prisma.ParcelUpdateManyWithoutCustomerNestedInput
+  courierAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutCourierNestedInput
+  createdAssignments?: Prisma.DeliveryAssignmentUpdateManyWithoutAssignedByNestedInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUpdateManyWithoutActorNestedInput
+  deliveryProofs?: Prisma.DeliveryProofUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUpdateOneWithoutMerchantNestedInput
+}
+
+export type UserUncheckedUpdateWithoutNotificationsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  fullName?: Prisma.StringFieldUpdateOperationsInput | string
+  phoneNumber?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  passwordHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  role?: Prisma.EnumRoleFieldUpdateOperationsInput | $Enums.Role
+  approvalStatus?: Prisma.EnumApprovalStatusFieldUpdateOperationsInput | $Enums.ApprovalStatus
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  googleSubject?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  twoFactorEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  deliveryStatusNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  failedDeliveryNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  storeConnectionNotifications?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  timeZone?: Prisma.StringFieldUpdateOperationsInput | string
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  rejectionReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  merchantProfile?: Prisma.MerchantProfileUncheckedUpdateOneWithoutUserNestedInput
+  merchantBusinessUpdateRequests?: Prisma.MerchantBusinessUpdateRequestUncheckedUpdateManyWithoutMerchantNestedInput
+  courierProfile?: Prisma.CourierProfileUncheckedUpdateOneWithoutUserNestedInput
+  merchantOrders?: Prisma.MerchantOrderUncheckedUpdateManyWithoutMerchantNestedInput
+  parcels?: Prisma.ParcelUncheckedUpdateManyWithoutCustomerNestedInput
+  courierAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutCourierNestedInput
+  createdAssignments?: Prisma.DeliveryAssignmentUncheckedUpdateManyWithoutAssignedByNestedInput
+  parcelStatusEvents?: Prisma.ParcelStatusEventUncheckedUpdateManyWithoutActorNestedInput
+  deliveryProofs?: Prisma.DeliveryProofUncheckedUpdateManyWithoutCourierNestedInput
+  webhookEndpoint?: Prisma.WebhookEndpointUncheckedUpdateOneWithoutMerchantNestedInput
 }
 
 
@@ -1613,21 +2540,25 @@ export type UserUncheckedUpdateWithoutParcelsInput = {
  */
 
 export type UserCountOutputType = {
+  merchantBusinessUpdateRequests: number
   merchantOrders: number
   parcels: number
   courierAssignments: number
   createdAssignments: number
   parcelStatusEvents: number
   deliveryProofs: number
+  notifications: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  merchantBusinessUpdateRequests?: boolean | UserCountOutputTypeCountMerchantBusinessUpdateRequestsArgs
   merchantOrders?: boolean | UserCountOutputTypeCountMerchantOrdersArgs
   parcels?: boolean | UserCountOutputTypeCountParcelsArgs
   courierAssignments?: boolean | UserCountOutputTypeCountCourierAssignmentsArgs
   createdAssignments?: boolean | UserCountOutputTypeCountCreatedAssignmentsArgs
   parcelStatusEvents?: boolean | UserCountOutputTypeCountParcelStatusEventsArgs
   deliveryProofs?: boolean | UserCountOutputTypeCountDeliveryProofsArgs
+  notifications?: boolean | UserCountOutputTypeCountNotificationsArgs
 }
 
 /**
@@ -1638,6 +2569,13 @@ export type UserCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensi
    * Select specific fields to fetch from the UserCountOutputType
    */
   select?: Prisma.UserCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountMerchantBusinessUpdateRequestsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.MerchantBusinessUpdateRequestWhereInput
 }
 
 /**
@@ -1682,6 +2620,13 @@ export type UserCountOutputTypeCountDeliveryProofsArgs<ExtArgs extends runtime.T
   where?: Prisma.DeliveryProofWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountNotificationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.NotificationWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1693,12 +2638,19 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   approvalStatus?: boolean
   isActive?: boolean
   googleSubject?: boolean
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: boolean
+  timeZone?: boolean
   reviewedAt?: boolean
   reviewedBy?: boolean
   rejectionReason?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   merchantProfile?: boolean | Prisma.User$merchantProfileArgs<ExtArgs>
+  merchantBusinessUpdateRequests?: boolean | Prisma.User$merchantBusinessUpdateRequestsArgs<ExtArgs>
   courierProfile?: boolean | Prisma.User$courierProfileArgs<ExtArgs>
   merchantOrders?: boolean | Prisma.User$merchantOrdersArgs<ExtArgs>
   parcels?: boolean | Prisma.User$parcelsArgs<ExtArgs>
@@ -1706,6 +2658,8 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   createdAssignments?: boolean | Prisma.User$createdAssignmentsArgs<ExtArgs>
   parcelStatusEvents?: boolean | Prisma.User$parcelStatusEventsArgs<ExtArgs>
   deliveryProofs?: boolean | Prisma.User$deliveryProofsArgs<ExtArgs>
+  webhookEndpoint?: boolean | Prisma.User$webhookEndpointArgs<ExtArgs>
+  notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -1719,6 +2673,12 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   approvalStatus?: boolean
   isActive?: boolean
   googleSubject?: boolean
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: boolean
+  timeZone?: boolean
   reviewedAt?: boolean
   reviewedBy?: boolean
   rejectionReason?: boolean
@@ -1736,6 +2696,12 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   approvalStatus?: boolean
   isActive?: boolean
   googleSubject?: boolean
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: boolean
+  timeZone?: boolean
   reviewedAt?: boolean
   reviewedBy?: boolean
   rejectionReason?: boolean
@@ -1753,6 +2719,12 @@ export type UserSelectScalar = {
   approvalStatus?: boolean
   isActive?: boolean
   googleSubject?: boolean
+  twoFactorEnabled?: boolean
+  deliveryStatusNotifications?: boolean
+  failedDeliveryNotifications?: boolean
+  storeConnectionNotifications?: boolean
+  language?: boolean
+  timeZone?: boolean
   reviewedAt?: boolean
   reviewedBy?: boolean
   rejectionReason?: boolean
@@ -1760,9 +2732,10 @@ export type UserSelectScalar = {
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "fullName" | "phoneNumber" | "passwordHash" | "role" | "approvalStatus" | "isActive" | "googleSubject" | "reviewedAt" | "reviewedBy" | "rejectionReason" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "fullName" | "phoneNumber" | "passwordHash" | "role" | "approvalStatus" | "isActive" | "googleSubject" | "twoFactorEnabled" | "deliveryStatusNotifications" | "failedDeliveryNotifications" | "storeConnectionNotifications" | "language" | "timeZone" | "reviewedAt" | "reviewedBy" | "rejectionReason" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   merchantProfile?: boolean | Prisma.User$merchantProfileArgs<ExtArgs>
+  merchantBusinessUpdateRequests?: boolean | Prisma.User$merchantBusinessUpdateRequestsArgs<ExtArgs>
   courierProfile?: boolean | Prisma.User$courierProfileArgs<ExtArgs>
   merchantOrders?: boolean | Prisma.User$merchantOrdersArgs<ExtArgs>
   parcels?: boolean | Prisma.User$parcelsArgs<ExtArgs>
@@ -1770,6 +2743,8 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   createdAssignments?: boolean | Prisma.User$createdAssignmentsArgs<ExtArgs>
   parcelStatusEvents?: boolean | Prisma.User$parcelStatusEventsArgs<ExtArgs>
   deliveryProofs?: boolean | Prisma.User$deliveryProofsArgs<ExtArgs>
+  webhookEndpoint?: boolean | Prisma.User$webhookEndpointArgs<ExtArgs>
+  notifications?: boolean | Prisma.User$notificationsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1779,6 +2754,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   name: "User"
   objects: {
     merchantProfile: Prisma.$MerchantProfilePayload<ExtArgs> | null
+    merchantBusinessUpdateRequests: Prisma.$MerchantBusinessUpdateRequestPayload<ExtArgs>[]
     courierProfile: Prisma.$CourierProfilePayload<ExtArgs> | null
     merchantOrders: Prisma.$MerchantOrderPayload<ExtArgs>[]
     parcels: Prisma.$ParcelPayload<ExtArgs>[]
@@ -1786,6 +2762,8 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     createdAssignments: Prisma.$DeliveryAssignmentPayload<ExtArgs>[]
     parcelStatusEvents: Prisma.$ParcelStatusEventPayload<ExtArgs>[]
     deliveryProofs: Prisma.$DeliveryProofPayload<ExtArgs>[]
+    webhookEndpoint: Prisma.$WebhookEndpointPayload<ExtArgs> | null
+    notifications: Prisma.$NotificationPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1797,6 +2775,12 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     approvalStatus: $Enums.ApprovalStatus
     isActive: boolean
     googleSubject: string | null
+    twoFactorEnabled: boolean
+    deliveryStatusNotifications: boolean
+    failedDeliveryNotifications: boolean
+    storeConnectionNotifications: boolean
+    language: string
+    timeZone: string
     reviewedAt: Date | null
     reviewedBy: string | null
     rejectionReason: string | null
@@ -2197,6 +3181,7 @@ readonly fields: UserFieldRefs;
 export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   merchantProfile<T extends Prisma.User$merchantProfileArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$merchantProfileArgs<ExtArgs>>): Prisma.Prisma__MerchantProfileClient<runtime.Types.Result.GetResult<Prisma.$MerchantProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  merchantBusinessUpdateRequests<T extends Prisma.User$merchantBusinessUpdateRequestsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$merchantBusinessUpdateRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MerchantBusinessUpdateRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   courierProfile<T extends Prisma.User$courierProfileArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$courierProfileArgs<ExtArgs>>): Prisma.Prisma__CourierProfileClient<runtime.Types.Result.GetResult<Prisma.$CourierProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   merchantOrders<T extends Prisma.User$merchantOrdersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$merchantOrdersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MerchantOrderPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   parcels<T extends Prisma.User$parcelsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$parcelsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ParcelPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -2204,6 +3189,8 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   createdAssignments<T extends Prisma.User$createdAssignmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$createdAssignmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DeliveryAssignmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   parcelStatusEvents<T extends Prisma.User$parcelStatusEventsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$parcelStatusEventsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ParcelStatusEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   deliveryProofs<T extends Prisma.User$deliveryProofsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$deliveryProofsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DeliveryProofPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  webhookEndpoint<T extends Prisma.User$webhookEndpointArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$webhookEndpointArgs<ExtArgs>>): Prisma.Prisma__WebhookEndpointClient<runtime.Types.Result.GetResult<Prisma.$WebhookEndpointPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  notifications<T extends Prisma.User$notificationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$notificationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$NotificationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2242,6 +3229,12 @@ export interface UserFieldRefs {
   readonly approvalStatus: Prisma.FieldRef<"User", 'ApprovalStatus'>
   readonly isActive: Prisma.FieldRef<"User", 'Boolean'>
   readonly googleSubject: Prisma.FieldRef<"User", 'String'>
+  readonly twoFactorEnabled: Prisma.FieldRef<"User", 'Boolean'>
+  readonly deliveryStatusNotifications: Prisma.FieldRef<"User", 'Boolean'>
+  readonly failedDeliveryNotifications: Prisma.FieldRef<"User", 'Boolean'>
+  readonly storeConnectionNotifications: Prisma.FieldRef<"User", 'Boolean'>
+  readonly language: Prisma.FieldRef<"User", 'String'>
+  readonly timeZone: Prisma.FieldRef<"User", 'String'>
   readonly reviewedAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly reviewedBy: Prisma.FieldRef<"User", 'String'>
   readonly rejectionReason: Prisma.FieldRef<"User", 'String'>
@@ -2659,6 +3652,30 @@ export type User$merchantProfileArgs<ExtArgs extends runtime.Types.Extensions.In
 }
 
 /**
+ * User.merchantBusinessUpdateRequests
+ */
+export type User$merchantBusinessUpdateRequestsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the MerchantBusinessUpdateRequest
+   */
+  select?: Prisma.MerchantBusinessUpdateRequestSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the MerchantBusinessUpdateRequest
+   */
+  omit?: Prisma.MerchantBusinessUpdateRequestOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MerchantBusinessUpdateRequestInclude<ExtArgs> | null
+  where?: Prisma.MerchantBusinessUpdateRequestWhereInput
+  orderBy?: Prisma.MerchantBusinessUpdateRequestOrderByWithRelationInput | Prisma.MerchantBusinessUpdateRequestOrderByWithRelationInput[]
+  cursor?: Prisma.MerchantBusinessUpdateRequestWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.MerchantBusinessUpdateRequestScalarFieldEnum | Prisma.MerchantBusinessUpdateRequestScalarFieldEnum[]
+}
+
+/**
  * User.courierProfile
  */
 export type User$courierProfileArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2819,6 +3836,49 @@ export type User$deliveryProofsArgs<ExtArgs extends runtime.Types.Extensions.Int
   take?: number
   skip?: number
   distinct?: Prisma.DeliveryProofScalarFieldEnum | Prisma.DeliveryProofScalarFieldEnum[]
+}
+
+/**
+ * User.webhookEndpoint
+ */
+export type User$webhookEndpointArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the WebhookEndpoint
+   */
+  select?: Prisma.WebhookEndpointSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the WebhookEndpoint
+   */
+  omit?: Prisma.WebhookEndpointOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.WebhookEndpointInclude<ExtArgs> | null
+  where?: Prisma.WebhookEndpointWhereInput
+}
+
+/**
+ * User.notifications
+ */
+export type User$notificationsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Notification
+   */
+  select?: Prisma.NotificationSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Notification
+   */
+  omit?: Prisma.NotificationOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.NotificationInclude<ExtArgs> | null
+  where?: Prisma.NotificationWhereInput
+  orderBy?: Prisma.NotificationOrderByWithRelationInput | Prisma.NotificationOrderByWithRelationInput[]
+  cursor?: Prisma.NotificationWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.NotificationScalarFieldEnum | Prisma.NotificationScalarFieldEnum[]
 }
 
 /**

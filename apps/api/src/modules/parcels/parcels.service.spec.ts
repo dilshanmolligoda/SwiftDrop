@@ -26,8 +26,10 @@ describe('ParcelsService', () => {
     const mockRepository = {
       createParcel: jest.fn(),
       findCustomerParcels: jest.fn(),
+      findCustomerTrackingParcels: jest.fn(),
       findCustomerParcelById: jest.fn(),
       getCustomerMetrics: jest.fn(),
+      cancelParcel: jest.fn(),
     };
 
     const mockPricingService = {
@@ -98,7 +100,7 @@ describe('ParcelsService', () => {
           customerId: mockUser.id,
           senderName: mockUser.email,
           costLkr: 350,
-          trackingNumber: expect.stringMatching(/^SD-\d{5}$/),
+          trackingNumber: expect.stringMatching(/^SD-[A-F0-9]{32}$/),
         }),
       );
       expect(result).toEqual(mockCreated);
@@ -136,6 +138,17 @@ describe('ParcelsService', () => {
       expect(result).toHaveLength(1);
       expect(result[0].trackingNumber).toBe('SD-24819');
     });
+  });
+
+  it('delegates the tracking snapshot to a separate customer-scoped read contract', async () => {
+    repository.findCustomerTrackingParcels.mockResolvedValue([]);
+    await expect(service.listForCustomerTracking(mockUser.id)).resolves.toEqual(
+      [],
+    );
+    expect(repository.findCustomerTrackingParcels).toHaveBeenCalledWith(
+      mockUser.id,
+    );
+    expect(repository.findCustomerParcels).not.toHaveBeenCalled();
   });
 
   describe('getMetrics', () => {
@@ -189,6 +202,69 @@ describe('ParcelsService', () => {
       await expect(
         service.getById(mockUser.id, 'non-existent'),
       ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('cancel', () => {
+    it('cancels delivery when status is PENDING and returns cancelled parcel', async () => {
+      const mockParcel = {
+        id: 'parcel-1',
+        customerId: mockUser.id,
+        trackingNumber: 'SD-CANCEL123',
+        senderName: 'Sender',
+        senderAddress: 'Address 1',
+        recipientName: 'Recipient',
+        recipientAddress: 'Address 2',
+        recipientPhone: '+94770000000',
+        packageSize: PackageSize.SMALL,
+        weightKg: 1.0,
+        costLkr: 350,
+        status: ParcelStatus.PENDING,
+        failureReason: null,
+        failedDeliveryAttempts: 0,
+        deliveredAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      repository.findCustomerParcelById.mockResolvedValue(mockParcel);
+      repository.cancelParcel.mockResolvedValue({
+        ...mockParcel,
+        status: ParcelStatus.RETURNED,
+      });
+
+      const result = await service.cancel(mockUser.id, 'parcel-1');
+      expect(result.status).toBe(ParcelStatus.RETURNED);
+      expect(repository.cancelParcel).toHaveBeenCalledWith(
+        mockUser.id,
+        'parcel-1',
+      );
+    });
+
+    it('throws ConflictException if parcel has already been picked up', async () => {
+      const mockParcel = {
+        id: 'parcel-1',
+        customerId: mockUser.id,
+        trackingNumber: 'SD-CANCEL123',
+        senderName: 'Sender',
+        senderAddress: 'Address 1',
+        recipientName: 'Recipient',
+        recipientAddress: 'Address 2',
+        recipientPhone: '+94770000000',
+        packageSize: PackageSize.SMALL,
+        weightKg: 1.0,
+        costLkr: 350,
+        status: ParcelStatus.PICKED_UP,
+        failureReason: null,
+        failedDeliveryAttempts: 0,
+        deliveredAt: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      repository.findCustomerParcelById.mockResolvedValue(mockParcel);
+
+      await expect(service.cancel(mockUser.id, 'parcel-1')).rejects.toThrow(
+        /Cannot cancel delivery with status PICKED_UP/,
+      );
     });
   });
 });

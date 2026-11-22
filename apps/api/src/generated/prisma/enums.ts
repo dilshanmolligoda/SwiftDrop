@@ -29,6 +29,15 @@ export const ApprovalStatus = {
 export type ApprovalStatus = (typeof ApprovalStatus)[keyof typeof ApprovalStatus]
 
 
+export const MerchantBusinessUpdateStatus = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED'
+} as const
+
+export type MerchantBusinessUpdateStatus = (typeof MerchantBusinessUpdateStatus)[keyof typeof MerchantBusinessUpdateStatus]
+
+
 export const ParcelStatus = {
   CREATED: 'CREATED',
   ASSIGNED: 'ASSIGNED',
@@ -84,3 +93,31 @@ export const PackageSize = {
 } as const
 
 export type PackageSize = (typeof PackageSize)[keyof typeof PackageSize]
+
+
+export const WebhookDeliveryStatus = {
+  DELIVERED: 'DELIVERED',
+  RETRY_SCHEDULED: 'RETRY_SCHEDULED',
+  FAILED: 'FAILED',
+  DEAD_LETTERED: 'DEAD_LETTERED'
+} as const
+
+export type WebhookDeliveryStatus = (typeof WebhookDeliveryStatus)[keyof typeof WebhookDeliveryStatus]
+
+
+export const NotificationChannel = {
+  EMAIL: 'EMAIL',
+  SMS: 'SMS',
+  IN_APP: 'IN_APP'
+} as const
+
+export type NotificationChannel = (typeof NotificationChannel)[keyof typeof NotificationChannel]
+
+
+export const NotificationStatus = {
+  SENT: 'SENT',
+  FAILED: 'FAILED',
+  SKIPPED: 'SKIPPED'
+} as const
+
+export type NotificationStatus = (typeof NotificationStatus)[keyof typeof NotificationStatus]
