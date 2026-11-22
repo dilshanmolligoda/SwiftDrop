@@ -41,6 +41,7 @@ describe('AuthService', () => {
     sendPasswordResetEmail: jest.Mock;
     sendPasswordResetConfirmationEmail: jest.Mock;
     sendGoogleLinkedEmail: jest.Mock;
+    sendCourierRegistrationReceivedEmail: jest.Mock;
   };
   let prismaService: {
     user: { update: jest.Mock };
@@ -97,6 +98,12 @@ describe('AuthService', () => {
         .fn()
         .mockResolvedValue(undefined),
       sendGoogleLinkedEmail: jest.fn().mockResolvedValue(undefined),
+      sendCourierRegistrationReceivedEmail: jest
+        .fn()
+        .mockResolvedValue(undefined),
+      sendMerchantRegistrationReceivedEmail: jest
+        .fn()
+        .mockResolvedValue(undefined),
     };
     prismaService = {
       user: {
@@ -486,6 +493,7 @@ describe('AuthService', () => {
       const createdMerchant = {
         ...validUser,
         id: 'merchant-uuid',
+        fullName: 'Merchant Owner',
         email: 'store@example.com',
         role: Role.MERCHANT,
         approvalStatus: ApprovalStatus.PENDING,
@@ -522,6 +530,38 @@ describe('AuthService', () => {
       });
       expect(result.user.approvalStatus).toBe(ApprovalStatus.PENDING);
       expect(result.user.role).toBe(Role.MERCHANT);
+      expect(
+        emailService.sendMerchantRegistrationReceivedEmail,
+      ).toHaveBeenCalledWith('store@example.com', 'Merchant Owner', 'My Store');
+
+      const notifCalls = prismaService.notification.create.mock.calls as Array<
+        [
+          {
+            data: {
+              channel: NotificationChannel;
+              recipientUserId: string;
+              template: string;
+              title: string;
+            };
+          },
+        ]
+      >;
+      expect(
+        notifCalls.some(
+          (call) =>
+            call[0].data.channel === NotificationChannel.IN_APP &&
+            call[0].data.recipientUserId === 'merchant-uuid' &&
+            call[0].data.template === 'merchant_registration_submitted',
+        ),
+      ).toBe(true);
+      expect(
+        notifCalls.some(
+          (call) =>
+            call[0].data.channel === NotificationChannel.EMAIL &&
+            call[0].data.recipientUserId === 'merchant-uuid' &&
+            call[0].data.template === 'merchant_registration_submitted',
+        ),
+      ).toBe(true);
     });
   });
 
@@ -570,6 +610,35 @@ describe('AuthService', () => {
       });
       expect(result.user.approvalStatus).toBe(ApprovalStatus.PENDING);
       expect(result.user.role).toBe(Role.COURIER);
+      expect(
+        emailService.sendCourierRegistrationReceivedEmail,
+      ).toHaveBeenCalledWith('rider@example.com', 'Test User');
+      const courierCalls = prismaService.notification.create.mock
+        .calls as Array<
+        [
+          {
+            data: {
+              recipientUserId: string;
+              channel: NotificationChannel;
+              template: string;
+              title: string;
+              description: string;
+              status: NotificationStatus;
+            };
+          },
+        ]
+      >;
+      const courierNotif = courierCalls.find(
+        (c) => c[0].data.recipientUserId === 'courier-uuid',
+      );
+      expect(courierNotif).toBeDefined();
+      expect(courierNotif?.[0].data).toMatchObject({
+        recipientUserId: 'courier-uuid',
+        channel: NotificationChannel.IN_APP,
+        template: 'courier_registration_submitted',
+        title: 'Application pending admin review',
+        status: NotificationStatus.SENT,
+      });
     });
 
     it('creates bicycle courier without requiring plate or driving licence', async () => {

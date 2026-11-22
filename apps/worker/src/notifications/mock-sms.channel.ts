@@ -6,6 +6,7 @@ import {
   type Recipient,
   type RenderedNotification,
   type SendResult,
+  type SendSmsOptions,
 } from './notification-channel.js';
 
 /**
@@ -21,21 +22,29 @@ export class MockSmsChannel implements NotificationChannel {
   constructor(@Inject(WORKER_CONFIG) private readonly config: WorkerConfig) {}
 
   send(
-    recipient: Recipient,
-    message: RenderedNotification,
+    recipientOrOptions: Recipient | SendSmsOptions,
+    message?: RenderedNotification,
   ): Promise<SendResult> {
     if (this.config.notifications.smsProvider !== 'mock') {
       return Promise.resolve({ status: 'SKIPPED', reason: 'SMS is disabled' });
     }
-    if (!recipient.phoneNumber) {
+
+    const phone =
+      'to' in recipientOrOptions
+        ? recipientOrOptions.to
+        : recipientOrOptions.phoneNumber;
+    const text =
+      'message' in recipientOrOptions
+        ? recipientOrOptions.message
+        : (message?.sms ?? '');
+
+    if (!phone) {
       return Promise.resolve({
         status: 'SKIPPED',
         reason: 'recipient has no phone number',
       });
     }
-    this.logger.log(
-      `[mock SMS to ${maskPhone(recipient.phoneNumber)}] ${message.sms}`,
-    );
+    this.logger.log(`[mock SMS to ${maskPhone(phone)}] ${text}`);
     return Promise.resolve({ status: 'SENT' });
   }
 }

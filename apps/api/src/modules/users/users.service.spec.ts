@@ -23,11 +23,14 @@ describe('UsersService', () => {
   let repository: {
     findByEmail: jest.Mock;
     findById: jest.Mock;
+    findMerchantById: jest.Mock;
     createCustomer: jest.Mock;
     createMerchant: jest.Mock;
     createCourier: jest.Mock;
     updatePassword: jest.Mock;
     updateProfile: jest.Mock;
+    approveUser: jest.Mock;
+    rejectUser: jest.Mock;
   };
   let passwordService: {
     verify: jest.Mock;
@@ -36,6 +39,10 @@ describe('UsersService', () => {
   let emailService: {
     sendPasswordChangedSettingsEmail: jest.Mock;
     sendProfileUpdatedEmail: jest.Mock;
+    sendCourierApprovedEmail: jest.Mock;
+    sendCourierRejectedEmail: jest.Mock;
+    sendMerchantApprovedEmail: jest.Mock;
+    sendMerchantRejectedEmail: jest.Mock;
   };
   let prismaService: {
     notification: { create: jest.Mock };
@@ -68,11 +75,14 @@ describe('UsersService', () => {
     repository = {
       findByEmail: jest.fn(),
       findById: jest.fn(),
+      findMerchantById: jest.fn(),
       createCustomer: jest.fn(),
       createMerchant: jest.fn(),
       createCourier: jest.fn(),
       updatePassword: jest.fn(),
       updateProfile: jest.fn(),
+      approveUser: jest.fn(),
+      rejectUser: jest.fn(),
     };
     passwordService = {
       verify: jest.fn(),
@@ -81,6 +91,10 @@ describe('UsersService', () => {
     emailService = {
       sendPasswordChangedSettingsEmail: jest.fn().mockResolvedValue(undefined),
       sendProfileUpdatedEmail: jest.fn().mockResolvedValue(undefined),
+      sendCourierApprovedEmail: jest.fn().mockResolvedValue(undefined),
+      sendCourierRejectedEmail: jest.fn().mockResolvedValue(undefined),
+      sendMerchantApprovedEmail: jest.fn().mockResolvedValue(undefined),
+      sendMerchantRejectedEmail: jest.fn().mockResolvedValue(undefined),
     };
     prismaService = {
       notification: {
@@ -459,6 +473,324 @@ describe('UsersService', () => {
       await expect(
         service.updateProfile('missing-user', { fullName: 'New Name' }),
       ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('approveCourier', () => {
+    const mockCourier: User = {
+      ...mockUser,
+      id: 'courier-uuid-1',
+      role: Role.COURIER,
+      approvalStatus: ApprovalStatus.PENDING,
+    };
+
+    it('approves a courier, sends approval email, and inserts notifications', async () => {
+      repository.findById.mockResolvedValue(mockCourier);
+      const approvedCourier = {
+        ...mockCourier,
+        approvalStatus: ApprovalStatus.APPROVED,
+        reviewedAt: new Date(),
+        reviewedBy: 'admin-uuid-1',
+      };
+      repository.approveUser.mockResolvedValue(approvedCourier);
+
+      const result = await service.approveCourier(
+        'courier-uuid-1',
+        'admin-uuid-1',
+      );
+
+      expect(result.approvalStatus).toBe(ApprovalStatus.APPROVED);
+      expect(repository.approveUser).toHaveBeenCalledWith(
+        'courier-uuid-1',
+        'admin-uuid-1',
+      );
+      expect(emailService.sendCourierApprovedEmail).toHaveBeenCalledWith(
+        mockCourier.email,
+        mockCourier.fullName,
+      );
+      expect(prismaService.notification.create).toHaveBeenCalledTimes(2);
+
+      const calls = prismaService.notification.create.mock.calls as Array<
+        [
+          {
+            data: {
+              recipientUserId: string;
+              channel: NotificationChannel;
+              template: string;
+              title: string;
+            };
+          },
+        ]
+      >;
+      expect(calls[0][0].data).toMatchObject({
+        recipientUserId: 'courier-uuid-1',
+        channel: NotificationChannel.IN_APP,
+        template: 'courier_approved',
+        title: 'Your courier account has been approved!',
+      });
+      expect(calls[1][0].data).toMatchObject({
+        recipientUserId: 'courier-uuid-1',
+        channel: NotificationChannel.EMAIL,
+        template: 'courier_approved',
+        title: 'Your courier account has been approved!',
+      });
+    });
+
+    it('throws NotFoundException if courier is not found', async () => {
+      repository.findById.mockResolvedValue(null);
+
+      await expect(service.approveCourier('unknown-courier')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('throws BadRequestException if user is not a courier', async () => {
+      repository.findById.mockResolvedValue(mockUser); // mockUser has role CUSTOMER
+
+      await expect(service.approveCourier(mockUser.id)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+  });
+
+  describe('rejectCourier', () => {
+    const mockCourier: User = {
+      ...mockUser,
+      id: 'courier-uuid-1',
+      role: Role.COURIER,
+      approvalStatus: ApprovalStatus.PENDING,
+    };
+
+    it('rejects a courier application, sends email notice, and logs notification', async () => {
+      repository.findById.mockResolvedValue(mockCourier);
+      const rejectedCourier = {
+        ...mockCourier,
+        approvalStatus: ApprovalStatus.REJECTED,
+        rejectionReason: 'Invalid driver license documents',
+        reviewedAt: new Date(),
+        reviewedBy: 'admin-uuid-1',
+      };
+      repository.rejectUser.mockResolvedValue(rejectedCourier);
+
+      const result = await service.rejectCourier(
+        'courier-uuid-1',
+        'Invalid driver license documents',
+        'admin-uuid-1',
+      );
+
+      expect(result.approvalStatus).toBe(ApprovalStatus.REJECTED);
+      expect(repository.rejectUser).toHaveBeenCalledWith(
+        'courier-uuid-1',
+        'Invalid driver license documents',
+        'admin-uuid-1',
+      );
+      expect(emailService.sendCourierRejectedEmail).toHaveBeenCalledWith(
+        mockCourier.email,
+        mockCourier.fullName,
+        'Invalid driver license documents',
+      );
+      expect(prismaService.notification.create).toHaveBeenCalledTimes(1);
+
+      const calls = prismaService.notification.create.mock.calls as Array<
+        [
+          {
+            data: {
+              recipientUserId: string;
+              channel: NotificationChannel;
+              template: string;
+              title: string;
+              description: string;
+            };
+          },
+        ]
+      >;
+      expect(calls[0][0].data).toMatchObject({
+        recipientUserId: 'courier-uuid-1',
+        channel: NotificationChannel.EMAIL,
+        template: 'courier_rejected',
+        title: 'Courier application rejected',
+        description:
+          'Application could not be approved: Invalid driver license documents',
+      });
+    });
+
+    it('throws NotFoundException if courier does not exist', async () => {
+      repository.findById.mockResolvedValue(null);
+
+      await expect(
+        service.rejectCourier('unknown-courier', 'Reason'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('throws BadRequestException if target user is not a courier', async () => {
+      repository.findById.mockResolvedValue(mockUser);
+
+      await expect(
+        service.rejectCourier(mockUser.id, 'Reason'),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('approveMerchant', () => {
+    const mockMerchant: User & { merchantProfile: { businessName: string } } = {
+      ...mockUser,
+      id: 'merchant-uuid-1',
+      role: Role.MERCHANT,
+      approvalStatus: ApprovalStatus.PENDING,
+      merchantProfile: {
+        businessName: 'Super Mart',
+      },
+    };
+
+    it('approves merchant, sends email, and logs in-app and email notifications', async () => {
+      repository.findMerchantById.mockResolvedValue(mockMerchant);
+      const approvedMerchant = {
+        ...mockMerchant,
+        approvalStatus: ApprovalStatus.APPROVED,
+        reviewedAt: new Date(),
+        reviewedBy: 'admin-uuid-1',
+      };
+      repository.approveUser.mockResolvedValue(approvedMerchant);
+
+      const result = await service.approveMerchant(
+        'merchant-uuid-1',
+        'admin-uuid-1',
+      );
+
+      expect(result.approvalStatus).toBe(ApprovalStatus.APPROVED);
+      expect(repository.approveUser).toHaveBeenCalledWith(
+        'merchant-uuid-1',
+        'admin-uuid-1',
+      );
+      expect(emailService.sendMerchantApprovedEmail).toHaveBeenCalledWith(
+        mockMerchant.email,
+        mockMerchant.fullName,
+        'Super Mart',
+      );
+      expect(prismaService.notification.create).toHaveBeenCalledTimes(2);
+
+      const calls = prismaService.notification.create.mock.calls as Array<
+        [
+          {
+            data: {
+              recipientUserId: string;
+              channel: NotificationChannel;
+              template: string;
+              title: string;
+            };
+          },
+        ]
+      >;
+      expect(calls[0][0].data).toMatchObject({
+        recipientUserId: 'merchant-uuid-1',
+        channel: NotificationChannel.IN_APP,
+        template: 'merchant_approved',
+        title: 'Your merchant account is now approved!',
+      });
+      expect(calls[1][0].data).toMatchObject({
+        recipientUserId: 'merchant-uuid-1',
+        channel: NotificationChannel.EMAIL,
+        template: 'merchant_approved',
+        title: 'Your merchant account is now approved!',
+      });
+    });
+
+    it('throws NotFoundException if merchant does not exist', async () => {
+      repository.findMerchantById.mockResolvedValue(null);
+
+      await expect(service.approveMerchant('unknown-merchant')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('throws BadRequestException if user is not a merchant', async () => {
+      repository.findMerchantById.mockResolvedValue(mockUser);
+
+      await expect(service.approveMerchant(mockUser.id)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+  });
+
+  describe('rejectMerchant', () => {
+    const mockMerchant: User & { merchantProfile: { businessName: string } } = {
+      ...mockUser,
+      id: 'merchant-uuid-1',
+      role: Role.MERCHANT,
+      approvalStatus: ApprovalStatus.PENDING,
+      merchantProfile: {
+        businessName: 'Super Mart',
+      },
+    };
+
+    it('rejects a merchant application, sends rejection email, and records notification', async () => {
+      repository.findMerchantById.mockResolvedValue(mockMerchant);
+      const rejectedMerchant = {
+        ...mockMerchant,
+        approvalStatus: ApprovalStatus.REJECTED,
+        rejectionReason: 'Invalid business registration documentation',
+        reviewedAt: new Date(),
+        reviewedBy: 'admin-uuid-1',
+      };
+      repository.rejectUser.mockResolvedValue(rejectedMerchant);
+
+      const result = await service.rejectMerchant(
+        'merchant-uuid-1',
+        'Invalid business registration documentation',
+        'admin-uuid-1',
+      );
+
+      expect(result.approvalStatus).toBe(ApprovalStatus.REJECTED);
+      expect(repository.rejectUser).toHaveBeenCalledWith(
+        'merchant-uuid-1',
+        'Invalid business registration documentation',
+        'admin-uuid-1',
+      );
+      expect(emailService.sendMerchantRejectedEmail).toHaveBeenCalledWith(
+        mockMerchant.email,
+        mockMerchant.fullName,
+        'Invalid business registration documentation',
+        'Super Mart',
+      );
+      expect(prismaService.notification.create).toHaveBeenCalledTimes(1);
+
+      const calls = prismaService.notification.create.mock.calls as Array<
+        [
+          {
+            data: {
+              recipientUserId: string;
+              channel: NotificationChannel;
+              template: string;
+              title: string;
+              description: string;
+            };
+          },
+        ]
+      >;
+      expect(calls[0][0].data).toMatchObject({
+        recipientUserId: 'merchant-uuid-1',
+        channel: NotificationChannel.EMAIL,
+        template: 'merchant_rejected',
+        title: 'Merchant application rejected',
+        description:
+          'Application could not be approved: Invalid business registration documentation',
+      });
+    });
+
+    it('throws NotFoundException if merchant does not exist', async () => {
+      repository.findMerchantById.mockResolvedValue(null);
+
+      await expect(
+        service.rejectMerchant('unknown-merchant', 'Reason'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('throws BadRequestException if user is not a merchant', async () => {
+      repository.findMerchantById.mockResolvedValue(mockUser);
+
+      await expect(
+        service.rejectMerchant(mockUser.id, 'Reason'),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

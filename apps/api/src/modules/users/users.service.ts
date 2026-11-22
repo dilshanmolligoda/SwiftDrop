@@ -21,6 +21,7 @@ import { UpdateProfileDto } from './dto/update-profile.dto.js';
 import {
   NotificationChannel,
   NotificationStatus,
+  Role,
 } from '../../generated/prisma/enums.js';
 import type {
   User,
@@ -290,5 +291,254 @@ export class UsersService {
       message: 'Profile updated successfully',
       user: safeUser,
     };
+  }
+
+  async approveCourier(courierId: string, reviewedBy?: string): Promise<User> {
+    const user = await this.usersRepository.findById(courierId);
+    if (!user) {
+      throw new NotFoundException('Courier not found');
+    }
+    if (user.role !== Role.COURIER) {
+      throw new BadRequestException('User is not a courier');
+    }
+
+    const updatedUser = await this.usersRepository.approveUser(
+      courierId,
+      reviewedBy,
+    );
+
+    if (this.emailService) {
+      try {
+        await this.emailService.sendCourierApprovedEmail(
+          updatedUser.email,
+          updatedUser.fullName,
+        );
+      } catch (emailErr) {
+        this.logger.error(
+          `Failed to send courier approval email to ${updatedUser.email}: ${(emailErr as Error).message}`,
+        );
+      }
+    }
+
+    if (this.prisma) {
+      try {
+        await this.prisma.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.IN_APP,
+            recipientUserId: updatedUser.id,
+            template: 'courier_approved',
+            title: 'Your courier account has been approved!',
+            description: 'Log in to view your daily delivery assignments.',
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+
+        await this.prisma.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.EMAIL,
+            recipientUserId: updatedUser.id,
+            template: 'courier_approved',
+            title: 'Your courier account has been approved!',
+            description: 'Log in to view your daily delivery assignments.',
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+      } catch (notifErr) {
+        this.logger.error(
+          `Failed to record courier approval notification for ${updatedUser.id}: ${(notifErr as Error).message}`,
+        );
+      }
+    }
+
+    return updatedUser;
+  }
+
+  async rejectCourier(
+    courierId: string,
+    reason: string,
+    reviewedBy?: string,
+  ): Promise<User> {
+    const user = await this.usersRepository.findById(courierId);
+    if (!user) {
+      throw new NotFoundException('Courier not found');
+    }
+    if (user.role !== Role.COURIER) {
+      throw new BadRequestException('User is not a courier');
+    }
+
+    const updatedUser = await this.usersRepository.rejectUser(
+      courierId,
+      reason,
+      reviewedBy,
+    );
+
+    if (this.emailService) {
+      try {
+        await this.emailService.sendCourierRejectedEmail(
+          updatedUser.email,
+          updatedUser.fullName,
+          reason,
+        );
+      } catch (emailErr) {
+        this.logger.error(
+          `Failed to send courier rejection email to ${updatedUser.email}: ${(emailErr as Error).message}`,
+        );
+      }
+    }
+
+    if (this.prisma) {
+      try {
+        await this.prisma.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.EMAIL,
+            recipientUserId: updatedUser.id,
+            template: 'courier_rejected',
+            title: 'Courier application rejected',
+            description: `Application could not be approved: ${reason}`,
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+      } catch (notifErr) {
+        this.logger.error(
+          `Failed to record courier rejection notification for ${updatedUser.id}: ${(notifErr as Error).message}`,
+        );
+      }
+    }
+
+    return updatedUser;
+  }
+
+  async approveMerchant(
+    merchantId: string,
+    reviewedBy?: string,
+  ): Promise<User> {
+    const user = await this.usersRepository.findMerchantById(merchantId);
+    if (!user) {
+      throw new NotFoundException('Merchant not found');
+    }
+    if (user.role !== Role.MERCHANT) {
+      throw new BadRequestException('User is not a merchant');
+    }
+
+    const updatedUser = await this.usersRepository.approveUser(
+      merchantId,
+      reviewedBy,
+    );
+
+    if (this.emailService) {
+      try {
+        await this.emailService.sendMerchantApprovedEmail(
+          updatedUser.email,
+          updatedUser.fullName,
+          user.merchantProfile?.businessName,
+        );
+      } catch (emailErr) {
+        this.logger.error(
+          `Failed to send merchant approval email to ${updatedUser.email}: ${(emailErr as Error).message}`,
+        );
+      }
+    }
+
+    if (this.prisma) {
+      try {
+        await this.prisma.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.IN_APP,
+            recipientUserId: updatedUser.id,
+            template: 'merchant_approved',
+            title: 'Your merchant account is now approved!',
+            description:
+              'Log in to access API keys, manage orders, and set up webhooks.',
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+
+        await this.prisma.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.EMAIL,
+            recipientUserId: updatedUser.id,
+            template: 'merchant_approved',
+            title: 'Your merchant account is now approved!',
+            description:
+              'Log in to access API keys, manage orders, and set up webhooks.',
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+      } catch (notifErr) {
+        this.logger.error(
+          `Failed to record merchant approval notification for ${updatedUser.id}: ${(notifErr as Error).message}`,
+        );
+      }
+    }
+
+    return updatedUser;
+  }
+
+  async rejectMerchant(
+    merchantId: string,
+    reason: string,
+    reviewedBy?: string,
+  ): Promise<User> {
+    const user = await this.usersRepository.findMerchantById(merchantId);
+    if (!user) {
+      throw new NotFoundException('Merchant not found');
+    }
+    if (user.role !== Role.MERCHANT) {
+      throw new BadRequestException('User is not a merchant');
+    }
+
+    const updatedUser = await this.usersRepository.rejectUser(
+      merchantId,
+      reason,
+      reviewedBy,
+    );
+
+    if (this.emailService) {
+      try {
+        await this.emailService.sendMerchantRejectedEmail(
+          updatedUser.email,
+          updatedUser.fullName,
+          reason,
+          user.merchantProfile?.businessName,
+        );
+      } catch (emailErr) {
+        this.logger.error(
+          `Failed to send merchant rejection email to ${updatedUser.email}: ${(emailErr as Error).message}`,
+        );
+      }
+    }
+
+    if (this.prisma) {
+      try {
+        await this.prisma.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.EMAIL,
+            recipientUserId: updatedUser.id,
+            template: 'merchant_rejected',
+            title: 'Merchant application rejected',
+            description: `Application could not be approved: ${reason}`,
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+      } catch (notifErr) {
+        this.logger.error(
+          `Failed to record merchant rejection notification for ${updatedUser.id}: ${(notifErr as Error).message}`,
+        );
+      }
+    }
+
+    return updatedUser;
   }
 }

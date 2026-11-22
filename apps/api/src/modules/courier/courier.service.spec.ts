@@ -627,12 +627,95 @@ describe('CourierService', () => {
       });
     });
 
+    it('notifies previous courier when parcel is reassigned to another courier', async () => {
+      const { service, transactionClient } = createHarness();
+      const mockParcel = {
+        id: PARCEL_ID,
+        customerId: 'customer-123',
+        trackingNumber: 'SD-ASSIGNED123',
+        status: ParcelStatus.ASSIGNED,
+      };
+      transactionClient.parcel.findUnique.mockResolvedValue(mockParcel);
+      transactionClient.deliveryAssignment.findFirst.mockResolvedValue({
+        courierId: 'previous-courier-id',
+      });
+      transactionClient.deliveryAssignment.create.mockResolvedValue({
+        id: ASSIGNMENT_ID,
+        parcelId: PARCEL_ID,
+        courierId: COURIER_ID,
+      });
+      transactionClient.parcel.update.mockResolvedValue(mockParcel);
+
+      await service.assignCourier(PARCEL_ID, COURIER_ID, 'dispatcher-1');
+
+      expect(transactionClient.notification.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          channel: 'IN_APP',
+          recipientUserId: 'previous-courier-id',
+          template: 'courier_assignment_reassigned',
+          title: 'Assignment updated',
+          description: `Delivery ${mockParcel.trackingNumber} was unassigned from your route.`,
+        }),
+      });
+    });
+
     it('throws NotFoundException when parcel does not exist', async () => {
       const { service, transactionClient } = createHarness();
       transactionClient.parcel.findUnique.mockResolvedValue(null);
 
       await expect(
         service.assignCourier('non-existent', COURIER_ID, 'dispatcher-1'),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('unassignCourier', () => {
+    it('unassigns courier and creates in-app notification', async () => {
+      const { service, transactionClient } = createHarness();
+      const mockParcel = {
+        id: PARCEL_ID,
+        trackingNumber: 'SD-UNASSIGN456',
+      };
+      transactionClient.parcel.findUnique.mockResolvedValue(mockParcel);
+      transactionClient.deliveryAssignment.findFirst.mockResolvedValue({
+        courierId: COURIER_ID,
+      });
+
+      const result = await service.unassignCourier(PARCEL_ID, 'dispatcher-1');
+
+      expect(result).toEqual({ message: 'Parcel unassigned successfully' });
+      expect(
+        transactionClient.deliveryAssignment.updateMany,
+      ).toHaveBeenCalledWith({
+        where: { parcelId: PARCEL_ID, endedAt: null },
+        data: { endedAt: expect.any(Date) },
+      });
+      expect(transactionClient.notification.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          channel: 'IN_APP',
+          recipientUserId: COURIER_ID,
+          template: 'courier_assignment_reassigned',
+          title: 'Assignment updated',
+          description: `Delivery ${mockParcel.trackingNumber} was unassigned from your route.`,
+        }),
+      });
+    });
+
+    it('returns message when no active assignment exists', async () => {
+      const { service, transactionClient } = createHarness();
+      transactionClient.parcel.findUnique.mockResolvedValue({ id: PARCEL_ID });
+      transactionClient.deliveryAssignment.findFirst.mockResolvedValue(null);
+
+      const result = await service.unassignCourier(PARCEL_ID, 'dispatcher-1');
+      expect(result).toEqual({ message: 'Parcel has no active assignment' });
+    });
+
+    it('throws NotFoundException when parcel does not exist', async () => {
+      const { service, transactionClient } = createHarness();
+      transactionClient.parcel.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.unassignCourier('non-existent', 'dispatcher-1'),
       ).rejects.toThrow(NotFoundException);
     });
   });
