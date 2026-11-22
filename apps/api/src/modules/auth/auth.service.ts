@@ -51,6 +51,7 @@ export interface UserProfile {
   id: string;
   email: string;
   fullName: string;
+  phoneNumber?: string | null;
   role: Role;
   approvalStatus: ApprovalStatus;
   isActive: boolean;
@@ -862,6 +863,7 @@ export class AuthService {
       id: user.id,
       email: user.email,
       fullName: user.fullName,
+      phoneNumber: user.phoneNumber,
       role: user.role,
       approvalStatus: user.approvalStatus,
       isActive: user.isActive,

@@ -181,6 +181,11 @@ export default function LoginPage() {
       }
 
       // Successful login sets HTTP-only cookie in browser.
+      try {
+        localStorage.removeItem('swiftdrop_customer_profile');
+      } catch {
+        // ignore
+      }
       // Now fetch the authoritative user profile using the established session cookie.
       const profileResponse = await fetch(`${env.apiBaseUrl}/auth/me`, {
         method: 'GET',

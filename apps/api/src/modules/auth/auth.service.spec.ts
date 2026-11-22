@@ -269,6 +269,7 @@ describe('AuthService', () => {
         id: validUser.id,
         email: validUser.email,
         fullName: validUser.fullName,
+        phoneNumber: validUser.phoneNumber,
         role: validUser.role,
         approvalStatus: validUser.approvalStatus,
         isActive: validUser.isActive,
