@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { env } from '../../../lib/env'
 import {
   type CustomerProfile,
@@ -79,41 +79,59 @@ export const CustomerProfileProvider: React.FC<{ children: React.ReactNode }> = 
     }
   }, [profile])
 
-  // Automatically sync with authenticated backend session if available
-  useEffect(() => {
-    let isMounted = true
-    const syncWithBackendSession = async (): Promise<void> => {
-      try {
-        const response = await fetch(`${env.apiBaseUrl}/auth/me`, {
-          credentials: 'include',
-        })
-        if (response.ok && isMounted) {
-          const user = (await response.json()) as {
-            fullName?: string
-            email?: string
-            role?: string
-            isGoogleLinked?: boolean
-          }
-          if (user?.fullName) {
-            setProfile((prev) => ({
-              ...prev,
-              fullName: user.fullName || prev.fullName,
-              email: user.email || prev.email,
-              role: user.role || prev.role,
-              isGoogleLinked: user.isGoogleLinked ?? prev.isGoogleLinked,
-              initials: computeUserInitials(user.fullName || prev.fullName),
-            }))
-          }
+  const refreshProfile = useCallback(async (): Promise<void> => {
+    try {
+      const response = await fetch(`${env.apiBaseUrl}/auth/me`, {
+        credentials: 'include',
+      })
+      if (response.ok) {
+        const user = (await response.json()) as {
+          fullName?: string
+          email?: string
+          phoneNumber?: string
+          role?: string
+          isGoogleLinked?: boolean
         }
-      } catch {
-        // Fallback to local profile silently if offline
+        if (user?.fullName) {
+          const resolvedName = user.fullName || ''
+          setProfile((prev) => {
+            const nextProfile: CustomerProfile = {
+              fullName: resolvedName,
+              email: user.email || prev.email || '',
+              phoneNumber: user.phoneNumber || prev.phoneNumber || '',
+              role: user.role,
+              isGoogleLinked: user.isGoogleLinked,
+              initials: computeUserInitials(resolvedName),
+              notifications: prev.notifications,
+            }
+            try {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(nextProfile))
+            } catch {
+              // ignore
+            }
+            return nextProfile
+          })
+        }
       }
-    }
-    void syncWithBackendSession()
-    return () => {
-      isMounted = false
+    } catch {
+      // Fallback silently if offline
     }
   }, [])
+
+  const clearProfile = useCallback((): void => {
+    try {
+      localStorage.removeItem(STORAGE_KEY)
+    } catch {
+      // ignore
+    }
+    setProfile(DEFAULT_PROFILE)
+  }, [])
+
+  // Automatically sync with authenticated backend session if available
+  useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect
+    void refreshProfile()
+  }, [refreshProfile])
 
   const updateProfile = (updatedFields: Partial<Omit<CustomerProfile, 'initials'>>): void => {
     setProfile((previousProfile) => {
@@ -139,7 +157,7 @@ export const CustomerProfileProvider: React.FC<{ children: React.ReactNode }> = 
   }
 
   return (
-    <CustomerProfileContext.Provider value={{ profile, updateProfile }}>
+    <CustomerProfileContext.Provider value={{ profile, updateProfile, refreshProfile, clearProfile }}>
       {children}
     </CustomerProfileContext.Provider>
   )

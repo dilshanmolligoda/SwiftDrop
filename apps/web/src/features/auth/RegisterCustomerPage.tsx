@@ -101,6 +101,11 @@ export default function RegisterCustomerPage() {
       }
 
       // Successful registration sets HTTP-only cookie and establishes session immediately
+      try {
+        localStorage.removeItem('swiftdrop_customer_profile');
+      } catch {
+        // ignore
+      }
       navigate('/customer/dashboard', { replace: true });
     } catch {
       setErrorMessage('Unable to connect to SwiftDrop server. Please ensure the backend is running.');
