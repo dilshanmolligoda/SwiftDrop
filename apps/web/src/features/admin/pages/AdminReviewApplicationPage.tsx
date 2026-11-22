@@ -58,6 +58,7 @@ export const AdminReviewApplicationPage: React.FC = () => {
     setError(null)
     try {
       await adminApi.approveApplication(id)
+      window.dispatchEvent(new Event('swiftdrop:approvals-updated'))
       const msg = `Application for ${application.fullName} has been approved successfully!`
       setSuccessMessage(msg)
       setTimeout(() => {
@@ -80,6 +81,7 @@ export const AdminReviewApplicationPage: React.FC = () => {
     setError(null)
     try {
       await adminApi.rejectApplication(id, decisionNote.trim())
+      window.dispatchEvent(new Event('swiftdrop:approvals-updated'))
       const msg = `Application for ${application.fullName} has been rejected.`
       setSuccessMessage(msg)
       setTimeout(() => {
