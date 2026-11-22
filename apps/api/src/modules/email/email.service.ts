@@ -1786,4 +1786,299 @@ export class EmailService {
 </body>
 </html>`;
   }
+
+  async sendMerchantApiKeyUpdatedEmail(
+    to: string,
+    recipientName: string,
+    action: 'issued' | 'revoked',
+    keyPrefix: string,
+  ): Promise<void> {
+    const actionText = action === 'issued' ? 'issued' : 'revoked';
+    const actionTitle = action === 'issued' ? 'Generated' : 'Revoked';
+    const subject = `Security Alert: API Key ${actionTitle} - SwiftDrop`;
+    const text = `Hello ${recipientName},\n\nA new API key (prefix: ${keyPrefix}) was ${actionText} on your merchant account.\n\nIf you did not perform this action, please sign in to review your API keys and secure your account immediately.\n\nBest regards,\nThe SwiftDrop Team`;
+    const html = this.renderMerchantApiKeyUpdatedHtml(
+      recipientName,
+      action,
+      keyPrefix,
+    );
+
+    await this.transporter.sendMail({
+      from: this.from,
+      to,
+      subject,
+      text,
+      html,
+    });
+  }
+
+  private renderMerchantApiKeyUpdatedHtml(
+    recipientName: string,
+    action: 'issued' | 'revoked',
+    keyPrefix: string,
+  ): string {
+    const actionText = action === 'issued' ? 'issued' : 'revoked';
+    const actionHeading = action === 'issued' ? 'Generated' : 'Revoked';
+    const actionColor = action === 'issued' ? '#2563eb' : '#dc2626';
+    const settingsUrl = `${this.webAppUrl}/merchant/settings`;
+
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>API Key Update</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+    <tr>
+      <td align="center">
+        <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 36px 32px; text-align: center;">
+              <h1 style="color: #ffffff; font-size: 26px; font-weight: 700; margin: 0; letter-spacing: -0.5px;">SwiftDrop</h1>
+              <p style="color: #cbd5e1; font-size: 14px; margin: 8px 0 0 0; font-weight: 500;">Merchant Security Alert</p>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding: 40px 36px;">
+              <h2 style="font-size: 20px; font-weight: 600; color: #0f172a; margin-top: 0; margin-bottom: 20px;">API Key ${actionHeading}</h2>
+              <p style="font-size: 15px; line-height: 1.6; color: #334155; margin-bottom: 20px;">Hello ${recipientName},</p>
+              <p style="font-size: 15px; line-height: 1.6; color: #334155; margin-bottom: 20px;">
+                A new API key (prefix: <strong>${keyPrefix}</strong>) was ${actionText} on your merchant account.
+              </p>
+              <div style="background-color: #f8fafc; border-left: 4px solid ${actionColor}; padding: 16px; border-radius: 4px; margin-bottom: 24px;">
+                <p style="margin: 0; font-size: 14px; color: #334155; line-height: 1.5;">
+                  <strong>Action:</strong> API Key ${actionHeading}<br>
+                  <strong>Key Prefix:</strong> ${keyPrefix}<br>
+                  <strong>Timestamp:</strong> ${new Date().toUTCString()}
+                </p>
+              </div>
+              <div style="text-align: center; margin: 32px 0;">
+                <a href="${settingsUrl}" style="background-color: #0f172a; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block;">View API Key Settings</a>
+              </div>
+              <p style="font-size: 14px; line-height: 1.6; color: #64748b; margin-bottom: 20px;">
+                If you did not perform this action, please log in immediately and revoke any unauthorized API keys to protect your merchant account.
+              </p>
+              <p style="font-size: 14px; line-height: 1.5; color: #64748b; margin-top: 24px;">
+                Best regards,<br>
+                <strong>The SwiftDrop Security Team</strong>
+              </p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 24px 32px; text-align: center; font-size: 12px; color: #64748b; line-height: 1.5;">
+              SwiftDrop - Merchant Services<br>
+              Colombo, Sri Lanka
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+  }
+
+  async sendAdminAccountAwaitingReviewEmail(
+    to: string,
+    adminName: string,
+    applicantName: string,
+    accountType: 'Courier' | 'Merchant',
+  ): Promise<void> {
+    const subject = `Action Required: New Registration Awaiting Review - SwiftDrop`;
+    const text = `Hello ${adminName},\n\nAction required: New registration from ${applicantName} awaiting review.\n\nAccount Type: ${accountType}\n\nPlease sign in to the SwiftDrop Admin Portal to review and approve or reject this application.\n\nBest regards,\nThe SwiftDrop System`;
+    const html = this.renderAdminAccountAwaitingReviewHtml(
+      adminName,
+      applicantName,
+      accountType,
+    );
+
+    await this.transporter.sendMail({
+      from: this.from,
+      to,
+      subject,
+      text,
+      html,
+    });
+  }
+
+  private renderAdminAccountAwaitingReviewHtml(
+    adminName: string,
+    applicantName: string,
+    accountType: 'Courier' | 'Merchant',
+  ): string {
+    const adminPortalUrl = `${this.webAppUrl}/admin`;
+
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>New Registration Awaiting Review</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+    <tr>
+      <td align="center">
+        <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #0f172a 0%, #334155 100%); padding: 36px 32px; text-align: center;">
+              <h1 style="color: #ffffff; font-size: 26px; font-weight: 700; margin: 0; letter-spacing: -0.5px;">SwiftDrop</h1>
+              <p style="color: #cbd5e1; font-size: 14px; margin: 8px 0 0 0; font-weight: 500;">Administration & Operations</p>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding: 40px 36px;">
+              <h2 style="font-size: 20px; font-weight: 600; color: #0f172a; margin-top: 0; margin-bottom: 20px;">New Account Awaiting Review</h2>
+              <p style="font-size: 15px; line-height: 1.6; color: #334155; margin-bottom: 20px;">Hello ${adminName},</p>
+              <p style="font-size: 15px; line-height: 1.6; color: #334155; margin-bottom: 20px;">
+                Action required: New registration from <strong>${applicantName}</strong> awaiting review.
+              </p>
+              <div style="background-color: #f8fafc; border-left: 4px solid #2563eb; padding: 16px; border-radius: 4px; margin-bottom: 24px;">
+                <p style="margin: 0; font-size: 14px; color: #334155; line-height: 1.5;">
+                  <strong>Applicant:</strong> ${applicantName}<br>
+                  <strong>Account Role:</strong> ${accountType}<br>
+                  <strong>Status:</strong> Pending Approval<br>
+                  <strong>Received At:</strong> ${new Date().toUTCString()}
+                </p>
+              </div>
+              <div style="text-align: center; margin: 32px 0;">
+                <a href="${adminPortalUrl}" style="background-color: #0f172a; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block;">Open Admin Portal</a>
+              </div>
+              <p style="font-size: 14px; line-height: 1.6; color: #64748b; margin-bottom: 20px;">
+                Please verify their submitted registration details and documents in accordance with platform onboarding policies.
+              </p>
+              <p style="font-size: 14px; line-height: 1.5; color: #64748b; margin-top: 24px;">
+                Best regards,<br>
+                <strong>The SwiftDrop Automated System</strong>
+              </p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 24px 32px; text-align: center; font-size: 12px; color: #64748b; line-height: 1.5;">
+              SwiftDrop Administration<br>
+              Colombo, Sri Lanka
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+  }
+
+  async sendWeeklyDeliveryDigestEmail(
+    to: string,
+    recipientName: string,
+    digest: {
+      completedCount: number;
+      inTransitCount: number;
+      totalExpenses: number;
+      period: string;
+    },
+  ): Promise<void> {
+    const subject = `Your Weekly Delivery Digest (${digest.period}) - SwiftDrop`;
+    const text = `Hello ${recipientName},\n\nHere is your SwiftDrop weekly delivery summary for ${digest.period}:\n\n- Completed Deliveries: ${digest.completedCount}\n- In-Transit Parcels: ${digest.inTransitCount}\n- Total Expenses: LKR ${digest.totalExpenses.toFixed(2)}\n\nThank you for choosing SwiftDrop.\n\nBest regards,\nThe SwiftDrop Team`;
+    const html = this.renderWeeklyDeliveryDigestHtml(recipientName, digest);
+
+    await this.transporter.sendMail({
+      from: this.from,
+      to,
+      subject,
+      text,
+      html,
+    });
+  }
+
+  private renderWeeklyDeliveryDigestHtml(
+    recipientName: string,
+    digest: {
+      completedCount: number;
+      inTransitCount: number;
+      totalExpenses: number;
+      period: string;
+    },
+  ): string {
+    const dashboardUrl = this.webAppUrl;
+
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Weekly Delivery Digest</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+    <tr>
+      <td align="center">
+        <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 36px 32px; text-align: center;">
+              <h1 style="color: #ffffff; font-size: 26px; font-weight: 700; margin: 0; letter-spacing: -0.5px;">SwiftDrop</h1>
+              <p style="color: #cbd5e1; font-size: 14px; margin: 8px 0 0 0; font-weight: 500;">Weekly Activity Digest</p>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding: 40px 36px;">
+              <h2 style="font-size: 20px; font-weight: 600; color: #0f172a; margin-top: 0; margin-bottom: 8px;">Weekly Delivery Summary</h2>
+              <p style="font-size: 13px; color: #64748b; margin-top: 0; margin-bottom: 24px;">Period: ${digest.period}</p>
+              <p style="font-size: 15px; line-height: 1.6; color: #334155; margin-bottom: 24px;">Hello ${recipientName},</p>
+              <p style="font-size: 15px; line-height: 1.6; color: #334155; margin-bottom: 24px;">
+                Here is an overview of your delivery activity and logistics expenditure over the past week:
+              </p>
+              
+              <!-- Metrics Cards -->
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 28px;">
+                <tr>
+                  <td width="31%" style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 16px; text-align: center;">
+                    <span style="font-size: 24px; font-weight: 700; color: #166534; display: block;">${digest.completedCount}</span>
+                    <span style="font-size: 12px; font-weight: 600; color: #15803d; text-transform: uppercase;">Completed</span>
+                  </td>
+                  <td width="3%"></td>
+                  <td width="31%" style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 16px; text-align: center;">
+                    <span style="font-size: 24px; font-weight: 700; color: #1e40af; display: block;">${digest.inTransitCount}</span>
+                    <span style="font-size: 12px; font-weight: 600; color: #2563eb; text-transform: uppercase;">In Transit</span>
+                  </td>
+                  <td width="3%"></td>
+                  <td width="32%" style="background-color: #faf5ff; border: 1px solid #e9d5ff; border-radius: 6px; padding: 16px; text-align: center;">
+                    <span style="font-size: 18px; font-weight: 700; color: #6b21a8; display: block;">LKR ${digest.totalExpenses.toFixed(0)}</span>
+                    <span style="font-size: 12px; font-weight: 600; color: #7e22ce; text-transform: uppercase;">Expenses</span>
+                  </td>
+                </tr>
+              </table>
+
+              <div style="text-align: center; margin: 32px 0;">
+                <a href="${dashboardUrl}" style="background-color: #0f172a; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block;">View Full Dashboard</a>
+              </div>
+              <p style="font-size: 14px; line-height: 1.6; color: #64748b;">
+                Thank you for shipping with SwiftDrop. You can review all tracking numbers and receipts anytime in your dashboard.
+              </p>
+              <p style="font-size: 14px; line-height: 1.5; color: #64748b; margin-top: 24px;">
+                Best regards,<br>
+                <strong>The SwiftDrop Logistics Team</strong>
+              </p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 24px 32px; text-align: center; font-size: 12px; color: #64748b; line-height: 1.5;">
+              SwiftDrop Logistics Network<br>
+              Colombo, Sri Lanka
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+  }
 }

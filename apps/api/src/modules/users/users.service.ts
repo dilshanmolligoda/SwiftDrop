@@ -18,6 +18,7 @@ import { EmailService } from '../email/email.service.js';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
 import { UpdateProfileDto } from './dto/update-profile.dto.js';
+import { UpdateNotificationPreferencesDto } from './dto/update-notification-preferences.dto.js';
 import {
   NotificationChannel,
   NotificationStatus,
@@ -540,5 +541,57 @@ export class UsersService {
     }
 
     return updatedUser;
+  }
+
+  async updateNotificationPreferences(
+    userId: string,
+    dto: UpdateNotificationPreferencesDto,
+  ) {
+    if (!this.prisma) {
+      throw new BadRequestException('Database service is unavailable');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(dto.deliveryStatusNotifications !== undefined
+          ? { deliveryStatusNotifications: dto.deliveryStatusNotifications }
+          : {}),
+        ...(dto.failedDeliveryNotifications !== undefined
+          ? { failedDeliveryNotifications: dto.failedDeliveryNotifications }
+          : {}),
+        ...(dto.storeConnectionNotifications !== undefined
+          ? { storeConnectionNotifications: dto.storeConnectionNotifications }
+          : {}),
+      },
+    });
+
+    const eventId = randomUUID();
+    await this.prisma.notification.create({
+      data: {
+        eventId,
+        channel: NotificationChannel.IN_APP,
+        recipientUserId: userId,
+        template: 'preferences_updated',
+        title: 'Preferences updated',
+        description: 'Your notification preferences have been saved.',
+        status: NotificationStatus.SENT,
+        sentAt: new Date(),
+      },
+    });
+
+    return {
+      deliveryStatusNotifications: updated.deliveryStatusNotifications,
+      failedDeliveryNotifications: updated.failedDeliveryNotifications,
+      storeConnectionNotifications: updated.storeConnectionNotifications,
+      message: 'Your notification preferences have been saved.',
+    };
   }
 }
