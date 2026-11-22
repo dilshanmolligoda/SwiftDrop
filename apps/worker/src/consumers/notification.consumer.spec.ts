@@ -427,4 +427,57 @@ describe('NotificationConsumer', () => {
     expect(recipientRecord?.[0].title).toBe('Package delivered');
     expect(recipientRecord?.[0].status).toBe('SENT');
   });
+
+  it('dispatches recipient missed delivery SMS alert when status changes to FAILED with RECIPIENT_UNAVAILABLE (Scenario 18)', async () => {
+    const { consumer, repository, channels } = setup();
+    repository.findParcel.mockResolvedValue({
+      id: '0b6a3f0e-7d2c-4f1a-8e9b-1c2d3e4f5a6b',
+      trackingNumber: 'SD-0123456789ABCDEF0123456789ABCDEF',
+      customerId: CUSTOMER.userId,
+      senderName: 'Sender Bob',
+      recipientName: 'Recipient Alice',
+      recipientPhone: '+94771112233',
+      recipientAddress: '123 Main St, Colombo',
+    });
+    const failedEvent: ParcelStatusChangedV1 = {
+      ...EVENT,
+      newStatus: 'FAILED',
+      failureReason: 'RECIPIENT_UNAVAILABLE',
+      previousStatus: 'OUT_FOR_DELIVERY',
+    };
+
+    await consumer.handle(failedEvent);
+
+    const smsChannel = channels.find((c) => c.channel === 'SMS');
+    const smsCalls = (smsChannel?.send as jest.Mock).mock.calls as Array<
+      [{ to: string; message: string }]
+    >;
+    const recipientCall = smsCalls.find(
+      (call) => call[0].to === '+94771112233',
+    );
+    expect(recipientCall).toBeDefined();
+    expect(recipientCall?.[0].message).toBe(
+      `SwiftDrop missed you: We attempted delivery for parcel ${failedEvent.trackingNumber} but could not reach you. Our courier will re-attempt or contact customer support.`,
+    );
+
+    const recordCalls = repository.record.mock.calls as Array<
+      [
+        {
+          channel: string;
+          template: string;
+          title: string;
+          description: string;
+          status: string;
+        },
+      ]
+    >;
+    const recipientRecord = recordCalls.find(
+      (call) =>
+        call[0].channel === 'SMS' &&
+        call[0].template === 'recipient_delivery_attempt_failed',
+    );
+    expect(recipientRecord).toBeDefined();
+    expect(recipientRecord?.[0].title).toBe('Missed delivery attempt');
+    expect(recipientRecord?.[0].status).toBe('SENT');
+  });
 });

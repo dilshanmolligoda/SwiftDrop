@@ -147,6 +147,61 @@ export class NotificationConsumer implements ParcelEventConsumer {
     ) {
       await this.handleRecipientDeliveredSms(event);
     }
+
+    if (
+      event.eventType === 'parcel.status.changed' &&
+      event.newStatus === 'FAILED' &&
+      (event.failureReason === 'RECIPIENT_UNAVAILABLE' ||
+        event.failureReason === 'UNABLE_TO_CONTACT')
+    ) {
+      await this.handleRecipientMissedDeliverySms(event);
+    }
+  }
+
+  private async handleRecipientMissedDeliverySms(
+    event: ParcelStatusChangedV1,
+  ): Promise<void> {
+    const parcel = await this.repository.findParcel(event.parcelId);
+    if (!parcel || !parcel.recipientPhone) return;
+
+    const recipientEventId = this.deterministicUuid(
+      `${event.eventId}:recipient:failed:sms`,
+    );
+    const recipientUser = await this.repository.findUserByPhone(
+      parcel.recipientPhone,
+    );
+    const recipientUserId = recipientUser?.id ?? parcel.customerId;
+
+    if (
+      await this.repository.alreadyHandled(
+        recipientEventId,
+        'SMS',
+        recipientUserId,
+      )
+    ) {
+      return;
+    }
+
+    const message = `SwiftDrop missed you: We attempted delivery for parcel ${event.trackingNumber} but could not reach you. Our courier will re-attempt or contact customer support.`;
+
+    const smsChannel = this.channels.find((c) => c.channel === 'SMS');
+    if (!smsChannel) return;
+
+    const result = await smsChannel.send({
+      to: parcel.recipientPhone,
+      message,
+    });
+
+    await this.repository.record({
+      eventId: recipientEventId,
+      channel: 'SMS',
+      recipientUserId,
+      template: 'recipient_delivery_attempt_failed',
+      title: 'Missed delivery attempt',
+      description: message,
+      status: result.status,
+      errorMessage: result.status === 'SENT' ? null : result.reason,
+    });
   }
 
   private async handleRecipientDeliveredSms(
