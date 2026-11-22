@@ -51,6 +51,23 @@ const DASHBOARD_STATUSES = [
   ParcelStatus.FAILED,
 ] as const;
 
+interface TxWithNotification {
+  notification?: {
+    create: (args: {
+      data: {
+        eventId: string;
+        channel: NotificationChannel;
+        recipientUserId: string;
+        template: string;
+        title: string;
+        description: string;
+        status: NotificationStatus;
+        sentAt: Date;
+      };
+    }) => Promise<unknown>;
+  };
+}
+
 @Injectable()
 export class CourierService {
   constructor(
@@ -451,19 +468,21 @@ export class CourierService {
       courierId,
     });
 
-    if ((tx as any).notification) {
+    const txNotif = tx as unknown as TxWithNotification;
+    if (txNotif.notification) {
       if (
         dto.status === ParcelStatus.PICKED_UP &&
         assignment.parcel.customerId
       ) {
-        await (tx as any).notification.create({
+        await txNotif.notification.create({
           data: {
             eventId: randomUUID(),
             channel: NotificationChannel.IN_APP,
             recipientUserId: assignment.parcel.customerId,
             template: 'parcel_picked_up',
             title: 'Parcel picked up',
-            description: `${assignment.parcel.trackingNumber ?? ''} is on its way to the sorting facility.`.trim(),
+            description:
+              `${assignment.parcel.trackingNumber ?? ''} is on its way to the sorting facility.`.trim(),
             status: NotificationStatus.SENT,
             sentAt: new Date(),
           },
@@ -474,14 +493,15 @@ export class CourierService {
         dto.status === ParcelStatus.IN_TRANSIT &&
         assignment.parcel.customerId
       ) {
-        await (tx as any).notification.create({
+        await txNotif.notification.create({
           data: {
             eventId: randomUUID(),
             channel: NotificationChannel.IN_APP,
             recipientUserId: assignment.parcel.customerId,
             template: 'parcel_in_transit',
             title: 'Parcel in transit',
-            description: `Parcel ${assignment.parcel.trackingNumber ?? ''} is in transit between delivery hubs.`.trim(),
+            description:
+              `Parcel ${assignment.parcel.trackingNumber ?? ''} is in transit between delivery hubs.`.trim(),
             status: NotificationStatus.SENT,
             sentAt: new Date(),
           },
@@ -492,14 +512,15 @@ export class CourierService {
         dto.status === ParcelStatus.OUT_FOR_DELIVERY &&
         assignment.parcel.customerId
       ) {
-        await (tx as any).notification.create({
+        await txNotif.notification.create({
           data: {
             eventId: randomUUID(),
             channel: NotificationChannel.IN_APP,
             recipientUserId: assignment.parcel.customerId,
             template: 'parcel_out_for_delivery',
             title: 'Out for delivery',
-            description: `Out for delivery: ${assignment.parcel.trackingNumber ?? ''} is scheduled to arrive today.`.trim(),
+            description:
+              `Out for delivery: ${assignment.parcel.trackingNumber ?? ''} is scheduled to arrive today.`.trim(),
             status: NotificationStatus.SENT,
             sentAt: new Date(),
           },
@@ -510,32 +531,31 @@ export class CourierService {
         dto.status === ParcelStatus.DELIVERED &&
         assignment.parcel.customerId
       ) {
-        await (tx as any).notification.create({
+        await txNotif.notification.create({
           data: {
             eventId: randomUUID(),
             channel: NotificationChannel.IN_APP,
             recipientUserId: assignment.parcel.customerId,
             template: 'parcel_delivered',
             title: 'Parcel delivered',
-            description: `${assignment.parcel.trackingNumber ?? ''} was delivered successfully.`.trim(),
+            description:
+              `${assignment.parcel.trackingNumber ?? ''} was delivered successfully.`.trim(),
             status: NotificationStatus.SENT,
             sentAt: new Date(),
           },
         });
       }
 
-      if (
-        dto.status === ParcelStatus.FAILED &&
-        assignment.parcel.customerId
-      ) {
-        await (tx as any).notification.create({
+      if (dto.status === ParcelStatus.FAILED && assignment.parcel.customerId) {
+        await txNotif.notification.create({
           data: {
             eventId: randomUUID(),
             channel: NotificationChannel.IN_APP,
             recipientUserId: assignment.parcel.customerId,
             template: 'parcel_failed',
             title: 'Delivery needs attention',
-            description: `Delivery attempt failed for ${assignment.parcel.trackingNumber ?? ''}. Reason: ${dto.failureReason ?? 'Delivery problem'}.`.trim(),
+            description:
+              `Delivery attempt failed for ${assignment.parcel.trackingNumber ?? ''}. Reason: ${dto.failureReason ?? 'Delivery problem'}.`.trim(),
             status: NotificationStatus.SENT,
             sentAt: new Date(),
           },
@@ -653,9 +673,10 @@ export class CourierService {
         });
 
         // In-app notifications
-        if ((tx as any).notification) {
+        const txNotif = tx as unknown as TxWithNotification;
+        if (txNotif.notification) {
           // Customer notification
-          await (tx as any).notification.create({
+          await txNotif.notification.create({
             data: {
               eventId: randomUUID(),
               channel: NotificationChannel.IN_APP,
@@ -669,7 +690,7 @@ export class CourierService {
           });
 
           // Courier notification
-          await (tx as any).notification.create({
+          await txNotif.notification.create({
             data: {
               eventId: randomUUID(),
               channel: NotificationChannel.IN_APP,

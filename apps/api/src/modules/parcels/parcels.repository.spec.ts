@@ -166,15 +166,28 @@ describe('ParcelsRepository tracking read boundary (isolated Prisma)', () => {
       costLkr: 350,
     });
 
-    expect(notificationCreate).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        channel: 'IN_APP',
-        recipientUserId: 'customer-123',
-        template: 'parcel_created',
-        title: 'Delivery created',
-        description: 'Your delivery request SD-CONFIRMED123 has been confirmed.',
-        status: 'SENT',
-      }),
+    expect(notificationCreate).toHaveBeenCalled();
+    const callArgs = notificationCreate.mock.calls as Array<
+      [
+        {
+          data: {
+            channel: string;
+            recipientUserId: string;
+            template: string;
+            title: string;
+            description: string;
+            status: string;
+          };
+        },
+      ]
+    >;
+    expect(callArgs[0][0].data).toMatchObject({
+      channel: 'IN_APP',
+      recipientUserId: 'customer-123',
+      template: 'parcel_created',
+      title: 'Delivery created',
+      description: 'Your delivery request SD-CONFIRMED123 has been confirmed.',
+      status: 'SENT',
     });
   });
 });

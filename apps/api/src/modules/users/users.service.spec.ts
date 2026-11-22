@@ -355,28 +355,45 @@ describe('UsersService', () => {
       // Email sent to both old and new addresses
       expect(emailService.sendProfileUpdatedEmail).toHaveBeenCalledWith(
         'user@example.com',
-        expect.objectContaining({ emailChanged: true, newEmail: 'newemail@example.com' }),
+        expect.objectContaining({
+          emailChanged: true,
+          newEmail: 'newemail@example.com',
+        }),
         'Jane Doe',
       );
       expect(emailService.sendProfileUpdatedEmail).toHaveBeenCalledWith(
         'newemail@example.com',
-        expect.objectContaining({ emailChanged: true, newEmail: 'newemail@example.com' }),
+        expect.objectContaining({
+          emailChanged: true,
+          newEmail: 'newemail@example.com',
+        }),
         'Jane Doe',
       );
 
       // In-app notification recorded
-      expect(prismaService.notification.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            recipientUserId: mockUser.id,
-            channel: NotificationChannel.IN_APP,
-            template: 'profile_updated',
-            title: 'Profile updated',
-            description: 'Your contact details were successfully updated.',
-            status: NotificationStatus.SENT,
-          }),
-        }),
-      );
+      expect(prismaService.notification.create).toHaveBeenCalled();
+      const notifCalls = prismaService.notification.create.mock.calls as Array<
+        [
+          {
+            data: {
+              recipientUserId: string;
+              channel: NotificationChannel;
+              template: string;
+              title: string;
+              description: string;
+              status: NotificationStatus;
+            };
+          },
+        ]
+      >;
+      expect(notifCalls[0][0].data).toMatchObject({
+        recipientUserId: mockUser.id,
+        channel: NotificationChannel.IN_APP,
+        template: 'profile_updated',
+        title: 'Profile updated',
+        description: 'Your contact details were successfully updated.',
+        status: NotificationStatus.SENT,
+      });
     });
 
     it('dispatches notification email and records in-app notification when phone number is changed', async () => {
@@ -394,18 +411,30 @@ describe('UsersService', () => {
       expect(result.user.phoneNumber).toBe('+94779876543');
       expect(emailService.sendProfileUpdatedEmail).toHaveBeenCalledWith(
         'user@example.com',
-        expect.objectContaining({ phoneChanged: true, newPhone: '+94779876543' }),
+        expect.objectContaining({
+          phoneChanged: true,
+          newPhone: '+94779876543',
+        }),
         'Jane Doe',
       );
-      expect(prismaService.notification.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            recipientUserId: mockUser.id,
-            channel: NotificationChannel.IN_APP,
-            title: 'Profile updated',
-          }),
-        }),
-      );
+      expect(prismaService.notification.create).toHaveBeenCalled();
+      const phoneNotifCalls = prismaService.notification.create.mock
+        .calls as Array<
+        [
+          {
+            data: {
+              recipientUserId: string;
+              channel: NotificationChannel;
+              title: string;
+            };
+          },
+        ]
+      >;
+      expect(phoneNotifCalls[0][0].data).toMatchObject({
+        recipientUserId: mockUser.id,
+        channel: NotificationChannel.IN_APP,
+        title: 'Profile updated',
+      });
     });
 
     it('throws ConflictException if new email is already used by another account', async () => {

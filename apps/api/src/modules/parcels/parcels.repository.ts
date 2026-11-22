@@ -42,6 +42,23 @@ export interface CustomerMetrics {
   needsAttention: number;
 }
 
+interface TxWithNotification {
+  notification?: {
+    create: (args: {
+      data: {
+        eventId: string;
+        channel: NotificationChannel;
+        recipientUserId: string;
+        template: string;
+        title: string;
+        description: string;
+        status: NotificationStatus;
+        sentAt: Date;
+      };
+    }) => Promise<unknown>;
+  };
+}
+
 @Injectable()
 export class ParcelsRepository {
   constructor(
@@ -95,8 +112,9 @@ export class ParcelsRepository {
         status: ParcelStatus.PENDING,
       });
 
-      if ((tx as any).notification) {
-        await (tx as any).notification.create({
+      const txNotif = tx as unknown as TxWithNotification;
+      if (txNotif.notification) {
+        await txNotif.notification.create({
           data: {
             eventId: randomUUID(),
             channel: NotificationChannel.IN_APP,
@@ -281,8 +299,9 @@ export class ParcelsRepository {
         courierId: null,
       });
 
-      if ((tx as any).notification) {
-        await (tx as any).notification.create({
+      const txNotif = tx as unknown as TxWithNotification;
+      if (txNotif.notification) {
+        await txNotif.notification.create({
           data: {
             eventId: randomUUID(),
             channel: NotificationChannel.IN_APP,

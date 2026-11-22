@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UsersController } from './users.controller.js';
 import { UsersService } from './users.service.js';
 import { Role } from '../../generated/prisma/enums.js';
+import type { User } from '../../generated/prisma/client.js';
 import type { Request } from 'express';
 
 describe('UsersController', () => {
@@ -68,7 +69,12 @@ describe('UsersController', () => {
     };
     const expectedResult = {
       message: 'Profile updated successfully',
-      user: { id: 'user-id-123', email: 'user@example.com', fullName: 'Updated Name', phoneNumber: '+94779998877' } as any,
+      user: {
+        id: 'user-id-123',
+        email: 'user@example.com',
+        fullName: 'Updated Name',
+        phoneNumber: '+94779998877',
+      } as unknown as Omit<User, 'passwordHash'>,
     };
     usersService.updateProfile.mockResolvedValue(expectedResult);
 

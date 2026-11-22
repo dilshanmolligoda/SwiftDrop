@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import nodemailer, { Transporter } from 'nodemailer';
+import nodemailer, { type Transporter } from 'nodemailer';
 
 export interface SendMailOptions {
   to: string;
@@ -207,13 +207,21 @@ export class EmailService {
     const formattedTimestamp = `${timeFormatter.format(new Date())} (Asia/Colombo)`;
     const resetUrl = `${this.webAppUrl.replace(/\/+$/, '')}/forgot-password`;
     const subject = 'SwiftDrop: Profile contact details updated';
-    const html = this.renderProfileUpdatedHtml(fullName, changes, formattedTimestamp, resetUrl);
+    const html = this.renderProfileUpdatedHtml(
+      fullName,
+      changes,
+      formattedTimestamp,
+      resetUrl,
+    );
 
     const greeting = fullName ? `Hello ${fullName},` : 'Hello,';
     const updatedFieldsList: string[] = [];
-    if (changes.emailChanged && changes.newEmail) updatedFieldsList.push(`Email address updated to: ${changes.newEmail}`);
-    if (changes.phoneChanged && changes.newPhone) updatedFieldsList.push(`Phone number updated to: ${changes.newPhone}`);
-    if (changes.fullNameChanged && changes.newFullName) updatedFieldsList.push(`Full name updated to: ${changes.newFullName}`);
+    if (changes.emailChanged && changes.newEmail)
+      updatedFieldsList.push(`Email address updated to: ${changes.newEmail}`);
+    if (changes.phoneChanged && changes.newPhone)
+      updatedFieldsList.push(`Phone number updated to: ${changes.newPhone}`);
+    if (changes.fullNameChanged && changes.newFullName)
+      updatedFieldsList.push(`Full name updated to: ${changes.newFullName}`);
 
     const text = `${greeting}\n\nYour SwiftDrop profile contact details were updated on ${formattedTimestamp}.\n\nChanges:\n${updatedFieldsList.map((f) => `- ${f}`).join('\n')}\n\nSecurity Notice:\nIf you did not authorize this change, please reset your password immediately or contact customer support.\n\nBest regards,\nThe SwiftDrop Security Team`;
 
@@ -1069,13 +1077,19 @@ export class EmailService {
     const greeting = fullName ? `Hello ${fullName},` : 'Hello,';
     const updatedItemsHtml: string[] = [];
     if (changes.emailChanged && changes.newEmail) {
-      updatedItemsHtml.push(`<div style="margin-bottom: 8px;"><strong>Email:</strong> ${changes.newEmail}</div>`);
+      updatedItemsHtml.push(
+        `<div style="margin-bottom: 8px;"><strong>Email:</strong> ${changes.newEmail}</div>`,
+      );
     }
     if (changes.phoneChanged && changes.newPhone) {
-      updatedItemsHtml.push(`<div style="margin-bottom: 8px;"><strong>Phone Number:</strong> ${changes.newPhone}</div>`);
+      updatedItemsHtml.push(
+        `<div style="margin-bottom: 8px;"><strong>Phone Number:</strong> ${changes.newPhone}</div>`,
+      );
     }
     if (changes.fullNameChanged && changes.newFullName) {
-      updatedItemsHtml.push(`<div style="margin-bottom: 8px;"><strong>Full Name:</strong> ${changes.newFullName}</div>`);
+      updatedItemsHtml.push(
+        `<div style="margin-bottom: 8px;"><strong>Full Name:</strong> ${changes.newFullName}</div>`,
+      );
     }
 
     return `<!DOCTYPE html>

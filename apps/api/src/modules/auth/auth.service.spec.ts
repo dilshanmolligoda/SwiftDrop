@@ -28,6 +28,9 @@ describe('AuthService', () => {
     createCustomer: jest.Mock;
     createMerchant: jest.Mock;
     createCourier: jest.Mock;
+    createGoogleCustomer: jest.Mock;
+    findByGoogleSubject: jest.Mock;
+    linkGoogleSubject: jest.Mock;
   };
   let passwordService: { verify: jest.Mock; hash: jest.Mock };
   let jwtService: { signAsync: jest.Mock; verifyAsync: jest.Mock };
@@ -37,6 +40,7 @@ describe('AuthService', () => {
     sendWelcomeEmail: jest.Mock;
     sendPasswordResetEmail: jest.Mock;
     sendPasswordResetConfirmationEmail: jest.Mock;
+    sendGoogleLinkedEmail: jest.Mock;
   };
   let prismaService: {
     user: { update: jest.Mock };
@@ -872,29 +876,44 @@ describe('AuthService', () => {
         'customer@example.com',
         'Google User',
       );
-      expect(prismaService.notification.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            recipientUserId: 'new-google-user-id',
-            channel: NotificationChannel.IN_APP,
-            template: 'google_account_linked',
-            title: 'Google account linked',
-            description: 'You can now sign in using Google.',
-            status: NotificationStatus.SENT,
-          }),
-        }),
+      expect(prismaService.notification.create).toHaveBeenCalled();
+      const calls = prismaService.notification.create.mock.calls as Array<
+        [
+          {
+            data: {
+              recipientUserId: string;
+              channel: NotificationChannel;
+              template: string;
+              title: string;
+              description: string;
+              status: NotificationStatus;
+            };
+          },
+        ]
+      >;
+      const inAppCall = calls.find(
+        (c) => c[0].data.channel === NotificationChannel.IN_APP,
       );
-      expect(prismaService.notification.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            recipientUserId: 'new-google-user-id',
-            channel: NotificationChannel.EMAIL,
-            template: 'google_account_linked',
-            title: 'Google account linked',
-            status: NotificationStatus.SENT,
-          }),
-        }),
+      const emailCall = calls.find(
+        (c) => c[0].data.channel === NotificationChannel.EMAIL,
       );
+      expect(inAppCall).toBeDefined();
+      expect(inAppCall?.[0].data).toMatchObject({
+        recipientUserId: 'new-google-user-id',
+        channel: NotificationChannel.IN_APP,
+        template: 'google_account_linked',
+        title: 'Google account linked',
+        description: 'You can now sign in using Google.',
+        status: NotificationStatus.SENT,
+      });
+      expect(emailCall).toBeDefined();
+      expect(emailCall?.[0].data).toMatchObject({
+        recipientUserId: 'new-google-user-id',
+        channel: NotificationChannel.EMAIL,
+        template: 'google_account_linked',
+        title: 'Google account linked',
+        status: NotificationStatus.SENT,
+      });
     });
 
     it('dispatches email and records notifications when an existing user links their Google account', async () => {
@@ -928,18 +947,33 @@ describe('AuthService', () => {
         'customer@example.com',
         'Test Customer',
       );
-      expect(prismaService.notification.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            recipientUserId: validUser.id,
-            channel: NotificationChannel.IN_APP,
-            template: 'google_account_linked',
-            title: 'Google account linked',
-            description: 'You can now sign in using Google.',
-            status: NotificationStatus.SENT,
-          }),
-        }),
+      expect(prismaService.notification.create).toHaveBeenCalled();
+      const linkCalls = prismaService.notification.create.mock.calls as Array<
+        [
+          {
+            data: {
+              recipientUserId: string;
+              channel: NotificationChannel;
+              template: string;
+              title: string;
+              description: string;
+              status: NotificationStatus;
+            };
+          },
+        ]
+      >;
+      const linkInApp = linkCalls.find(
+        (c) => c[0].data.channel === NotificationChannel.IN_APP,
       );
+      expect(linkInApp).toBeDefined();
+      expect(linkInApp?.[0].data).toMatchObject({
+        recipientUserId: validUser.id,
+        channel: NotificationChannel.IN_APP,
+        template: 'google_account_linked',
+        title: 'Google account linked',
+        description: 'You can now sign in using Google.',
+        status: NotificationStatus.SENT,
+      });
     });
   });
 

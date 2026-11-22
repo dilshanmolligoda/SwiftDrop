@@ -200,8 +200,7 @@ export class UsersService {
       Boolean(dto.phoneNumber) &&
       dto.phoneNumber!.trim() !== (currentUser.phoneNumber ?? '');
     const fullNameChanged =
-      Boolean(dto.fullName) &&
-      dto.fullName!.trim() !== currentUser.fullName;
+      Boolean(dto.fullName) && dto.fullName!.trim() !== currentUser.fullName;
 
     if (emailChanged) {
       const existing = await this.usersRepository.findByEmail(dto.email!);
@@ -285,7 +284,8 @@ export class UsersService {
       }
     }
 
-    const { passwordHash: _, ...safeUser } = updatedUser;
+    const safeUser: Omit<User, 'passwordHash'> = { ...updatedUser };
+    delete (safeUser as { passwordHash?: string | null }).passwordHash;
     return {
       message: 'Profile updated successfully',
       user: safeUser,
