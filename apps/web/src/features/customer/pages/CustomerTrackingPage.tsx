@@ -9,6 +9,7 @@ import {
   normalizeTrackingNumber, STATUS_DETAILS, useCustomerRequest,
   type ParcelStatus, type TrackingParcel,
 } from '../tracking/customerTrackingApi'
+import { useCustomerTrackingUpdates, type CustomerTrackingUpdateSource } from '../tracking/customerTrackingUpdates'
 import './CustomerTrackingPage.css'
 
 type SessionState = 'checking' | 'customer' | 'redirecting' | 'error' | 'denied'
@@ -114,7 +115,10 @@ function TrackingSearchForm({ initialNumber, onTrack }: { initialNumber: string;
   )
 }
 
-function CustomerTrackingContent({ onAccessError }: { onAccessError: (error: unknown) => boolean }) {
+function CustomerTrackingContent({ onAccessError, updates }: {
+  onAccessError: (error: unknown) => boolean
+  updates?: CustomerTrackingUpdateSource
+}) {
   const [params, setParams] = useSearchParams()
   const queryNumber = params.get('trackingNumber')
   let normalizedNumber = ''
@@ -128,21 +132,24 @@ function CustomerTrackingContent({ onAccessError }: { onAccessError: (error: unk
     queryError = customerErrorMessage(error)
   }
   const loadTracking = useCallback((signal: AbortSignal) => getCustomerTracking(normalizedNumber, signal), [normalizedNumber])
-  const { data: parcel, loading, error, retry, refresh } = useCustomerRequest(loadTracking, onAccessError, Boolean(normalizedNumber))
-  const { data: summary, error: summaryError, retry: retrySummary, refresh: refreshSummary } = useCustomerRequest(getCustomerSummary, onAccessError)
-  // Live updates: re-read in the background when this parcel changes (or after a reconnect).
+  const { data: parcel, loading, refreshing, error, retry, refresh } = useCustomerRequest(
+    loadTracking, onAccessError, Boolean(normalizedNumber), { keepPreviousDataOnRefresh: true },
+  )
+  const { data: summary, error: summaryError, retry: retrySummary, refresh: refreshSummary } = useCustomerRequest(
+    getCustomerSummary, onAccessError, true, { keepPreviousDataOnRefresh: true },
+  )
+  const refreshTracking = useCallback(() => { refresh(); refreshSummary() }, [refresh, refreshSummary])
+  useCustomerTrackingUpdates(updates, parcel?.id, refreshTracking)
+  // Reuse dev's shared client; an injected source replaces it to avoid duplicate subscriptions.
   const { state: liveState } = useParcelRealtime({
-    subscription: parcel ? { scope: 'parcel', parcelId: parcel.id } : null,
-    onChange: useCallback(() => {
-      refresh()
-      refreshSummary()
-    }, [refresh, refreshSummary]),
+    subscription: !updates && parcel ? { scope: 'parcel', parcelId: parcel.id } : null,
+    onChange: refreshTracking,
   })
   const handleTrack = (number: string) => {
     const next = new URLSearchParams(params)
     next.set('trackingNumber', number)
     setParams(next)
-    retry()
+    if (number === normalizedNumber) retry()
   }
 
   return (
@@ -167,21 +174,21 @@ function CustomerTrackingContent({ onAccessError }: { onAccessError: (error: unk
         ))}
       </section>
       <div className="customer-tracking-summary-note" role={summaryError ? 'alert' : 'status'}>
-        {summaryError ? <>{summaryError} <button className="customer-tracking-link customer-tracking-summary-retry" type="button" onClick={retrySummary}>Retry statistics</button></>
+        {summaryError ? <>{summary && 'Showing the last loaded statistics. '}{summaryError} <button className="customer-tracking-link customer-tracking-summary-retry" type="button" onClick={retrySummary}>Retry statistics</button></>
           : summary ? `Statistics cover your deliveries. Reporting month: ${summary.reportingMonth} (UTC).` : 'Loading delivery statistics…'}
       </div>
       <div className="customer-tracking-card">
         <TrackingSearchForm key={queryNumber ?? ''} initialNumber={queryNumber ?? ''} onTrack={handleTrack} />
-        <div className="customer-tracking-search-feedback" role="status" aria-atomic="true">{loading && 'Loading parcel tracking…'}</div>
-        {(queryError || error) && <p className="customer-tracking-error" role="alert">{queryError || error} {error && <button className="customer-tracking-link customer-tracking-summary-retry" type="button" onClick={retry}>Try again</button>}</p>}
-        {parcel && <div className="customer-tracking-live"><LiveIndicator state={liveState} /></div>}
+        <div className="customer-tracking-search-feedback" role="status" aria-atomic="true">{loading && (refreshing ? 'Refreshing parcel tracking…' : 'Loading parcel tracking…')}</div>
+        {(queryError || error) && <p className="customer-tracking-error" role="alert">{parcel && error && 'Showing the last loaded result. '}{queryError || error} {error && <button className="customer-tracking-link customer-tracking-summary-retry" type="button" onClick={retry}>Try again</button>}</p>}
+        {parcel && !updates && <div className="customer-tracking-live"><LiveIndicator state={liveState} /></div>}
         <div aria-busy={loading}><ParcelDetails parcel={parcel} /></div>
       </div>
     </div>
   )
 }
 
-export function CustomerTrackingPage() {
+export function CustomerTrackingPage({ updates }: { updates?: CustomerTrackingUpdateSource } = {}) {
   const navigate = useNavigate()
   const [session, setSession] = useState<SessionState>('checking')
   const [sessionError, setSessionError] = useState('')
@@ -275,5 +282,5 @@ export function CustomerTrackingPage() {
     )
   }
 
-  return <CustomerTrackingContent onAccessError={onAccessError} />
+  return <CustomerTrackingContent onAccessError={onAccessError} updates={updates} />
 }

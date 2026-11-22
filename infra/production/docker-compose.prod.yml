@@ -117,8 +117,34 @@ services:
     environment:
       MOCK_MERCHANT_PORT: "5000"
       SWIFTDROP_API_URL: http://api:4000/api/v1
+      # What to register in SwiftDrop: the worker calls the store directly on the
+      # Docker network (:8443 is behind basic auth). Needs
+      # WEBHOOK_PRIVATE_HOST_ALLOWLIST=mock-merchant in .env.
+      MOCK_MERCHANT_WEBHOOK_URL: http://mock-merchant:5000/webhooks/swiftdrop
     depends_on:
       - api
+    logging: *logging
+
+  # AI Delivery Assistant (bonus): chat endpoint + MCP tools. Calls only the
+  # SwiftDrop API (as the logged-in user) and the LLM provider. No ports:
+  # Caddy routes /api/assistant/* here. Without LLM_API_KEY in .env it still
+  # starts and the chat answers "not configured".
+  ai-assistant:
+    image: ghcr.io/dilshanmolligoda/swiftdrop-ai-assistant:${TAG:-main}
+    env_file: .env
+    environment:
+      AI_BACKEND_API_URL: http://api:4000/api/v1
+      AI_ASSISTANT_PORT: "3100"
+    restart: always
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3100/api/assistant/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     logging: *logging
 
   caddy:
@@ -142,6 +168,7 @@ services:
       - web
       - mock-merchant
       - mailpit
+      - ai-assistant
     logging: *logging
 
 volumes:

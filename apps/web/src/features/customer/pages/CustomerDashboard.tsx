@@ -16,7 +16,7 @@ import {
   Send,
 } from 'lucide-react'
 import { useCustomerDeliveries } from '../context/useCustomerDeliveries'
-import { type CustomerDelivery } from '../context/CustomerDeliveryContext'
+import { DELIVERY_STATUS_LABELS, isActiveDeliveryStatus, isPickupConfirmed } from '../context/customerDeliveryModel'
 import './CustomerDashboard.css'
 
 function getInitialLinkNotice(): { type: 'success' | 'error'; message: string } | null {
@@ -70,7 +70,7 @@ function getInitialLinkNotice(): { type: 'success' | 'error'; message: string } 
 
 
 export const CustomerDashboard: React.FC = () => {
-  const { metrics, deliveries, openCreateModal } = useCustomerDeliveries()
+  const { metrics, deliveries, isLoading, error, openCreateModal, refreshDeliveries } = useCustomerDeliveries()
   const [linkNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(
     getInitialLinkNotice,
   )
@@ -80,7 +80,8 @@ export const CustomerDashboard: React.FC = () => {
   const [searchFeedback, setSearchFeedback] = useState<string | null>(null)
 
   // Modal States
-  const [selectedDelivery, setSelectedDelivery] = useState<CustomerDelivery | null>(null)
+  const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(null)
+  const selectedDelivery = deliveries.find(delivery => delivery.id === selectedDeliveryId) ?? null
   const [isAssistantOpen, setIsAssistantOpen] = useState(false)
 
   // Assistant State
@@ -108,7 +109,8 @@ export const CustomerDashboard: React.FC = () => {
 
     if (matched) {
       setSearchFeedback(null)
-      setSelectedDelivery(matched)
+      setSelectedDeliveryId(matched.id)
+      void refreshDeliveries()
     } else {
       setSearchFeedback(`No parcel found matching "${query}". Check your tracking code and try again.`)
     }
@@ -140,9 +142,7 @@ export const CustomerDashboard: React.FC = () => {
     }, 400)
   }
 
-  const activeDeliveriesList = deliveries.filter((d) =>
-    ['PENDING', 'ACCEPTED', 'PICKED_UP', 'IN_TRANSIT', 'OUT_FOR_DELIVERY'].includes(d.status),
-  )
+  const activeDeliveriesList = deliveries.filter(d => isActiveDeliveryStatus(d.status))
   const attentionDelivery = deliveries.find((d) => ['FAILED', 'RETURNED'].includes(d.status))
 
   return (
@@ -246,6 +246,18 @@ export const CustomerDashboard: React.FC = () => {
         )}
       </section>
 
+      {isLoading && (
+        <p className="customer-dashboard__subtitle" role="status">Loading deliveries...</p>
+      )}
+      {error && (
+        <div className="customer-dashboard__alert customer-dashboard__alert--error" role="alert">
+          <span>{error}</span>
+          <button type="button" className="section-header__link" onClick={() => void refreshDeliveries()} disabled={isLoading}>
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* Main 2-Column Section */}
       <div className="customer-dashboard__main-grid">
         {/* Left Column: Active deliveries */}
@@ -263,9 +275,9 @@ export const CustomerDashboard: React.FC = () => {
               <div className="empty-deliveries-icon">
                 <Package className="w-8 h-8 text-emerald-800" />
               </div>
-              <h3 className="empty-deliveries-title">No active deliveries</h3>
+              <h3 className="empty-deliveries-title">{isLoading ? 'Loading deliveries...' : error ? 'Deliveries unavailable' : 'No active deliveries'}</h3>
               <p className="empty-deliveries-subtitle">
-                You haven't scheduled any deliveries yet. Click "Create delivery" to book your first courier pickup!
+                {isLoading || error ? 'Refresh your deliveries to check their latest status.' : 'You haven\'t scheduled any deliveries yet. Click "Create delivery" to book your first courier pickup!'}
               </p>
               <button
                 type="button"
@@ -280,22 +292,15 @@ export const CustomerDashboard: React.FC = () => {
             activeDeliveriesList.map((delivery) => {
               const destinationCity =
                 delivery.recipientAddress.split(',').pop()?.trim() || delivery.recipientAddress
-              const isPending = delivery.status === 'PENDING'
+              const isPending = ['CREATED', 'ASSIGNED', 'PENDING'].includes(delivery.status)
               const isInTransit = delivery.status === 'IN_TRANSIT'
               const isOutForDelivery = delivery.status === 'OUT_FOR_DELIVERY'
 
-              const stage1Completed = !isPending
+              const stage1Completed = isPickupConfirmed(delivery.status)
               const stage2Completed = isInTransit || isOutForDelivery
               const stage3Active = isOutForDelivery
 
-              const badgeText =
-                delivery.status === 'OUT_FOR_DELIVERY'
-                  ? 'Out for delivery'
-                  : delivery.status === 'IN_TRANSIT'
-                    ? 'In transit'
-                    : delivery.status === 'PICKED_UP'
-                      ? 'Picked up'
-                      : 'Pending pickup'
+              const badgeText = DELIVERY_STATUS_LABELS[delivery.status]
 
               const badgeClass =
                 delivery.status === 'OUT_FOR_DELIVERY'
@@ -436,7 +441,7 @@ export const CustomerDashboard: React.FC = () => {
                     </div>
                     <button
                       type="button"
-                      onClick={() => setSelectedDelivery(delivery)}
+                      onClick={() => setSelectedDeliveryId(delivery.id)}
                       className="delivery-card__details-btn"
                     >
                       <span>View details</span>
@@ -469,14 +474,14 @@ export const CustomerDashboard: React.FC = () => {
                   </span>
                 </div>
 
-                <h4 className="attention-card__issue-title">Delivery failed / delayed</h4>
+                <h4 className="attention-card__issue-title">{DELIVERY_STATUS_LABELS[attentionDelivery.status]}</h4>
                 <p className="attention-card__issue-desc">
-                  Our driver could not reach the recipient. Please verify contact information.
+                  Open the delivery details to review its recorded status.
                 </p>
 
                 <button
                   type="button"
-                  onClick={() => setSelectedDelivery(attentionDelivery)}
+                  onClick={() => setSelectedDeliveryId(attentionDelivery.id)}
                   className="attention-card__link-btn"
                 >
                   <span>View delivery</span>
@@ -524,7 +529,7 @@ export const CustomerDashboard: React.FC = () => {
        * Modal 1: Delivery Details Dialog
        * ------------------------------------------------------------- */}
       {selectedDelivery && (
-        <div className="modal-backdrop" onClick={() => setSelectedDelivery(null)}>
+        <div className="modal-backdrop" onClick={() => setSelectedDeliveryId(null)}>
           <div
             className="modal-card"
             onClick={(e) => e.stopPropagation()}
@@ -542,7 +547,7 @@ export const CustomerDashboard: React.FC = () => {
               <button
                 type="button"
                 className="modal-close-btn"
-                onClick={() => setSelectedDelivery(null)}
+                onClick={() => setSelectedDeliveryId(null)}
                 aria-label="Close dialog"
               >
                 <X className="w-5 h-5" />
@@ -564,7 +569,7 @@ export const CustomerDashboard: React.FC = () => {
                         : 'badge--default'
                     }`}
                   >
-                    {selectedDelivery.status.replace(/_/g, ' ')}
+                    {DELIVERY_STATUS_LABELS[selectedDelivery.status]}
                   </span>
                 </div>
 
@@ -598,8 +603,8 @@ export const CustomerDashboard: React.FC = () => {
                 <div className="modal-alert-box">
                   <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
                   <div>
-                    <strong>Action Required:</strong> The recipient could not be contacted at the
-                    delivery destination. Courier will retry during regular business hours tomorrow.
+                    <strong>Action Required:</strong> This delivery is recorded as failed.
+                    Contact support if you need help with the next steps.
                   </div>
                 </div>
               )}
@@ -608,7 +613,7 @@ export const CustomerDashboard: React.FC = () => {
             <div className="modal-footer">
               <button
                 type="button"
-                onClick={() => setSelectedDelivery(null)}
+                onClick={() => setSelectedDeliveryId(null)}
                 className="modal-btn-secondary"
               >
                 Close

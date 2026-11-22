@@ -1,4 +1,4 @@
-# apps/ai-assistant — AI Delivery Assistant (bonus +5)
+# apps/ai-assistant — AI Delivery Assistant 
 
 A chatbot that answers questions like *"Where is my parcel?"* or *"How much to send 2 kg to
 Kandy?"* by calling the SwiftDrop backend API — never the database directly, so every
