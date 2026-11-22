@@ -16,7 +16,7 @@ import { adminApi, type AdminApplicationItem, type AdminDashboardKpis } from '..
 import { AdminFilterSelect } from '../components/AdminFilterSelect'
 import styles from './AdminUsersApprovalsPage.module.css'
 
-type TabOption = 'pending' | 'customers' | 'merchants' | 'couriers'
+type TabOption = 'pending' | 'merchants' | 'couriers'
 
 function mapAdminAppToItem(app: AdminApplicationItem): ApplicationItem {
   const initials = app.fullName
@@ -222,18 +222,6 @@ export const AdminUsersApprovalsPage: React.FC = () => {
           <button
             type="button"
             role="tab"
-            aria-selected={activeTab === 'customers'}
-            className={`${styles.tabButton} ${activeTab === 'customers' ? styles.tabButtonActive : ''}`}
-            onClick={() => {
-              setActiveTab('customers')
-              setPage(1)
-            }}
-          >
-            Customers
-          </button>
-          <button
-            type="button"
-            role="tab"
             aria-selected={activeTab === 'merchants'}
             className={`${styles.tabButton} ${activeTab === 'merchants' ? styles.tabButtonActive : ''}`}
             onClick={() => {
@@ -308,12 +296,6 @@ export const AdminUsersApprovalsPage: React.FC = () => {
                       <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
                       <span>Loading applications...</span>
                     </div>
-                  </td>
-                </tr>
-              ) : activeTab === 'customers' ? (
-                <tr>
-                  <td colSpan={5} style={{ textAlign: 'center', padding: '36px', color: '#64748b' }}>
-                    Customer accounts are automatically verified upon registration.
                   </td>
                 </tr>
               ) : filteredApplications.length === 0 ? (

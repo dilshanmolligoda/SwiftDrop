@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
+import { X, Lock, Shield, Laptop, CheckCircle2, Trash2 } from 'lucide-react'
 import type {
   AdminProfileData,
   NotificationPreferencesData,
@@ -16,33 +17,113 @@ export const AdminSettingsPage: React.FC = () => {
 
   // 1. Profile State
   const [profile, setProfile] = useState<AdminProfileData>(() => ({
-    fullName: user?.fullName || 'Anjali Perera',
+    fullName: user?.fullName || 'Demo Dispatcher',
     phoneNumber: '+94 77 345 6789',
-    email: user?.email || 'anjali.perera@example.com',
+    email: user?.email || 'dispatcher@swiftdrop.local',
     role: user ? formatUserRole(user.role) : 'Dispatcher',
-    initials: user ? getUserInitials(user.fullName) : 'AP',
+    initials: user ? getUserInitials(user.fullName) : 'DD',
   }))
 
+  // Profile Avatar State (persisted to localStorage)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(() => {
+    return localStorage.getItem('swiftdrop_admin_avatar') || null
+  })
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   // 2. Regional Preferences State
-  const [regional, setRegional] = useState<RegionalPreferencesData>({
-    language: 'English',
-    timeZone: 'Asia/Colombo (UTC+05:30)',
+  const [regional, setRegional] = useState<RegionalPreferencesData>(() => {
+    const saved = localStorage.getItem('swiftdrop_admin_regional')
+    if (saved) {
+      try {
+        return JSON.parse(saved)
+      } catch {
+        // ignore
+      }
+    }
+    return {
+      language: 'English',
+      timeZone: 'Asia/Colombo (UTC+05:30)',
+    }
   })
 
-  // 3. Notification Toggles State (auto-saves on toggle)
-  const [notifications, setNotifications] = useState<NotificationPreferencesData>({
-    newUnassignedParcels: true,
-    failedDeliveryAttempts: true,
-    newMerchantOrCourierApplications: true,
-    soundAlerts: false,
+  // 3. Notification Toggles State (persisted to localStorage)
+  const [notifications, setNotifications] = useState<NotificationPreferencesData>(() => {
+    const saved = localStorage.getItem('swiftdrop_admin_notifications')
+    if (saved) {
+      try {
+        return JSON.parse(saved)
+      } catch {
+        // ignore
+      }
+    }
+    return {
+      newUnassignedParcels: true,
+      failedDeliveryAttempts: true,
+      newMerchantOrCourierApplications: true,
+      soundAlerts: false,
+    }
   })
+
+  // Security States
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState<boolean>(() => {
+    return localStorage.getItem('swiftdrop_admin_2fa') === 'true'
+  })
+
+  // Modals state
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false)
+  const [is2FaModalOpen, setIs2FaModalOpen] = useState(false)
+  const [isDevicesModalOpen, setIsDevicesModalOpen] = useState(false)
+
+  // Password Form State
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordError, setPasswordError] = useState<string | null>(null)
 
   // Toast / Feedback State
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null)
 
   const showFeedback = (message: string) => {
     setFeedbackMessage(message)
-    setTimeout(() => setFeedbackMessage(null), 3000)
+    setTimeout(() => setFeedbackMessage(null), 3500)
+  }
+
+  // Handle Photo Upload
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      showFeedback('Please select a valid image file.')
+      return
+    }
+
+    if (file.size > 3 * 1024 * 1024) {
+      showFeedback('Image file size must be under 3 MB.')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      const dataUrl = reader.result as string
+      setAvatarUrl(dataUrl)
+      try {
+        localStorage.setItem('swiftdrop_admin_avatar', dataUrl)
+      } catch {
+        // Storage limit fallback
+      }
+      showFeedback('Profile photo updated successfully.')
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleRemovePhoto = () => {
+    setAvatarUrl(null)
+    localStorage.removeItem('swiftdrop_admin_avatar')
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+    showFeedback('Profile photo removed.')
   }
 
   // Handle Profile Save
@@ -54,6 +135,7 @@ export const AdminSettingsPage: React.FC = () => {
   // Handle Regional Preferences Save
   const handleRegionalSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    localStorage.setItem('swiftdrop_admin_regional', JSON.stringify(regional))
     showFeedback('Regional preferences updated.')
   }
 
@@ -61,9 +143,51 @@ export const AdminSettingsPage: React.FC = () => {
   const handleToggleNotification = (key: keyof NotificationPreferencesData) => {
     setNotifications((prev) => {
       const updated = { ...prev, [key]: !prev[key] }
+      localStorage.setItem('swiftdrop_admin_notifications', JSON.stringify(updated))
       return updated
     })
     showFeedback('Notification preferences updated automatically.')
+  }
+
+  // Handle Password Submit
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    setPasswordError(null)
+
+    if (!currentPassword) {
+      setPasswordError('Please enter your current password.')
+      return
+    }
+
+    if (newPassword.length < 12) {
+      setPasswordError('New password must be at least 12 characters long.')
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('New passwords do not match.')
+      return
+    }
+
+    // Success simulation
+    setIsPasswordModalOpen(false)
+    setCurrentPassword('')
+    setNewPassword('')
+    setConfirmPassword('')
+    showFeedback('Your password has been changed successfully.')
+  }
+
+  // Handle 2FA Toggle
+  const handleToggle2Fa = () => {
+    const nextState = !twoFactorEnabled
+    setTwoFactorEnabled(nextState)
+    localStorage.setItem('swiftdrop_admin_2fa', nextState ? 'true' : 'false')
+    setIs2FaModalOpen(false)
+    showFeedback(
+      nextState
+        ? 'Two-step verification has been enabled.'
+        : 'Two-step verification has been disabled.',
+    )
   }
 
   return (
@@ -77,7 +201,10 @@ export const AdminSettingsPage: React.FC = () => {
 
       {feedbackMessage && (
         <div className={styles.toastNotice} role="status">
-          <span>{feedbackMessage}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <CheckCircle2 size={16} />
+            <span>{feedbackMessage}</span>
+          </div>
           <button
             type="button"
             onClick={() => setFeedbackMessage(null)}
@@ -99,17 +226,46 @@ export const AdminSettingsPage: React.FC = () => {
             </div>
 
             <div className={styles.profileHeader}>
-              <div className={styles.avatarLarge} aria-hidden="true">
-                {profile.initials}
+              <div className={styles.avatarLarge} aria-hidden="true" style={{ overflow: 'hidden' }}>
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={profile.fullName}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  profile.initials
+                )}
               </div>
               <div className={styles.profileActions}>
-                <button
-                  type="button"
-                  className={styles.buttonOutlineSmall}
-                  onClick={() => alert('Photo upload dialog')}
-                >
-                  Change photo
-                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={handlePhotoUpload}
+                />
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    className={styles.buttonOutlineSmall}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    Change photo
+                  </button>
+                  {avatarUrl && (
+                    <button
+                      type="button"
+                      className={styles.buttonOutlineSmall}
+                      style={{ color: '#dc2626', borderColor: '#fca5a5' }}
+                      onClick={handleRemovePhoto}
+                      title="Remove custom photo"
+                    >
+                      <Trash2 size={13} style={{ marginRight: '4px' }} />
+                      Remove
+                    </button>
+                  )}
+                </div>
                 <span className={styles.roleBadge}>{profile.role}</span>
               </div>
             </div>
@@ -144,7 +300,7 @@ export const AdminSettingsPage: React.FC = () => {
                   <button
                     type="button"
                     className={styles.actionLink}
-                    onClick={() => alert('Change email verification link sent.')}
+                    onClick={() => showFeedback('A verification email has been sent to update your address.')}
                   >
                     Change
                   </button>
@@ -224,10 +380,7 @@ export const AdminSettingsPage: React.FC = () => {
               <div className={styles.securityItem}>
                 <div className={styles.securityLeft}>
                   <div className={styles.securityIconWrapper} aria-hidden="true">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                    </svg>
+                    <Lock size={18} />
                   </div>
                   <div>
                     <h3 className={styles.securityTitle}>Password</h3>
@@ -239,7 +392,10 @@ export const AdminSettingsPage: React.FC = () => {
                 <button
                   type="button"
                   className={styles.buttonOutlineSmall}
-                  onClick={() => alert('Change password modal will open')}
+                  onClick={() => {
+                    setPasswordError(null)
+                    setIsPasswordModalOpen(true)
+                  }}
                 >
                   Change password
                 </button>
@@ -249,9 +405,7 @@ export const AdminSettingsPage: React.FC = () => {
               <div className={styles.securityItem}>
                 <div className={styles.securityLeft}>
                   <div className={styles.securityIconWrapper} aria-hidden="true">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                    </svg>
+                    <Shield size={18} />
                   </div>
                   <div>
                     <h3 className={styles.securityTitle}>Two-step verification</h3>
@@ -261,13 +415,22 @@ export const AdminSettingsPage: React.FC = () => {
                   </div>
                 </div>
                 <div className={styles.securityRight}>
-                  <span className={styles.statusPill}>Off</span>
+                  <span
+                    className={styles.statusPill}
+                    style={
+                      twoFactorEnabled
+                        ? { backgroundColor: '#ecfdf5', color: '#065f46', borderColor: '#a7f3d0' }
+                        : {}
+                    }
+                  >
+                    {twoFactorEnabled ? 'On' : 'Off'}
+                  </span>
                   <button
                     type="button"
                     className={styles.buttonOutlineSmall}
-                    onClick={() => alert('2-step verification setup')}
+                    onClick={() => setIs2FaModalOpen(true)}
                   >
-                    Set up
+                    {twoFactorEnabled ? 'Manage' : 'Set up'}
                   </button>
                 </div>
               </div>
@@ -276,11 +439,7 @@ export const AdminSettingsPage: React.FC = () => {
               <div className={styles.securityItem}>
                 <div className={styles.securityLeft}>
                   <div className={styles.securityIconWrapper} aria-hidden="true">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-                      <line x1="8" y1="21" x2="16" y2="21" />
-                      <line x1="12" y1="17" x2="12" y2="21" />
-                    </svg>
+                    <Laptop size={18} />
                   </div>
                   <div>
                     <h3 className={styles.securityTitle}>Signed-in devices</h3>
@@ -292,7 +451,7 @@ export const AdminSettingsPage: React.FC = () => {
                 <button
                   type="button"
                   className={styles.actionLink}
-                  onClick={() => alert('Managing active sessions')}
+                  onClick={() => setIsDevicesModalOpen(true)}
                 >
                   Manage →
                 </button>
@@ -406,16 +565,207 @@ export const AdminSettingsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Bottom Help Link */}
-      <a href="#help" className={styles.helpFooter}>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="12" cy="12" r="10" />
-          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-          <line x1="12" y1="17" x2="12.01" y2="17" />
-        </svg>
-        <span>Help & support</span>
-      </a>
+      {/* Change Password Modal */}
+      {isPasswordModalOpen && (
+        <div className={styles.modalOverlay} role="dialog" aria-modal="true" aria-labelledby="change-password-title">
+          <div className={styles.modalDialog}>
+            <div className={styles.modalHeader}>
+              <h2 id="change-password-title" className={styles.modalTitle}>Change password</h2>
+              <button
+                type="button"
+                className={styles.modalCloseBtn}
+                onClick={() => setIsPasswordModalOpen(false)}
+                aria-label="Close dialog"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <form onSubmit={handlePasswordSubmit}>
+              <div className={styles.modalBody}>
+                {passwordError && (
+                  <div style={{ backgroundColor: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca', borderRadius: '6px', padding: '10px 14px', marginBottom: '16px', fontSize: '13px' }}>
+                    {passwordError}
+                  </div>
+                )}
+                <div className={styles.formGroup}>
+                  <label htmlFor="current-password" className={styles.label}>Current password</label>
+                  <input
+                    id="current-password"
+                    type="password"
+                    className={styles.input}
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label htmlFor="new-password" className={styles.label}>New password (min 12 characters)</label>
+                  <input
+                    id="new-password"
+                    type="password"
+                    className={styles.input}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label htmlFor="confirm-new-password" className={styles.label}>Confirm new password</label>
+                  <input
+                    id="confirm-new-password"
+                    type="password"
+                    className={styles.input}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+              <div className={styles.modalFooter}>
+                <button
+                  type="button"
+                  className={styles.buttonSecondary}
+                  onClick={() => setIsPasswordModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className={styles.buttonPrimary}>
+                  Update password
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Two-Step Verification Modal */}
+      {is2FaModalOpen && (
+        <div className={styles.modalOverlay} role="dialog" aria-modal="true" aria-labelledby="two-fa-title">
+          <div className={styles.modalDialog}>
+            <div className={styles.modalHeader}>
+              <h2 id="two-fa-title" className={styles.modalTitle}>Two-step verification</h2>
+              <button
+                type="button"
+                className={styles.modalCloseBtn}
+                onClick={() => setIs2FaModalOpen(false)}
+                aria-label="Close dialog"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <p style={{ fontSize: '14px', color: '#4b5563', lineHeight: '1.5', margin: '0 0 16px 0' }}>
+                Two-step verification adds an additional layer of security by requiring a verification code when signing in from an unrecognized device.
+              </p>
+              <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: '14px', color: '#111827' }}>
+                    Authentication status
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>
+                    {twoFactorEnabled ? 'Enabled on your account' : 'Currently disabled'}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className={twoFactorEnabled ? styles.buttonSecondary : styles.buttonPrimary}
+                  onClick={handleToggle2Fa}
+                >
+                  {twoFactorEnabled ? 'Disable 2FA' : 'Enable 2FA'}
+                </button>
+              </div>
+            </div>
+            <div className={styles.modalFooter}>
+              <button
+                type="button"
+                className={styles.buttonSecondary}
+                onClick={() => setIs2FaModalOpen(false)}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Signed-in Devices Modal */}
+      {isDevicesModalOpen && (
+        <div className={styles.modalOverlay} role="dialog" aria-modal="true" aria-labelledby="devices-title">
+          <div className={styles.modalDialog}>
+            <div className={styles.modalHeader}>
+              <h2 id="devices-title" className={styles.modalTitle}>Signed-in devices</h2>
+              <button
+                type="button"
+                className={styles.modalCloseBtn}
+                onClick={() => setIsDevicesModalOpen(false)}
+                aria-label="Close dialog"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <p style={{ fontSize: '13px', color: '#6b7280', margin: '0 0 14px 0' }}>
+                These devices are currently logged into your administrator account.
+              </p>
+
+              <div className={styles.deviceItem}>
+                <div className={styles.deviceInfo}>
+                  <div className={styles.deviceIcon}>
+                    <Laptop size={20} />
+                  </div>
+                  <div>
+                    <p className={styles.deviceName}>MacBook Pro • Chrome</p>
+                    <p className={styles.deviceMeta}>
+                      <span className={styles.activeDot} />
+                      Active now • Colombo, LK (127.0.0.1)
+                    </p>
+                  </div>
+                </div>
+                <span style={{ fontSize: '12px', color: '#059669', fontWeight: 600 }}>This device</span>
+              </div>
+
+              <div className={styles.deviceItem}>
+                <div className={styles.deviceInfo}>
+                  <div className={styles.deviceIcon}>
+                    <Laptop size={20} />
+                  </div>
+                  <div>
+                    <p className={styles.deviceName}>Safari on iPhone</p>
+                    <p className={styles.deviceMeta}>Last active 2 hours ago • Sri Lanka</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className={styles.buttonOutlineSmall}
+                  style={{ color: '#dc2626', borderColor: '#fca5a5' }}
+                  onClick={() => showFeedback('Session revoked for Safari on iPhone.')}
+                >
+                  Sign out
+                </button>
+              </div>
+            </div>
+            <div className={styles.modalFooter}>
+              <button
+                type="button"
+                className={styles.buttonOutlineSmall}
+                onClick={() => {
+                  setIsDevicesModalOpen(false)
+                  showFeedback('All other sessions signed out.')
+                }}
+              >
+                Sign out all other sessions
+              </button>
+              <button
+                type="button"
+                className={styles.buttonPrimary}
+                onClick={() => setIsDevicesModalOpen(false)}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
-
