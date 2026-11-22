@@ -81,9 +81,9 @@ function copyFor(event: ParcelEventV1): Copy | null {
     case 'RETURNED':
       return {
         template: 'parcel-returned',
-        subject: 'Your parcel is being returned',
-        headline: 'Returned to sender',
-        body: 'Your parcel could not be delivered and is being returned to the sender.',
+        subject: `Delivery Cancelled: Parcel ${event.trackingNumber}`,
+        headline: 'Delivery cancelled',
+        body: `Your delivery request ${event.trackingNumber} was cancelled. Fee adjustment or refund will be confirmed.`,
       };
     default:
       return null;

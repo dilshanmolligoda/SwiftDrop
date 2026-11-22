@@ -242,4 +242,67 @@ export class ParcelsRepository {
       needsAttention,
     };
   }
+
+  async cancelParcel(
+    customerId: string,
+    parcelId: string,
+  ): Promise<CustomerParcelRecord> {
+    const parcel = await this.prisma.$transaction(async (tx) => {
+      const existing = await tx.parcel.findUnique({
+        where: { id: parcelId },
+      });
+      if (!existing || existing.customerId !== customerId) {
+        throw new Error('Parcel not found');
+      }
+
+      const updated = await tx.parcel.update({
+        where: { id: parcelId },
+        data: {
+          status: ParcelStatus.RETURNED,
+          statusHistory: {
+            create: {
+              status: ParcelStatus.RETURNED,
+              note: 'Delivery cancelled by customer before pickup.',
+            },
+          },
+        },
+        include: {
+          statusHistory: {
+            orderBy: { createdAt: 'asc' },
+          },
+        },
+      });
+
+      await this.outbox.recordParcelStatusChanged(tx, {
+        parcel: updated,
+        previousStatus: existing.status,
+        newStatus: ParcelStatus.RETURNED,
+        failureReason: null,
+        courierId: null,
+      });
+
+      if ((tx as any).notification) {
+        await (tx as any).notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.IN_APP,
+            recipientUserId: customerId,
+            template: 'parcel_cancelled',
+            title: 'Delivery cancelled',
+            description: `Delivery request ${updated.trackingNumber} was cancelled.`,
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+      }
+
+      return updated;
+    });
+
+    return {
+      ...parcel,
+      weightKg: Number(parcel.weightKg),
+      costLkr: Number(parcel.costLkr),
+    };
+  }
 }
