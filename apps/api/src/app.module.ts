@@ -21,6 +21,7 @@ import { MerchantWebhooksModule } from './modules/merchant-webhooks/merchant-web
 import { PricingModule } from './modules/pricing/pricing.module.js';
 import { RealtimeModule } from './modules/realtime/realtime.module.js';
 import { ParcelsModule } from './modules/parcels/parcels.module.js';
+import { AdminModule } from './modules/admin/admin.module.js';
 import { TrackingModule } from './modules/tracking/tracking.module.js';
 import { MerchantSettingsModule } from './modules/merchant-settings/merchant-settings.module.js';
 
@@ -32,6 +33,7 @@ import { MerchantSettingsModule } from './modules/merchant-settings/merchant-set
       envFilePath: ['.env', '../../.env'],
       validate: validateEnv,
     }),
+    AdminModule,
     AuthModule,
     CourierModule,
     EmailModule,

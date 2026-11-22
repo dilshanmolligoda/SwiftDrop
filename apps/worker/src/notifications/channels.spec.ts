@@ -138,6 +138,15 @@ describe('MockSmsChannel', () => {
     ).resolves.toEqual({ status: 'SENT' });
   });
 
+  it('reports SENT when called with direct to and message object', async () => {
+    await expect(
+      new MockSmsChannel(testWorkerConfig()).send({
+        to: '+94771234567',
+        message: 'Hello! Package sent',
+      }),
+    ).resolves.toEqual({ status: 'SENT' });
+  });
+
   it('skips without a phone number or when SMS is off', async () => {
     await expect(
       new MockSmsChannel(testWorkerConfig()).send(

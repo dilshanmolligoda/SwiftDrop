@@ -17,7 +17,7 @@ export const ADMIN_NAV_ITEMS: readonly NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', path: '/admin/dashboard', icon: 'dashboard' },
   { id: 'deliveries', label: 'Deliveries', path: '/admin/deliveries', icon: 'deliveries' },
   { id: 'couriers', label: 'Couriers', path: '/admin/couriers', icon: 'couriers' },
-  { id: 'users', label: 'Users & approvals', path: '/admin/users', icon: 'users', badge: 4 },
+  { id: 'users', label: 'Users & approvals', path: '/admin/users', icon: 'users' },
   { id: 'zones', label: 'Zones & pricing', path: '/admin/pricing', icon: 'zones' },
   { id: 'reports', label: 'Reports', path: '/admin/reports', icon: 'reports' },
   { id: 'settings', label: 'Settings', path: '/admin/settings', icon: 'settings' },

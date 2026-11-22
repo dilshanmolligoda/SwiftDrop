@@ -55,6 +55,15 @@ export class UsersRepository {
     });
   }
 
+  async findMerchantById(
+    id: string,
+  ): Promise<(User & { merchantProfile: MerchantProfile | null }) | null> {
+    return this.prisma.user.findUnique({
+      where: { id },
+      include: { merchantProfile: true },
+    });
+  }
+
   async findByGoogleSubject(googleSubject: string): Promise<User | null> {
     const trimmed = googleSubject?.trim();
     if (!trimmed) {
@@ -126,6 +135,34 @@ export class UsersRepository {
     return this.prisma.user.update({
       where: { id: userId },
       data: updateData,
+    });
+  }
+
+  async approveUser(userId: string, reviewedBy?: string): Promise<User> {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        approvalStatus: ApprovalStatus.APPROVED,
+        reviewedAt: new Date(),
+        reviewedBy: reviewedBy ?? null,
+        rejectionReason: null,
+      },
+    });
+  }
+
+  async rejectUser(
+    userId: string,
+    rejectionReason: string,
+    reviewedBy?: string,
+  ): Promise<User> {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        approvalStatus: ApprovalStatus.REJECTED,
+        reviewedAt: new Date(),
+        reviewedBy: reviewedBy ?? null,
+        rejectionReason: rejectionReason.trim(),
+      },
     });
   }
 

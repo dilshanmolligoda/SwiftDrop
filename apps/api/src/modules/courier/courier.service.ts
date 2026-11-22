@@ -628,6 +628,12 @@ export class CourierService {
           throw new NotFoundException('Parcel not found');
         }
 
+        // Check if there was an active assignment with another courier
+        const previousAssignment = await tx.deliveryAssignment.findFirst({
+          where: { parcelId, endedAt: null },
+          select: { courierId: true },
+        });
+
         // End any existing active assignment for this parcel
         await tx.deliveryAssignment.updateMany({
           where: { parcelId, endedAt: null },
@@ -702,9 +708,86 @@ export class CourierService {
               sentAt: new Date(),
             },
           });
+
+          // Scenario 23: If reassigned from another courier, notify previous courier
+          if (
+            previousAssignment &&
+            previousAssignment.courierId !== courierId
+          ) {
+            await txNotif.notification.create({
+              data: {
+                eventId: randomUUID(),
+                channel: NotificationChannel.IN_APP,
+                recipientUserId: previousAssignment.courierId,
+                template: 'courier_assignment_reassigned',
+                title: 'Assignment updated',
+                description: `Delivery ${parcel.trackingNumber} was unassigned from your route.`,
+                status: NotificationStatus.SENT,
+                sentAt: new Date(),
+              },
+            });
+          }
         }
 
         return assignment;
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+    );
+  }
+
+  async unassignCourier(parcelId: string, unassignedById?: string) {
+    return this.prisma.$transaction(
+      async (tx) => {
+        const parcel = await tx.parcel.findUnique({
+          where: { id: parcelId },
+        });
+        if (!parcel) {
+          throw new NotFoundException('Parcel not found');
+        }
+
+        const activeAssignment = await tx.deliveryAssignment.findFirst({
+          where: { parcelId, endedAt: null },
+          select: { courierId: true },
+        });
+
+        if (!activeAssignment) {
+          return { message: 'Parcel has no active assignment' };
+        }
+
+        await tx.deliveryAssignment.updateMany({
+          where: { parcelId, endedAt: null },
+          data: { endedAt: new Date() },
+        });
+
+        if (unassignedById) {
+          await tx.parcelStatusEvent.create({
+            data: {
+              id: randomUUID(),
+              parcelId,
+              actorId: unassignedById,
+              status: parcel.status,
+              note: 'Courier unassigned from parcel',
+            },
+          });
+        }
+
+        const txNotif = tx as unknown as TxWithNotification;
+        if (txNotif.notification) {
+          await txNotif.notification.create({
+            data: {
+              eventId: randomUUID(),
+              channel: NotificationChannel.IN_APP,
+              recipientUserId: activeAssignment.courierId,
+              template: 'courier_assignment_reassigned',
+              title: 'Assignment updated',
+              description: `Delivery ${parcel.trackingNumber} was unassigned from your route.`,
+              status: NotificationStatus.SENT,
+              sentAt: new Date(),
+            },
+          });
+        }
+
+        return { message: 'Parcel unassigned successfully' };
       },
       { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
     );
