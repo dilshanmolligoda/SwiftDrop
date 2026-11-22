@@ -166,9 +166,14 @@ services:
       context: .
       dockerfile: apps/ai-assistant/Dockerfile
     env_file: .env
+    environment:
+      # Inside Docker the API is reached by service name, whatever .env says
+      # (.env may point at localhost for `npm run dev:ai`)
+      AI_BACKEND_API_URL: http://api:4000/api/v1
+      AI_ASSISTANT_PORT: "3100"
     restart: unless-stopped
     ports:
-      - "${AI_ASSISTANT_PORT:-3100}:3100"
+      - "${AI_ASSISTANT_PORT:-3100}:3100"   # widget calls http://localhost:3100/api/assistant
     depends_on:
       - api
 

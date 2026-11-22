@@ -1,5 +1,10 @@
 {$SITE_ADDRESS} {
 	encode gzip
+	# AI assistant. Must come before /api/*. Same origin as the app, so the
+	# HttpOnly session cookie (path /api) reaches it automatically.
+	handle /api/assistant/* {
+		reverse_proxy ai-assistant:3100
+	}
 	handle /api/* {
 		reverse_proxy api:4000
 	}
