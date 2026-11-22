@@ -8,7 +8,7 @@ export type DeliveryFilter = 'all' | 'active' | 'history'
 export const STATUS_DETAILS: Record<ParcelStatus, { label: string; tone: string }> = {
   CREATED: { label: 'Created', tone: 'neutral' },
   ASSIGNED: { label: 'Assigned', tone: 'neutral' },
-  PENDING: { label: 'Created', tone: 'neutral' },
+  PENDING: { label: 'Pending pickup', tone: 'neutral' },
   PICKED_UP: { label: 'Picked Up', tone: 'transit' },
   IN_TRANSIT: { label: 'In Transit', tone: 'transit' },
   OUT_FOR_DELIVERY: { label: 'Out for Delivery', tone: 'transit' },
