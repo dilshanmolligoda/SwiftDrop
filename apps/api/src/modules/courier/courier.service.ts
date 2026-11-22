@@ -523,6 +523,24 @@ export class CourierService {
           },
         });
       }
+
+      if (
+        dto.status === ParcelStatus.FAILED &&
+        assignment.parcel.customerId
+      ) {
+        await (tx as any).notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.IN_APP,
+            recipientUserId: assignment.parcel.customerId,
+            template: 'parcel_failed',
+            title: 'Delivery needs attention',
+            description: `Delivery attempt failed for ${assignment.parcel.trackingNumber ?? ''}. Reason: ${dto.failureReason ?? 'Delivery problem'}.`.trim(),
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+      }
     }
 
     return { parcelId, status: dto.status, event, duplicate: false };

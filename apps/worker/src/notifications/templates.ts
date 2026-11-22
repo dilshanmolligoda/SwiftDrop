@@ -73,8 +73,8 @@ function copyFor(event: ParcelEventV1): Copy | null {
           : FAILURE_REASONS.OTHER;
       return {
         template: 'parcel-delivery-failed',
-        subject: 'We could not deliver your parcel',
-        headline: 'Delivery attempt failed',
+        subject: `Delivery Attempt Failed: Parcel ${event.trackingNumber}`,
+        headline: 'Delivery needs attention',
         body: `We tried to deliver your parcel, but could not because ${reason}. We will be in touch about the next attempt.`,
       };
     }
