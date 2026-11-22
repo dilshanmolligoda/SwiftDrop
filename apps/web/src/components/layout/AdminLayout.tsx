@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import React, { useEffect, useRef, useState } from 'react'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { env } from '../../lib/env'
 import { Sidebar } from './Sidebar'
 import {
@@ -14,9 +14,27 @@ export const AdminLayout: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
   const [retryCount, setRetryCount] = useState(0)
+  const profileMenuRef = useRef<HTMLDivElement>(null)
   const location = useLocation()
   const navigate = useNavigate()
+
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsProfileMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   useEffect(() => {
     let isMounted = true
@@ -198,12 +216,77 @@ export const AdminLayout: React.FC = () => {
                 </svg>
               </button>
 
-              <div className={styles.userDropdown}>
-                <div className={styles.smallAvatar}>{initials}</div>
-                <span className={styles.userFullName}>{user.fullName}</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
+              <div className={styles.profileMenuContainer} ref={profileMenuRef}>
+                <button
+                  type="button"
+                  className={styles.userDropdown}
+                  onClick={() => setIsProfileMenuOpen((prev) => !prev)}
+                  aria-expanded={isProfileMenuOpen}
+                  aria-haspopup="true"
+                  aria-label="User account menu"
+                >
+                  <div className={styles.smallAvatar}>{initials}</div>
+                  <span className={styles.userFullName}>{user.fullName}</span>
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    aria-hidden="true"
+                    className={isProfileMenuOpen ? styles.chevronRotated : ''}
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+
+                {isProfileMenuOpen && (
+                  <div className={styles.profileDropdownMenu} role="menu">
+                    <div className={styles.profileDropdownHeader}>
+                      <div className={styles.dropdownAvatar}>{initials}</div>
+                      <div className={styles.dropdownUserDetails}>
+                        <span className={styles.dropdownUserName}>{user.fullName}</span>
+                        <span className={styles.dropdownUserEmail}>{user.email}</span>
+                        <span className={styles.dropdownRoleBadge}>
+                          {user.role === 'DISPATCHER' ? 'Dispatcher' : 'Administrator'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className={styles.dropdownDivider} />
+
+                    <Link
+                      to="/admin/settings"
+                      className={styles.dropdownItem}
+                      role="menuitem"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                        <circle cx="12" cy="12" r="3" />
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                      </svg>
+                      Account Settings
+                    </Link>
+
+                    <button
+                      type="button"
+                      className={`${styles.dropdownItem} ${styles.dropdownLogoutButton}`}
+                      role="menuitem"
+                      onClick={() => {
+                        setIsProfileMenuOpen(false)
+                        void handleLogout()
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                      </svg>
+                      Log out
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </header>
