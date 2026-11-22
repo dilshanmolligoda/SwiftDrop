@@ -13,7 +13,7 @@ import {
 import styles from './AdminSettingsPage.module.css'
 
 export const AdminSettingsPage: React.FC = () => {
-  const { user } = useAdminAuth()
+  const { user, logout } = useAdminAuth()
 
   // 1. Profile State
   const [profile, setProfile] = useState<AdminProfileData>(() => ({
@@ -86,6 +86,24 @@ export const AdminSettingsPage: React.FC = () => {
   const showFeedback = (message: string) => {
     setFeedbackMessage(message)
     setTimeout(() => setFeedbackMessage(null), 3500)
+  }
+
+  // Devices state
+  const [hasOtherDevices, setHasOtherDevices] = useState(true)
+
+  const handleSignOutOtherDevices = () => {
+    setHasOtherDevices(false)
+    showFeedback('All other device sessions have been revoked.')
+  }
+
+  const handleSignOutAllSessions = async () => {
+    setIsDevicesModalOpen(false)
+    showFeedback('Signing out of all sessions...')
+    try {
+      await logout()
+    } catch {
+      window.location.href = '/login'
+    }
   }
 
   // Handle Photo Upload
@@ -708,6 +726,7 @@ export const AdminSettingsPage: React.FC = () => {
                 These devices are currently logged into your administrator account.
               </p>
 
+              {/* Current Device */}
               <div className={styles.deviceItem}>
                 <div className={styles.deviceInfo}>
                   <div className={styles.deviceIcon}>
@@ -721,39 +740,67 @@ export const AdminSettingsPage: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                <span style={{ fontSize: '12px', color: '#059669', fontWeight: 600 }}>This device</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '12px', color: '#059669', fontWeight: 600 }}>This device</span>
+                  <button
+                    type="button"
+                    className={styles.buttonOutlineSmall}
+                    style={{ color: '#dc2626', borderColor: '#fca5a5' }}
+                    onClick={handleSignOutAllSessions}
+                    title="Sign out of this session"
+                  >
+                    Sign out
+                  </button>
+                </div>
               </div>
 
-              <div className={styles.deviceItem}>
-                <div className={styles.deviceInfo}>
-                  <div className={styles.deviceIcon}>
-                    <Laptop size={20} />
+              {/* Other Device */}
+              {hasOtherDevices ? (
+                <div className={styles.deviceItem}>
+                  <div className={styles.deviceInfo}>
+                    <div className={styles.deviceIcon}>
+                      <Laptop size={20} />
+                    </div>
+                    <div>
+                      <p className={styles.deviceName}>Safari on iPhone</p>
+                      <p className={styles.deviceMeta}>Last active 2 hours ago • Sri Lanka</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className={styles.deviceName}>Safari on iPhone</p>
-                    <p className={styles.deviceMeta}>Last active 2 hours ago • Sri Lanka</p>
-                  </div>
+                  <button
+                    type="button"
+                    className={styles.buttonOutlineSmall}
+                    style={{ color: '#dc2626', borderColor: '#fca5a5' }}
+                    onClick={() => {
+                      setHasOtherDevices(false)
+                      showFeedback('Session revoked for Safari on iPhone.')
+                    }}
+                  >
+                    Sign out
+                  </button>
                 </div>
+              ) : (
+                <p style={{ fontSize: '12px', color: '#9ca3af', fontStyle: 'italic', margin: '8px 0' }}>
+                  No other active device sessions.
+                </p>
+              )}
+            </div>
+            <div className={styles.modalFooter}>
+              {hasOtherDevices && (
                 <button
                   type="button"
                   className={styles.buttonOutlineSmall}
-                  style={{ color: '#dc2626', borderColor: '#fca5a5' }}
-                  onClick={() => showFeedback('Session revoked for Safari on iPhone.')}
+                  onClick={handleSignOutOtherDevices}
                 >
-                  Sign out
+                  Sign out other sessions
                 </button>
-              </div>
-            </div>
-            <div className={styles.modalFooter}>
+              )}
               <button
                 type="button"
                 className={styles.buttonOutlineSmall}
-                onClick={() => {
-                  setIsDevicesModalOpen(false)
-                  showFeedback('All other sessions signed out.')
-                }}
+                style={{ color: '#dc2626', borderColor: '#fca5a5' }}
+                onClick={handleSignOutAllSessions}
               >
-                Sign out all other sessions
+                Sign out all sessions
               </button>
               <button
                 type="button"
