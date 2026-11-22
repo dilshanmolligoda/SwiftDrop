@@ -12,26 +12,49 @@ export interface ChatMessage {
 
 const MAX_TOOL_STEPS = 5;
 const MAX_TOOL_RESULT_CHARS = 8000;
+/** Per LLM call. On timeout the fallback model is tried, so keep this short. */
+const LLM_TIMEOUT_MS = 20_000;
 
 let llm: OpenAI | undefined;
 
 /** Created lazily so a missing LLM_API_KEY never crashes the service at startup. */
 function getLlm(): OpenAI {
-  llm ??= new OpenAI({ apiKey: config.llm.apiKey, baseURL: config.llm.baseURL });
+  llm ??= new OpenAI({
+    apiKey: config.llm.apiKey,
+    baseURL: config.llm.baseURL,
+    // The SDK default is 10 minutes; a chat user will not wait that long
+    timeout: LLM_TIMEOUT_MS,
+    // The fallback model is our retry; SDK retries would double the wait
+    maxRetries: 0,
+  });
   return llm;
 }
 
 type CompletionParams = Omit<OpenAI.ChatCompletionCreateParamsNonStreaming, 'model'>;
 
-/** Calls the main model; on overload (503) or rate limit (429) retries once with the fallback model. */
+/** True when the model is overloaded, rate-limited or too slow: worth trying another model. */
+function isBusy(error: unknown): boolean {
+  if (error instanceof OpenAI.APIConnectionTimeoutError) return true;
+  return error instanceof OpenAI.APIError && (error.status === 503 || error.status === 429);
+}
+
+/** Calls the main model; if it is busy (503/429/timeout) retries once with the fallback model. */
 async function complete(params: CompletionParams): Promise<OpenAI.ChatCompletion> {
+  const effort = config.llm.reasoningEffort;
+  const request = (model: string) =>
+    getLlm().chat.completions.create({
+      ...params,
+      model,
+      ...(effort ? { reasoning_effort: effort as OpenAI.ReasoningEffort } : {}),
+    });
+
   try {
-    return await getLlm().chat.completions.create({ ...params, model: config.llm.model });
+    return await request(config.llm.model);
   } catch (error) {
-    const busy = error instanceof OpenAI.APIError && (error.status === 503 || error.status === 429);
     const fallback = config.llm.fallbackModel;
-    if (!busy || !fallback || fallback === config.llm.model) throw error;
-    return getLlm().chat.completions.create({ ...params, model: fallback });
+    if (!isBusy(error) || !fallback || fallback === config.llm.model) throw error;
+    console.warn(`LLM ${config.llm.model} busy, using fallback ${fallback}`);
+    return request(fallback);
   }
 }
 

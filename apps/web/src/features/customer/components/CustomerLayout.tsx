@@ -18,6 +18,7 @@ import { env } from '../../../lib/env'
 import { useCustomerProfile } from '../context/useCustomerProfile'
 import { useCustomerDeliveries } from '../context/useCustomerDeliveries'
 import { CreateDeliveryModal } from './CreateDeliveryModal'
+import { AssistantWidget } from '../../assistant/AssistantWidget'
 import './CustomerLayout.css'
 
 interface NavigationItem {
@@ -420,6 +421,8 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
 
         {/* Global Create Delivery Modal */}
         <CreateDeliveryModal />
+
+        <AssistantWidget role="CUSTOMER" userKey={profile.email} />
       </div>
     </div>
   )

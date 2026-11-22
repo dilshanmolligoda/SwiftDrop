@@ -1,18 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Fake OpenAI client: each test queues the responses the "LLM" returns.
-const { create, FakeAPIError } = vi.hoisted(() => {
+const { create, FakeAPIError, FakeTimeoutError } = vi.hoisted(() => {
   class FakeAPIError extends Error {
     constructor(public status: number) {
       super(`HTTP ${status}`);
     }
   }
-  return { create: vi.fn(), FakeAPIError };
+  class FakeTimeoutError extends Error {}
+  return { create: vi.fn(), FakeAPIError, FakeTimeoutError };
 });
 
 vi.mock('openai', () => {
   class OpenAI {
     static APIError = FakeAPIError;
+    static APIConnectionTimeoutError = FakeTimeoutError;
     chat = { completions: { create } };
   }
   return { default: OpenAI };
@@ -93,6 +95,13 @@ describe('runChat', () => {
       'main-model',
       'fallback-model',
     ]);
+  });
+
+  it('switches to the fallback model when the main model times out', async () => {
+    create.mockRejectedValueOnce(new FakeTimeoutError('timed out')).mockResolvedValueOnce(text('Fallback answer'));
+
+    expect(await runChat(user, ask)).toBe('Fallback answer');
+    expect((create.mock.calls[1][0] as { model: string }).model).toBe('fallback-model');
   });
 
   it('does not use the fallback for other errors', async () => {

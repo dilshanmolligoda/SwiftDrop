@@ -3,6 +3,7 @@ import { Bell, ChevronDown, Home } from 'lucide-react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { env } from '../../../lib/env'
 import { MerchantSidebar } from './MerchantSidebar'
+import { AssistantWidget } from '../../assistant/AssistantWidget'
 import './MerchantLayout.css'
 
 interface MerchantUser {
@@ -111,6 +112,8 @@ export const MerchantLayout: React.FC = () => {
         </header>
         <main className="merchant-layout__content"><Outlet /></main>
       </div>
+
+      <AssistantWidget role="MERCHANT" userKey={user?.fullName} />
     </div>
   )
 }
