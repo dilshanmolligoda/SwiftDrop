@@ -29,6 +29,7 @@ npm test -w tools/mock-merchant         # signature verification tests
 |---|---|---|
 | `MOCK_MERCHANT_PORT` | `5000` | Port the store listens on (from the root `.env`) |
 | `SWIFTDROP_API_URL` | `http://localhost:4000/api/v1` | SwiftDrop API base URL; can also be changed on the page |
+| `MOCK_MERCHANT_WEBHOOK_URL` | page origin + `/webhooks/swiftdrop` | Webhook URL the page tells you to register. Docker sets `http://mock-merchant:5000/webhooks/swiftdrop`: the worker calls the store directly, and the public `:8443` address is behind basic auth |
 
 ## Demo flow
 
