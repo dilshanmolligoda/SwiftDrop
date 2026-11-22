@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from 'react'
-import { X, Search, Clock } from 'lucide-react'
-import type {
-  AvailableCourierCandidate,
-  DeliveryItem,
-} from '../types/admin-deliveries.types'
-import { MOCK_CANDIDATE_COURIERS } from '../config/admin-deliveries.mock'
+import { X, Search, Clock, Loader2 } from 'lucide-react'
+import type { DeliveryItem } from '../types/admin-deliveries.types'
+import { adminApi, type AdminCourierItem } from '../api/admin-api'
+import { AdminFilterSelect } from './AdminFilterSelect'
 import styles from './AssignCourierDrawer.module.css'
+
+interface AvailableCourier {
+  id: string
+  name: string
+  initials: string
+  vehicleType: string
+  zones: string
+  activeCount: number
+  isAvailable: boolean
+  avatarColor: string
+}
 
 interface AssignCourierDrawerProps {
   readonly isOpen: boolean
@@ -14,16 +23,67 @@ interface AssignCourierDrawerProps {
   readonly onAssign: (deliveryId: string, courierId: string, note?: string) => void
 }
 
+const AVATAR_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b']
+
 export const AssignCourierDrawer: React.FC<AssignCourierDrawerProps> = ({
   isOpen,
   delivery,
   onClose,
   onAssign,
 }) => {
-  const [candidates] = useState<readonly AvailableCourierCandidate[]>(MOCK_CANDIDATE_COURIERS)
-  const [selectedCourierId, setSelectedCourierId] = useState<string>('c-1')
+  const [candidates, setCandidates] = useState<AvailableCourier[]>([])
+  const [isLoadingCouriers, setIsLoadingCouriers] = useState(false)
+  const [selectedCourierId, setSelectedCourierId] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState('')
+  const [availabilityFilter, setAvailabilityFilter] = useState<'available' | 'all'>('available')
   const [note, setNote] = useState('')
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    let cancelled = false
+
+    adminApi
+      .getCouriers({ status: 'APPROVED' })
+      .then((res) => {
+        if (cancelled) return
+        const mapped: AvailableCourier[] = (res.data || []).map((c: AdminCourierItem, index: number) => {
+          const initials = c.fullName
+            .split(' ')
+            .map((n) => n[0])
+            .join('')
+            .slice(0, 2)
+            .toUpperCase()
+          return {
+            id: c.id,
+            name: c.fullName,
+            initials: initials || 'CR',
+            vehicleType: c.courierProfile?.vehicleType || 'Courier',
+            zones: c.courierProfile?.licensePlate || 'Registered',
+            activeCount: c.activeDeliveriesCount,
+            isAvailable: c.isActive,
+            avatarColor: AVATAR_COLORS[index % AVATAR_COLORS.length],
+          }
+        })
+        setCandidates(mapped)
+        if (mapped.length > 0) {
+          setSelectedCourierId(mapped[0].id)
+        } else {
+          setSelectedCourierId('')
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load couriers for drawer:', err)
+        if (!cancelled) setCandidates([])
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingCouriers(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [isOpen])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -39,12 +99,15 @@ export const AssignCourierDrawer: React.FC<AssignCourierDrawerProps> = ({
     return null
   }
 
-  const filteredCandidates = candidates.filter(
-    (c) =>
+  const filteredCandidates = candidates.filter((c) => {
+    const matchesSearch =
       c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.vehicleType.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.zones.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+      c.zones.toLowerCase().includes(searchQuery.toLowerCase())
+
+    const matchesAvailability = availabilityFilter === 'all' || c.isAvailable
+    return matchesSearch && matchesAvailability
+  })
 
   const selectedCandidate = candidates.find((c) => c.id === selectedCourierId)
 
@@ -144,18 +207,33 @@ export const AssignCourierDrawer: React.FC<AssignCourierDrawerProps> = ({
                 />
               </div>
 
-              <select className={styles.selectDropdown} aria-label="Availability filter">
-                <option value="available">Available couriers</option>
-                <option value="all">All couriers</option>
-              </select>
+              <AdminFilterSelect
+                value={availabilityFilter}
+                onChange={(val) => setAvailabilityFilter(val as 'available' | 'all')}
+                ariaLabel="Availability filter"
+                options={[
+                  { value: 'available', label: 'Available couriers' },
+                  { value: 'all', label: 'All couriers' },
+                ]}
+              />
             </div>
 
             <span className={styles.resultsMeta}>
-              {filteredCandidates.length} available couriers approved for this route
+              {filteredCandidates.length} couriers available
             </span>
 
             <div className={styles.courierList} role="radiogroup" aria-label="Candidate couriers">
-              {filteredCandidates.map((courier) => {
+              {isLoadingCouriers ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px', color: '#64748b', gap: '8px' }}>
+                  <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
+                  <span>Loading available couriers...</span>
+                </div>
+              ) : filteredCandidates.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '32px', color: '#64748b', fontSize: '14px' }}>
+                  No approved couriers found in the database.
+                </div>
+              ) : (
+                filteredCandidates.map((courier) => {
                 const isSelected = courier.id === selectedCourierId
                 return (
                   <div
@@ -204,7 +282,7 @@ export const AssignCourierDrawer: React.FC<AssignCourierDrawerProps> = ({
                     </div>
                   </div>
                 )
-              })}
+              }))}
             </div>
 
             <p className={styles.helperText}>

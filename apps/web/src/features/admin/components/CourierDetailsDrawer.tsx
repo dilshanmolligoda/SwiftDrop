@@ -39,7 +39,7 @@ export const CourierDetailsDrawer: React.FC<CourierDetailsDrawerProps> = ({
 
   const handleNavigateToDeliveries = () => {
     onClose()
-    navigate('/admin/deliveries')
+    navigate(`/admin/deliveries?courierId=${courier.id}&courierName=${encodeURIComponent(courier.name)}`)
   }
 
   return (
