@@ -1972,4 +1972,113 @@ export class EmailService {
 </body>
 </html>`;
   }
+
+  async sendWeeklyDeliveryDigestEmail(
+    to: string,
+    recipientName: string,
+    digest: {
+      completedCount: number;
+      inTransitCount: number;
+      totalExpenses: number;
+      period: string;
+    },
+  ): Promise<void> {
+    const subject = `Your Weekly Delivery Digest (${digest.period}) - SwiftDrop`;
+    const text = `Hello ${recipientName},\n\nHere is your SwiftDrop weekly delivery summary for ${digest.period}:\n\n- Completed Deliveries: ${digest.completedCount}\n- In-Transit Parcels: ${digest.inTransitCount}\n- Total Expenses: LKR ${digest.totalExpenses.toFixed(2)}\n\nThank you for choosing SwiftDrop.\n\nBest regards,\nThe SwiftDrop Team`;
+    const html = this.renderWeeklyDeliveryDigestHtml(recipientName, digest);
+
+    await this.transporter.sendMail({
+      from: this.from,
+      to,
+      subject,
+      text,
+      html,
+    });
+  }
+
+  private renderWeeklyDeliveryDigestHtml(
+    recipientName: string,
+    digest: {
+      completedCount: number;
+      inTransitCount: number;
+      totalExpenses: number;
+      period: string;
+    },
+  ): string {
+    const dashboardUrl = this.webAppUrl;
+
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Weekly Delivery Digest</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+    <tr>
+      <td align="center">
+        <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 36px 32px; text-align: center;">
+              <h1 style="color: #ffffff; font-size: 26px; font-weight: 700; margin: 0; letter-spacing: -0.5px;">SwiftDrop</h1>
+              <p style="color: #cbd5e1; font-size: 14px; margin: 8px 0 0 0; font-weight: 500;">Weekly Activity Digest</p>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding: 40px 36px;">
+              <h2 style="font-size: 20px; font-weight: 600; color: #0f172a; margin-top: 0; margin-bottom: 8px;">Weekly Delivery Summary</h2>
+              <p style="font-size: 13px; color: #64748b; margin-top: 0; margin-bottom: 24px;">Period: ${digest.period}</p>
+              <p style="font-size: 15px; line-height: 1.6; color: #334155; margin-bottom: 24px;">Hello ${recipientName},</p>
+              <p style="font-size: 15px; line-height: 1.6; color: #334155; margin-bottom: 24px;">
+                Here is an overview of your delivery activity and logistics expenditure over the past week:
+              </p>
+              
+              <!-- Metrics Cards -->
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 28px;">
+                <tr>
+                  <td width="31%" style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 16px; text-align: center;">
+                    <span style="font-size: 24px; font-weight: 700; color: #166534; display: block;">${digest.completedCount}</span>
+                    <span style="font-size: 12px; font-weight: 600; color: #15803d; text-transform: uppercase;">Completed</span>
+                  </td>
+                  <td width="3%"></td>
+                  <td width="31%" style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 16px; text-align: center;">
+                    <span style="font-size: 24px; font-weight: 700; color: #1e40af; display: block;">${digest.inTransitCount}</span>
+                    <span style="font-size: 12px; font-weight: 600; color: #2563eb; text-transform: uppercase;">In Transit</span>
+                  </td>
+                  <td width="3%"></td>
+                  <td width="32%" style="background-color: #faf5ff; border: 1px solid #e9d5ff; border-radius: 6px; padding: 16px; text-align: center;">
+                    <span style="font-size: 18px; font-weight: 700; color: #6b21a8; display: block;">LKR ${digest.totalExpenses.toFixed(0)}</span>
+                    <span style="font-size: 12px; font-weight: 600; color: #7e22ce; text-transform: uppercase;">Expenses</span>
+                  </td>
+                </tr>
+              </table>
+
+              <div style="text-align: center; margin: 32px 0;">
+                <a href="${dashboardUrl}" style="background-color: #0f172a; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block;">View Full Dashboard</a>
+              </div>
+              <p style="font-size: 14px; line-height: 1.6; color: #64748b;">
+                Thank you for shipping with SwiftDrop. You can review all tracking numbers and receipts anytime in your dashboard.
+              </p>
+              <p style="font-size: 14px; line-height: 1.5; color: #64748b; margin-top: 24px;">
+                Best regards,<br>
+                <strong>The SwiftDrop Logistics Team</strong>
+              </p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 24px 32px; text-align: center; font-size: 12px; color: #64748b; line-height: 1.5;">
+              SwiftDrop Logistics Network<br>
+              Colombo, Sri Lanka
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+  }
 }
