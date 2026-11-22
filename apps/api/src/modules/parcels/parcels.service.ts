@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { ParcelStatus } from '../../generated/prisma/enums.js';
 import {
   ParcelsRepository,
   type CustomerParcelRecord,
@@ -67,5 +72,27 @@ export class ParcelsService {
       throw new NotFoundException('Parcel not found');
     }
     return parcel;
+  }
+
+  async cancel(
+    customerId: string,
+    parcelId: string,
+  ): Promise<CustomerParcelRecord> {
+    const parcel = await this.parcelsRepository.findCustomerParcelById(
+      customerId,
+      parcelId,
+    );
+    if (!parcel) {
+      throw new NotFoundException('Parcel not found');
+    }
+    if (
+      parcel.status !== ParcelStatus.PENDING &&
+      parcel.status !== ParcelStatus.ASSIGNED
+    ) {
+      throw new ConflictException(
+        `Cannot cancel delivery with status ${parcel.status}. Cancellation is only allowed before courier pickup.`,
+      );
+    }
+    return this.parcelsRepository.cancelParcel(customerId, parcelId);
   }
 }

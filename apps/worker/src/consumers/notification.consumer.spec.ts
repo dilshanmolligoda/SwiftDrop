@@ -1,4 +1,7 @@
-import type { ParcelStatusChangedV1 } from '@swiftdrop/contracts';
+import type {
+  ParcelCreatedV1,
+  ParcelStatusChangedV1,
+} from '@swiftdrop/contracts';
 import type {
   NotificationChannel,
   Recipient,
@@ -6,6 +9,7 @@ import type {
   SendResult,
 } from '../notifications/notification-channel.js';
 import type { NotificationRepository } from '../notifications/notification.repository.js';
+import { DEFAULT_NOTIFY_STATUSES } from '../config/worker.config.js';
 import { testWorkerConfig } from '../testing/worker-config.fixture.js';
 import { NotificationConsumer } from './notification.consumer.js';
 
@@ -47,6 +51,12 @@ function channel(
 function setup(channels = [channel('EMAIL'), channel('SMS')]) {
   const repository = {
     findRecipient: jest.fn().mockResolvedValue(CUSTOMER),
+    findParcel: jest.fn().mockResolvedValue(null),
+    findUserByPhone: jest.fn().mockResolvedValue(null),
+    findUserById: jest.fn().mockResolvedValue(null),
+    findMerchantOrderRef: jest.fn().mockResolvedValue(null),
+    countFailedAttempts: jest.fn().mockResolvedValue(0),
+    findAdminAndDispatcherIds: jest.fn().mockResolvedValue([]),
     alreadyHandled: jest.fn().mockResolvedValue(false),
     record: jest.fn().mockResolvedValue(undefined),
   };
@@ -138,5 +148,507 @@ describe('NotificationConsumer', () => {
 
     expect(email.send).not.toHaveBeenCalled();
     expect(sms.send).toHaveBeenCalledTimes(1);
+  });
+
+  it('handles parcel.created event and sends booking confirmation email', async () => {
+    const { consumer, repository, channels } = setup();
+    const createdEvent: ParcelCreatedV1 = {
+      eventId: '7f1c2c8e-1b2a-4c3d-9e8f-0a1b2c3d4e5a',
+      eventType: 'parcel.created',
+      version: 1,
+      occurredAt: '2026-11-21T08:30:00.000Z',
+      parcelId: '0b6a3f0e-7d2c-4f1a-8e9b-1c2d3e4f5a6b',
+      trackingNumber: 'SD-0123456789ABCDEF0123456789ABCDEF',
+      customerId: CUSTOMER.userId,
+      merchantId: null,
+      status: 'PENDING',
+    };
+
+    await consumer.handle(createdEvent);
+
+    expect(channels[0].send).toHaveBeenCalledWith(
+      CUSTOMER,
+      expect.objectContaining({ template: 'parcel-booked' }),
+    );
+    expect(repository.record).toHaveBeenCalledWith({
+      eventId: createdEvent.eventId,
+      channel: 'EMAIL',
+      recipientUserId: CUSTOMER.userId,
+      template: 'parcel-booked',
+      status: 'SENT',
+      errorMessage: null,
+    });
+  });
+
+  it('notifies customer and courier when ASSIGNED is in notifyStatuses', async () => {
+    const customConfig = testWorkerConfig({
+      notifications: {
+        ...testWorkerConfig().notifications,
+        notifyStatuses: new Set([...DEFAULT_NOTIFY_STATUSES, 'ASSIGNED']),
+      },
+    });
+    const repository = {
+      findRecipient: jest.fn().mockResolvedValue(CUSTOMER),
+      findParcel: jest.fn().mockResolvedValue(null),
+      findUserById: jest.fn().mockResolvedValue(null),
+      alreadyHandled: jest.fn().mockResolvedValue(false),
+      record: jest.fn().mockResolvedValue(undefined),
+    };
+    const channels = [channel('EMAIL'), channel('SMS')];
+    const consumer = new NotificationConsumer(
+      repository as unknown as NotificationRepository,
+      channels,
+      customConfig,
+    );
+
+    const assignedEvent: ParcelStatusChangedV1 = {
+      ...EVENT,
+      newStatus: 'ASSIGNED',
+      courierId: 'courier-uuid-1',
+    };
+
+    await consumer.handle(assignedEvent);
+
+    expect(channels[0].send).toHaveBeenCalledWith(
+      CUSTOMER,
+      expect.objectContaining({ template: 'parcel-assigned' }),
+    );
+    expect(repository.record).toHaveBeenCalledWith({
+      eventId: assignedEvent.eventId,
+      channel: 'EMAIL',
+      recipientUserId: CUSTOMER.userId,
+      template: 'parcel-assigned',
+      status: 'SENT',
+      errorMessage: null,
+    });
+    expect(repository.record).toHaveBeenCalledWith({
+      eventId: assignedEvent.eventId,
+      channel: 'IN_APP',
+      recipientUserId: 'courier-uuid-1',
+      template: 'courier_new_assignment',
+      title: 'New delivery assigned',
+      description: `New delivery assigned: ${assignedEvent.trackingNumber} added to today's deliveries.`,
+      status: 'SENT',
+      errorMessage: null,
+    });
+  });
+
+  it('notifies customer when parcel is PICKED_UP', async () => {
+    const { consumer, repository, channels } = setup();
+    const pickedUpEvent: ParcelStatusChangedV1 = {
+      ...EVENT,
+      previousStatus: 'ASSIGNED',
+      newStatus: 'PICKED_UP',
+    };
+
+    await consumer.handle(pickedUpEvent);
+
+    expect(channels[0].send).toHaveBeenCalledWith(
+      CUSTOMER,
+      expect.objectContaining({
+        template: 'parcel-picked-up',
+        subject: `Parcel Picked Up — ${pickedUpEvent.trackingNumber}`,
+      }),
+    );
+    expect(repository.record).toHaveBeenCalledWith({
+      eventId: pickedUpEvent.eventId,
+      channel: 'EMAIL',
+      recipientUserId: CUSTOMER.userId,
+      template: 'parcel-picked-up',
+      status: 'SENT',
+      errorMessage: null,
+    });
+  });
+
+  it('records an IN_APP notification for customer when status is IN_TRANSIT', async () => {
+    const { consumer, repository, channels } = setup();
+    const inTransitEvent: ParcelStatusChangedV1 = {
+      ...EVENT,
+      previousStatus: 'PICKED_UP',
+      newStatus: 'IN_TRANSIT',
+    };
+
+    await consumer.handle(inTransitEvent);
+
+    // No email is sent for in-transit
+    expect(channels[0].send).not.toHaveBeenCalled();
+    // In-app notification is recorded
+    expect(repository.record).toHaveBeenCalledWith({
+      eventId: inTransitEvent.eventId,
+      channel: 'IN_APP',
+      recipientUserId: CUSTOMER.userId,
+      template: 'parcel_in_transit',
+      status: 'SENT',
+      errorMessage: null,
+    });
+  });
+
+  it('dispatches recipient SMS alert when parcel status changes to PICKED_UP (Scenario 15)', async () => {
+    const { consumer, repository, channels } = setup();
+    repository.findParcel.mockResolvedValue({
+      id: '0b6a3f0e-7d2c-4f1a-8e9b-1c2d3e4f5a6b',
+      trackingNumber: 'SD-0123456789ABCDEF0123456789ABCDEF',
+      customerId: CUSTOMER.userId,
+      senderName: 'Sender Bob',
+      recipientName: 'Recipient Alice',
+      recipientPhone: '+94771112233',
+      recipientAddress: '123 Main St, Colombo',
+    });
+    const pickedUpEvent: ParcelStatusChangedV1 = {
+      ...EVENT,
+      newStatus: 'PICKED_UP',
+      previousStatus: 'ASSIGNED',
+    };
+
+    await consumer.handle(pickedUpEvent);
+
+    const smsChannel = channels.find((c) => c.channel === 'SMS');
+    expect(smsChannel?.send).toHaveBeenCalled();
+    const smsCalls = (smsChannel?.send as jest.Mock).mock.calls as Array<
+      [{ to: string; message: string }]
+    >;
+    const recipientCall = smsCalls.find(
+      (call) => call[0].to === '+94771112233',
+    );
+    expect(recipientCall).toBeDefined();
+    expect(recipientCall?.[0].message).toContain(
+      'Hello! Sender Bob has sent you a package via SwiftDrop',
+    );
+
+    const recordCalls = repository.record.mock.calls as Array<
+      [
+        {
+          channel: string;
+          template: string;
+          title: string;
+          description: string;
+          status: string;
+        },
+      ]
+    >;
+    const recipientRecord = recordCalls.find(
+      (call) =>
+        call[0].channel === 'SMS' &&
+        call[0].template === 'recipient_parcel_dispatched',
+    );
+    expect(recipientRecord).toBeDefined();
+    expect(recipientRecord?.[0].description).toContain(
+      'Hello! Sender Bob has sent you a package via SwiftDrop',
+    );
+    expect(recipientRecord?.[0].status).toBe('SENT');
+  });
+
+  it('dispatches recipient SMS alert when parcel status changes to OUT_FOR_DELIVERY (Scenario 16)', async () => {
+    const { consumer, repository, channels } = setup();
+    repository.findParcel.mockResolvedValue({
+      id: '0b6a3f0e-7d2c-4f1a-8e9b-1c2d3e4f5a6b',
+      trackingNumber: 'SD-0123456789ABCDEF0123456789ABCDEF',
+      customerId: CUSTOMER.userId,
+      senderName: 'Sender Bob',
+      recipientName: 'Recipient Alice',
+      recipientPhone: '+94771112233',
+      recipientAddress: '123 Main St, Colombo',
+    });
+
+    await consumer.handle(EVENT); // EVENT has newStatus: 'OUT_FOR_DELIVERY'
+
+    const smsChannel = channels.find((c) => c.channel === 'SMS');
+    const smsCalls = (smsChannel?.send as jest.Mock).mock.calls as Array<
+      [{ to: string; message: string }]
+    >;
+    const recipientCall = smsCalls.find(
+      (call) => call[0].to === '+94771112233',
+    );
+    expect(recipientCall).toBeDefined();
+    expect(recipientCall?.[0].message).toBe(
+      `SwiftDrop Alert: Your package ${EVENT.trackingNumber} is out for delivery today to your address. Please ensure someone is available.`,
+    );
+
+    const recordCalls = repository.record.mock.calls as Array<
+      [
+        {
+          channel: string;
+          template: string;
+          title: string;
+          description: string;
+          status: string;
+        },
+      ]
+    >;
+    const recipientRecord = recordCalls.find(
+      (call) =>
+        call[0].channel === 'SMS' &&
+        call[0].template === 'recipient_out_for_delivery',
+    );
+    expect(recipientRecord).toBeDefined();
+    expect(recipientRecord?.[0].title).toBe('Out for delivery today');
+    expect(recipientRecord?.[0].status).toBe('SENT');
+  });
+
+  it('dispatches recipient SMS alert when parcel status changes to DELIVERED (Scenario 17)', async () => {
+    const { consumer, repository, channels } = setup();
+    repository.findParcel.mockResolvedValue({
+      id: '0b6a3f0e-7d2c-4f1a-8e9b-1c2d3e4f5a6b',
+      trackingNumber: 'SD-0123456789ABCDEF0123456789ABCDEF',
+      customerId: CUSTOMER.userId,
+      senderName: 'Sender Bob',
+      recipientName: 'Recipient Alice',
+      recipientPhone: '+94771112233',
+      recipientAddress: '123 Main St, Colombo',
+    });
+    const deliveredEvent: ParcelStatusChangedV1 = {
+      ...EVENT,
+      newStatus: 'DELIVERED',
+      previousStatus: 'OUT_FOR_DELIVERY',
+    };
+
+    await consumer.handle(deliveredEvent);
+
+    const smsChannel = channels.find((c) => c.channel === 'SMS');
+    const smsCalls = (smsChannel?.send as jest.Mock).mock.calls as Array<
+      [{ to: string; message: string }]
+    >;
+    const recipientCall = smsCalls.find(
+      (call) => call[0].to === '+94771112233',
+    );
+    expect(recipientCall).toBeDefined();
+    expect(recipientCall?.[0].message).toBe(
+      `SwiftDrop: Package ${deliveredEvent.trackingNumber} was successfully delivered. Thank you for choosing SwiftDrop!`,
+    );
+
+    const recordCalls = repository.record.mock.calls as Array<
+      [
+        {
+          channel: string;
+          template: string;
+          title: string;
+          description: string;
+          status: string;
+        },
+      ]
+    >;
+    const recipientRecord = recordCalls.find(
+      (call) =>
+        call[0].channel === 'SMS' && call[0].template === 'recipient_delivered',
+    );
+    expect(recipientRecord).toBeDefined();
+    expect(recipientRecord?.[0].title).toBe('Package delivered');
+    expect(recipientRecord?.[0].status).toBe('SENT');
+  });
+
+  it('dispatches recipient missed delivery SMS alert when status changes to FAILED with RECIPIENT_UNAVAILABLE (Scenario 18)', async () => {
+    const { consumer, repository, channels } = setup();
+    repository.findParcel.mockResolvedValue({
+      id: '0b6a3f0e-7d2c-4f1a-8e9b-1c2d3e4f5a6b',
+      trackingNumber: 'SD-0123456789ABCDEF0123456789ABCDEF',
+      customerId: CUSTOMER.userId,
+      senderName: 'Sender Bob',
+      recipientName: 'Recipient Alice',
+      recipientPhone: '+94771112233',
+      recipientAddress: '123 Main St, Colombo',
+    });
+    const failedEvent: ParcelStatusChangedV1 = {
+      ...EVENT,
+      newStatus: 'FAILED',
+      failureReason: 'RECIPIENT_UNAVAILABLE',
+      previousStatus: 'OUT_FOR_DELIVERY',
+    };
+
+    await consumer.handle(failedEvent);
+
+    const smsChannel = channels.find((c) => c.channel === 'SMS');
+    const smsCalls = (smsChannel?.send as jest.Mock).mock.calls as Array<
+      [{ to: string; message: string }]
+    >;
+    const recipientCall = smsCalls.find(
+      (call) => call[0].to === '+94771112233',
+    );
+    expect(recipientCall).toBeDefined();
+    expect(recipientCall?.[0].message).toBe(
+      `SwiftDrop missed you: We attempted delivery for parcel ${failedEvent.trackingNumber} but could not reach you. Our courier will re-attempt or contact customer support.`,
+    );
+
+    const recordCalls = repository.record.mock.calls as Array<
+      [
+        {
+          channel: string;
+          template: string;
+          title: string;
+          description: string;
+          status: string;
+        },
+      ]
+    >;
+    const recipientRecord = recordCalls.find(
+      (call) =>
+        call[0].channel === 'SMS' &&
+        call[0].template === 'recipient_delivery_attempt_failed',
+    );
+    expect(recipientRecord).toBeDefined();
+    expect(recipientRecord?.[0].title).toBe('Missed delivery attempt');
+    expect(recipientRecord?.[0].status).toBe('SENT');
+  });
+
+  it('sends in-app notification and SMS to courier when parcel is ASSIGNED', async () => {
+    const { consumer, repository, channels } = setup();
+    repository.findUserById.mockResolvedValue({
+      id: 'courier-uuid-1',
+      fullName: 'Kamal Courier',
+      phoneNumber: '+94719876543',
+    });
+
+    const assignedEvent: ParcelStatusChangedV1 = {
+      ...EVENT,
+      newStatus: 'ASSIGNED',
+      courierId: 'courier-uuid-1',
+    };
+
+    await consumer.handle(assignedEvent);
+
+    const smsChannel = channels.find((c) => c.channel === 'SMS');
+    const smsCalls = (smsChannel?.send as jest.Mock).mock.calls as Array<
+      [{ to: string; message: string }]
+    >;
+    const courierSmsCall = smsCalls.find(
+      (call) => call[0].to === '+94719876543',
+    );
+    expect(courierSmsCall).toBeDefined();
+    expect(courierSmsCall?.[0].message).toBe(
+      `SwiftDrop: New delivery assigned: ${assignedEvent.trackingNumber} added to today's deliveries.`,
+    );
+
+    const recordCalls = repository.record.mock.calls as Array<
+      [
+        {
+          recipientUserId: string;
+          channel: string;
+          template: string;
+          title?: string;
+          description?: string;
+        },
+      ]
+    >;
+    const inAppRecord = recordCalls.find(
+      (c) =>
+        c[0].channel === 'IN_APP' &&
+        c[0].recipientUserId === 'courier-uuid-1' &&
+        c[0].template === 'courier_new_assignment',
+    );
+    expect(inAppRecord).toBeDefined();
+    expect(inAppRecord?.[0].title).toBe('New delivery assigned');
+
+    const smsRecord = recordCalls.find(
+      (c) =>
+        c[0].channel === 'SMS' &&
+        c[0].recipientUserId === 'courier-uuid-1' &&
+        c[0].template === 'courier_new_assignment',
+    );
+    expect(smsRecord).toBeDefined();
+    expect(smsRecord?.[0].title).toBe('New delivery assigned');
+  });
+
+  it('sends email and creates in-app notification for merchant when order delivery fails (Scenario 29)', async () => {
+    const { consumer, repository, channels } = setup();
+
+    const merchantUser = {
+      id: 'merchant-uuid-1',
+      fullName: 'Acme Merchant',
+      phoneNumber: '+94771234567',
+      email: 'orders@acmeco.com',
+    };
+    repository.findUserById.mockResolvedValue(merchantUser);
+    repository.findMerchantOrderRef.mockResolvedValue('ORD-9988');
+
+    const merchantFailedEvent: ParcelStatusChangedV1 = {
+      ...EVENT,
+      eventId: 'failed-event-uuid-1',
+      newStatus: 'FAILED',
+      failureReason: 'INCORRECT_ADDRESS',
+      merchantId: 'merchant-uuid-1',
+    };
+
+    await consumer.handle(merchantFailedEvent);
+
+    const emailChannel = channels.find((c) => c.channel === 'EMAIL');
+    const emailCalls = (emailChannel?.send as jest.Mock).mock.calls as Array<
+      [Recipient, RenderedNotification]
+    >;
+    const merchantEmailCall = emailCalls.find(
+      (call) => call[0].email === 'orders@acmeco.com',
+    );
+    expect(merchantEmailCall).toBeDefined();
+    expect(merchantEmailCall?.[1].template).toBe(
+      'merchant_order_delivery_failed',
+    );
+    expect(merchantEmailCall?.[1].subject).toContain('ORD-9988');
+
+    const recordCalls = repository.record.mock.calls as Array<
+      [
+        {
+          recipientUserId: string;
+          channel: string;
+          template: string;
+          title?: string;
+          description?: string;
+        },
+      ]
+    >;
+    const inAppRecord = recordCalls.find(
+      (c) =>
+        c[0].channel === 'IN_APP' &&
+        c[0].recipientUserId === 'merchant-uuid-1' &&
+        c[0].template === 'merchant_order_delivery_failed',
+    );
+    expect(inAppRecord).toBeDefined();
+    expect(inAppRecord?.[0].title).toBe('Order ORD-9988 delivery failed');
+  });
+
+  it('creates in-app escalation notification for admins and dispatchers when failed attempts >= 2 (Scenario 31)', async () => {
+    const { consumer, repository } = setup();
+
+    repository.countFailedAttempts.mockResolvedValue(2);
+    repository.findAdminAndDispatcherIds.mockResolvedValue([
+      'admin-uuid-1',
+      'dispatcher-uuid-1',
+    ]);
+
+    const failedEvent: ParcelStatusChangedV1 = {
+      ...EVENT,
+      eventId: 'escalation-event-uuid-1',
+      newStatus: 'FAILED',
+      failureReason: 'OTHER',
+    };
+
+    await consumer.handle(failedEvent);
+
+    const recordCalls = repository.record.mock.calls as Array<
+      [
+        {
+          recipientUserId: string;
+          channel: string;
+          template: string;
+          title?: string;
+          description?: string;
+        },
+      ]
+    >;
+    const adminEscalation = recordCalls.find(
+      (c) =>
+        c[0].channel === 'IN_APP' &&
+        c[0].recipientUserId === 'admin-uuid-1' &&
+        c[0].template === 'admin_delivery_escalation',
+    );
+    expect(adminEscalation).toBeDefined();
+    expect(adminEscalation?.[0].description).toBe(
+      `Escalation: Parcel ${failedEvent.trackingNumber} has failed 2 delivery attempts.`,
+    );
+
+    const dispatcherEscalation = recordCalls.find(
+      (c) =>
+        c[0].channel === 'IN_APP' &&
+        c[0].recipientUserId === 'dispatcher-uuid-1' &&
+        c[0].template === 'admin_delivery_escalation',
+    );
+    expect(dispatcherEscalation).toBeDefined();
   });
 });

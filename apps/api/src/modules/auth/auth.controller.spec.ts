@@ -27,6 +27,8 @@ describe('AuthController', () => {
     registerCourier: jest.Mock;
     getProfile: jest.Mock;
     getApplicationStatus: jest.Mock;
+    forgotPassword: jest.Mock;
+    resetPassword: jest.Mock;
   };
   let configService: { get: jest.Mock };
 
@@ -38,6 +40,8 @@ describe('AuthController', () => {
       registerCourier: jest.fn(),
       getProfile: jest.fn(),
       getApplicationStatus: jest.fn(),
+      forgotPassword: jest.fn(),
+      resetPassword: jest.fn(),
     };
     configService = {
       get: jest
@@ -75,6 +79,7 @@ describe('AuthController', () => {
         email: 'user@example.com',
         fullName: 'Test User',
         role: Role.CUSTOMER,
+        approvalStatus: ApprovalStatus.APPROVED,
       },
     };
     authService.login.mockResolvedValue(loginResult);
@@ -104,7 +109,9 @@ describe('AuthController', () => {
       expiresIn: 900,
       user: loginResult.user,
     });
-    expect((result as Record<string, unknown>).accessToken).toBeUndefined();
+    expect(
+      (result as unknown as Record<string, unknown>).accessToken,
+    ).toBeUndefined();
   });
 
   it('delegates getProfile to AuthService.getProfile using authenticated user id', async () => {
@@ -129,6 +136,35 @@ describe('AuthController', () => {
 
     expect(authService.getProfile).toHaveBeenCalledWith('user-1');
     expect(result).toEqual(profileResponse);
+  });
+
+  it('delegates forgotPassword to AuthService.forgotPassword and returns standard message', async () => {
+    const expectedResponse = {
+      message: 'If the email exists, a reset link was sent',
+    };
+    authService.forgotPassword.mockResolvedValue(expectedResponse);
+
+    const dto = { email: 'user@example.com' };
+    const result = await controller.forgotPassword(dto);
+
+    expect(authService.forgotPassword).toHaveBeenCalledWith(dto);
+    expect(result).toEqual(expectedResponse);
+  });
+
+  it('delegates resetPassword to AuthService.resetPassword and returns success message', async () => {
+    const expectedResponse = {
+      message: 'Password has been reset successfully',
+    };
+    authService.resetPassword.mockResolvedValue(expectedResponse);
+
+    const dto = {
+      token: 'valid-reset-token',
+      newPassword: 'NewValidPassword123!',
+    };
+    const result = await controller.resetPassword(dto);
+
+    expect(authService.resetPassword).toHaveBeenCalledWith(dto);
+    expect(result).toEqual(expectedResponse);
   });
 
   it('clears authentication cookie on logout with matching cookie attributes', () => {

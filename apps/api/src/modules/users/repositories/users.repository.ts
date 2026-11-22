@@ -55,6 +55,15 @@ export class UsersRepository {
     });
   }
 
+  async findMerchantById(
+    id: string,
+  ): Promise<(User & { merchantProfile: MerchantProfile | null }) | null> {
+    return this.prisma.user.findUnique({
+      where: { id },
+      include: { merchantProfile: true },
+    });
+  }
+
   async findByGoogleSubject(googleSubject: string): Promise<User | null> {
     const trimmed = googleSubject?.trim();
     if (!trimmed) {
@@ -93,6 +102,66 @@ export class UsersRepository {
       where: { id: userId },
       data: {
         googleSubject: googleSubject.trim(),
+      },
+    });
+  }
+
+  async updatePassword(userId: string, passwordHash: string): Promise<User> {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        passwordHash,
+      },
+    });
+  }
+
+  async updateProfile(
+    userId: string,
+    data: { fullName?: string; email?: string; phoneNumber?: string },
+  ): Promise<User> {
+    const updateData: {
+      fullName?: string;
+      email?: string;
+      phoneNumber?: string;
+    } = {};
+    if (data.fullName !== undefined) updateData.fullName = data.fullName.trim();
+    if (data.email !== undefined) {
+      updateData.email = data.email.trim().toLowerCase();
+    }
+    if (data.phoneNumber !== undefined) {
+      updateData.phoneNumber = data.phoneNumber.trim();
+    }
+
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+    });
+  }
+
+  async approveUser(userId: string, reviewedBy?: string): Promise<User> {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        approvalStatus: ApprovalStatus.APPROVED,
+        reviewedAt: new Date(),
+        reviewedBy: reviewedBy ?? null,
+        rejectionReason: null,
+      },
+    });
+  }
+
+  async rejectUser(
+    userId: string,
+    rejectionReason: string,
+    reviewedBy?: string,
+  ): Promise<User> {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        approvalStatus: ApprovalStatus.REJECTED,
+        reviewedAt: new Date(),
+        reviewedBy: reviewedBy ?? null,
+        rejectionReason: rejectionReason.trim(),
       },
     });
   }

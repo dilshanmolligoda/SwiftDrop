@@ -1,10 +1,20 @@
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service.js';
 import { UsersRepository } from './repositories/users.repository.js';
+import { PasswordService } from '../auth/password.service.js';
+import { EmailService } from '../email/email.service.js';
+import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 import {
   Role,
   ApprovalStatus,
   VehicleType,
+  NotificationChannel,
+  NotificationStatus,
 } from '../../generated/prisma/enums.js';
 import type { User } from '../../generated/prisma/client.js';
 
@@ -13,9 +23,30 @@ describe('UsersService', () => {
   let repository: {
     findByEmail: jest.Mock;
     findById: jest.Mock;
+    findMerchantById: jest.Mock;
     createCustomer: jest.Mock;
     createMerchant: jest.Mock;
     createCourier: jest.Mock;
+    updatePassword: jest.Mock;
+    updateProfile: jest.Mock;
+    approveUser: jest.Mock;
+    rejectUser: jest.Mock;
+  };
+  let passwordService: {
+    verify: jest.Mock;
+    hash: jest.Mock;
+  };
+  let emailService: {
+    sendPasswordChangedSettingsEmail: jest.Mock;
+    sendProfileUpdatedEmail: jest.Mock;
+    sendCourierApprovedEmail: jest.Mock;
+    sendCourierRejectedEmail: jest.Mock;
+    sendMerchantApprovedEmail: jest.Mock;
+    sendMerchantRejectedEmail: jest.Mock;
+  };
+  let prismaService: {
+    user: { findUnique: jest.Mock; update: jest.Mock };
+    notification: { create: jest.Mock };
   };
 
   const mockUser: User = {
@@ -28,6 +59,12 @@ describe('UsersService', () => {
     approvalStatus: ApprovalStatus.APPROVED,
     isActive: true,
     googleSubject: null,
+    twoFactorEnabled: false,
+    deliveryStatusNotifications: true,
+    failedDeliveryNotifications: true,
+    storeConnectionNotifications: true,
+    language: 'English',
+    timeZone: 'Asia/Colombo (UTC+05:30)',
     reviewedAt: null,
     reviewedBy: null,
     rejectionReason: null,
@@ -39,15 +76,44 @@ describe('UsersService', () => {
     repository = {
       findByEmail: jest.fn(),
       findById: jest.fn(),
+      findMerchantById: jest.fn(),
       createCustomer: jest.fn(),
       createMerchant: jest.fn(),
       createCourier: jest.fn(),
+      updatePassword: jest.fn(),
+      updateProfile: jest.fn(),
+      approveUser: jest.fn(),
+      rejectUser: jest.fn(),
+    };
+    passwordService = {
+      verify: jest.fn(),
+      hash: jest.fn(),
+    };
+    emailService = {
+      sendPasswordChangedSettingsEmail: jest.fn().mockResolvedValue(undefined),
+      sendProfileUpdatedEmail: jest.fn().mockResolvedValue(undefined),
+      sendCourierApprovedEmail: jest.fn().mockResolvedValue(undefined),
+      sendCourierRejectedEmail: jest.fn().mockResolvedValue(undefined),
+      sendMerchantApprovedEmail: jest.fn().mockResolvedValue(undefined),
+      sendMerchantRejectedEmail: jest.fn().mockResolvedValue(undefined),
+    };
+    prismaService = {
+      user: {
+        findUnique: jest.fn(),
+        update: jest.fn(),
+      },
+      notification: {
+        create: jest.fn().mockResolvedValue({ id: 'notif-uuid' }),
+      },
     };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
         { provide: UsersRepository, useValue: repository },
+        { provide: PasswordService, useValue: passwordService },
+        { provide: EmailService, useValue: emailService },
+        { provide: PrismaService, useValue: prismaService },
       ],
     }).compile();
 
@@ -168,6 +234,624 @@ describe('UsersService', () => {
       const result = await service.createCourier(data);
       expect(repository.createCourier).toHaveBeenCalledWith(data);
       expect(result).toEqual(courierWithProfile);
+    });
+  });
+
+  describe('changePassword', () => {
+    it('verifies current password, hashes new password, updates DB, sends security email and creates notifications', async () => {
+      repository.findById.mockResolvedValue(mockUser);
+      passwordService.verify.mockResolvedValue(true);
+      passwordService.hash.mockResolvedValue('$2b$12$newHashedPassword');
+      repository.updatePassword.mockResolvedValue({
+        ...mockUser,
+        passwordHash: '$2b$12$newHashedPassword',
+      });
+
+      const result = await service.changePassword(
+        mockUser.id,
+        {
+          currentPassword: 'current-valid-pass',
+          newPassword: 'NewValidPassword123!',
+        },
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+      );
+
+      expect(repository.findById).toHaveBeenCalledWith(mockUser.id);
+      expect(passwordService.verify).toHaveBeenCalledWith(
+        'current-valid-pass',
+        mockUser.passwordHash,
+      );
+      expect(passwordService.hash).toHaveBeenCalledWith('NewValidPassword123!');
+      expect(repository.updatePassword).toHaveBeenCalledWith(
+        mockUser.id,
+        '$2b$12$newHashedPassword',
+      );
+      expect(
+        emailService.sendPasswordChangedSettingsEmail,
+      ).toHaveBeenCalledWith(
+        mockUser.email,
+        mockUser.fullName,
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+      );
+
+      const notifCalls = prismaService.notification.create.mock.calls as Array<
+        [
+          {
+            data: {
+              channel: NotificationChannel;
+              recipientUserId: string;
+              title: string;
+              description: string;
+              status: NotificationStatus;
+            };
+          },
+        ]
+      >;
+      const inAppCall = notifCalls.find(
+        ([arg]) => arg.data.channel === NotificationChannel.IN_APP,
+      );
+      expect(inAppCall).toBeDefined();
+      expect(inAppCall?.[0].data.recipientUserId).toBe(mockUser.id);
+      expect(inAppCall?.[0].data.title).toBe('Password changed');
+      expect(inAppCall?.[0].data.description).toBe(
+        'Your password was successfully updated.',
+      );
+
+      expect(result).toEqual({
+        message: 'Your password was successfully updated',
+      });
+    });
+
+    it('throws BadRequestException when current password is wrong', async () => {
+      repository.findById.mockResolvedValue(mockUser);
+      passwordService.verify.mockResolvedValue(false);
+
+      await expect(
+        service.changePassword(mockUser.id, {
+          currentPassword: 'wrong-password',
+          newPassword: 'NewValidPassword123!',
+        }),
+      ).rejects.toThrow(
+        new BadRequestException('Current password is incorrect'),
+      );
+
+      expect(passwordService.hash).not.toHaveBeenCalled();
+      expect(repository.updatePassword).not.toHaveBeenCalled();
+      expect(
+        emailService.sendPasswordChangedSettingsEmail,
+      ).not.toHaveBeenCalled();
+    });
+
+    it('throws BadRequestException when account has no passwordHash', async () => {
+      repository.findById.mockResolvedValue({
+        ...mockUser,
+        passwordHash: null,
+      });
+
+      await expect(
+        service.changePassword(mockUser.id, {
+          currentPassword: 'any-password',
+          newPassword: 'NewValidPassword123!',
+        }),
+      ).rejects.toThrow(
+        new BadRequestException(
+          'Password cannot be changed for accounts without password authentication',
+        ),
+      );
+    });
+
+    it('throws NotFoundException when user does not exist', async () => {
+      repository.findById.mockResolvedValue(null);
+
+      await expect(
+        service.changePassword('non-existent-user', {
+          currentPassword: 'any-password',
+          newPassword: 'NewValidPassword123!',
+        }),
+      ).rejects.toThrow(new NotFoundException('User not found'));
+    });
+  });
+
+  describe('updateProfile (Scenario 06)', () => {
+    it('dispatches emails to both old and new addresses and records in-app notification when email is changed', async () => {
+      repository.findById.mockResolvedValue(mockUser);
+      repository.findByEmail.mockResolvedValue(null);
+      repository.updateProfile.mockResolvedValue({
+        ...mockUser,
+        email: 'newemail@example.com',
+      });
+
+      const result = await service.updateProfile(mockUser.id, {
+        email: 'newemail@example.com',
+      });
+
+      expect(result.message).toBe('Profile updated successfully');
+      expect(result.user.email).toBe('newemail@example.com');
+      expect(repository.updateProfile).toHaveBeenCalledWith(mockUser.id, {
+        email: 'newemail@example.com',
+      });
+
+      // Email sent to both old and new addresses
+      expect(emailService.sendProfileUpdatedEmail).toHaveBeenCalledWith(
+        'user@example.com',
+        expect.objectContaining({
+          emailChanged: true,
+          newEmail: 'newemail@example.com',
+        }),
+        'Jane Doe',
+      );
+      expect(emailService.sendProfileUpdatedEmail).toHaveBeenCalledWith(
+        'newemail@example.com',
+        expect.objectContaining({
+          emailChanged: true,
+          newEmail: 'newemail@example.com',
+        }),
+        'Jane Doe',
+      );
+
+      // In-app notification recorded
+      expect(prismaService.notification.create).toHaveBeenCalled();
+      const notifCalls = prismaService.notification.create.mock.calls as Array<
+        [
+          {
+            data: {
+              recipientUserId: string;
+              channel: NotificationChannel;
+              template: string;
+              title: string;
+              description: string;
+              status: NotificationStatus;
+            };
+          },
+        ]
+      >;
+      expect(notifCalls[0][0].data).toMatchObject({
+        recipientUserId: mockUser.id,
+        channel: NotificationChannel.IN_APP,
+        template: 'profile_updated',
+        title: 'Profile updated',
+        description: 'Your contact details were successfully updated.',
+        status: NotificationStatus.SENT,
+      });
+    });
+
+    it('dispatches notification email and records in-app notification when phone number is changed', async () => {
+      repository.findById.mockResolvedValue(mockUser);
+      repository.updateProfile.mockResolvedValue({
+        ...mockUser,
+        phoneNumber: '+94779876543',
+      });
+
+      const result = await service.updateProfile(mockUser.id, {
+        phoneNumber: '+94779876543',
+      });
+
+      expect(result.message).toBe('Profile updated successfully');
+      expect(result.user.phoneNumber).toBe('+94779876543');
+      expect(emailService.sendProfileUpdatedEmail).toHaveBeenCalledWith(
+        'user@example.com',
+        expect.objectContaining({
+          phoneChanged: true,
+          newPhone: '+94779876543',
+        }),
+        'Jane Doe',
+      );
+      expect(prismaService.notification.create).toHaveBeenCalled();
+      const phoneNotifCalls = prismaService.notification.create.mock
+        .calls as Array<
+        [
+          {
+            data: {
+              recipientUserId: string;
+              channel: NotificationChannel;
+              title: string;
+            };
+          },
+        ]
+      >;
+      expect(phoneNotifCalls[0][0].data).toMatchObject({
+        recipientUserId: mockUser.id,
+        channel: NotificationChannel.IN_APP,
+        title: 'Profile updated',
+      });
+    });
+
+    it('throws ConflictException if new email is already used by another account', async () => {
+      repository.findById.mockResolvedValue(mockUser);
+      repository.findByEmail.mockResolvedValue({
+        ...mockUser,
+        id: 'other-user-uuid',
+        email: 'existing@example.com',
+      });
+
+      await expect(
+        service.updateProfile(mockUser.id, { email: 'existing@example.com' }),
+      ).rejects.toThrow(ConflictException);
+
+      expect(repository.updateProfile).not.toHaveBeenCalled();
+      expect(emailService.sendProfileUpdatedEmail).not.toHaveBeenCalled();
+    });
+
+    it('throws NotFoundException if user does not exist', async () => {
+      repository.findById.mockResolvedValue(null);
+
+      await expect(
+        service.updateProfile('missing-user', { fullName: 'New Name' }),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('approveCourier', () => {
+    const mockCourier: User = {
+      ...mockUser,
+      id: 'courier-uuid-1',
+      role: Role.COURIER,
+      approvalStatus: ApprovalStatus.PENDING,
+    };
+
+    it('approves a courier, sends approval email, and inserts notifications', async () => {
+      repository.findById.mockResolvedValue(mockCourier);
+      const approvedCourier = {
+        ...mockCourier,
+        approvalStatus: ApprovalStatus.APPROVED,
+        reviewedAt: new Date(),
+        reviewedBy: 'admin-uuid-1',
+      };
+      repository.approveUser.mockResolvedValue(approvedCourier);
+
+      const result = await service.approveCourier(
+        'courier-uuid-1',
+        'admin-uuid-1',
+      );
+
+      expect(result.approvalStatus).toBe(ApprovalStatus.APPROVED);
+      expect(repository.approveUser).toHaveBeenCalledWith(
+        'courier-uuid-1',
+        'admin-uuid-1',
+      );
+      expect(emailService.sendCourierApprovedEmail).toHaveBeenCalledWith(
+        mockCourier.email,
+        mockCourier.fullName,
+      );
+      expect(prismaService.notification.create).toHaveBeenCalledTimes(2);
+
+      const calls = prismaService.notification.create.mock.calls as Array<
+        [
+          {
+            data: {
+              recipientUserId: string;
+              channel: NotificationChannel;
+              template: string;
+              title: string;
+            };
+          },
+        ]
+      >;
+      expect(calls[0][0].data).toMatchObject({
+        recipientUserId: 'courier-uuid-1',
+        channel: NotificationChannel.IN_APP,
+        template: 'courier_approved',
+        title: 'Your courier account has been approved!',
+      });
+      expect(calls[1][0].data).toMatchObject({
+        recipientUserId: 'courier-uuid-1',
+        channel: NotificationChannel.EMAIL,
+        template: 'courier_approved',
+        title: 'Your courier account has been approved!',
+      });
+    });
+
+    it('throws NotFoundException if courier is not found', async () => {
+      repository.findById.mockResolvedValue(null);
+
+      await expect(service.approveCourier('unknown-courier')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('throws BadRequestException if user is not a courier', async () => {
+      repository.findById.mockResolvedValue(mockUser); // mockUser has role CUSTOMER
+
+      await expect(service.approveCourier(mockUser.id)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+  });
+
+  describe('rejectCourier', () => {
+    const mockCourier: User = {
+      ...mockUser,
+      id: 'courier-uuid-1',
+      role: Role.COURIER,
+      approvalStatus: ApprovalStatus.PENDING,
+    };
+
+    it('rejects a courier application, sends email notice, and logs notification', async () => {
+      repository.findById.mockResolvedValue(mockCourier);
+      const rejectedCourier = {
+        ...mockCourier,
+        approvalStatus: ApprovalStatus.REJECTED,
+        rejectionReason: 'Invalid driver license documents',
+        reviewedAt: new Date(),
+        reviewedBy: 'admin-uuid-1',
+      };
+      repository.rejectUser.mockResolvedValue(rejectedCourier);
+
+      const result = await service.rejectCourier(
+        'courier-uuid-1',
+        'Invalid driver license documents',
+        'admin-uuid-1',
+      );
+
+      expect(result.approvalStatus).toBe(ApprovalStatus.REJECTED);
+      expect(repository.rejectUser).toHaveBeenCalledWith(
+        'courier-uuid-1',
+        'Invalid driver license documents',
+        'admin-uuid-1',
+      );
+      expect(emailService.sendCourierRejectedEmail).toHaveBeenCalledWith(
+        mockCourier.email,
+        mockCourier.fullName,
+        'Invalid driver license documents',
+      );
+      expect(prismaService.notification.create).toHaveBeenCalledTimes(1);
+
+      const calls = prismaService.notification.create.mock.calls as Array<
+        [
+          {
+            data: {
+              recipientUserId: string;
+              channel: NotificationChannel;
+              template: string;
+              title: string;
+              description: string;
+            };
+          },
+        ]
+      >;
+      expect(calls[0][0].data).toMatchObject({
+        recipientUserId: 'courier-uuid-1',
+        channel: NotificationChannel.EMAIL,
+        template: 'courier_rejected',
+        title: 'Courier application rejected',
+        description:
+          'Application could not be approved: Invalid driver license documents',
+      });
+    });
+
+    it('throws NotFoundException if courier does not exist', async () => {
+      repository.findById.mockResolvedValue(null);
+
+      await expect(
+        service.rejectCourier('unknown-courier', 'Reason'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('throws BadRequestException if target user is not a courier', async () => {
+      repository.findById.mockResolvedValue(mockUser);
+
+      await expect(
+        service.rejectCourier(mockUser.id, 'Reason'),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('approveMerchant', () => {
+    const mockMerchant: User & { merchantProfile: { businessName: string } } = {
+      ...mockUser,
+      id: 'merchant-uuid-1',
+      role: Role.MERCHANT,
+      approvalStatus: ApprovalStatus.PENDING,
+      merchantProfile: {
+        businessName: 'Super Mart',
+      },
+    };
+
+    it('approves merchant, sends email, and logs in-app and email notifications', async () => {
+      repository.findMerchantById.mockResolvedValue(mockMerchant);
+      const approvedMerchant = {
+        ...mockMerchant,
+        approvalStatus: ApprovalStatus.APPROVED,
+        reviewedAt: new Date(),
+        reviewedBy: 'admin-uuid-1',
+      };
+      repository.approveUser.mockResolvedValue(approvedMerchant);
+
+      const result = await service.approveMerchant(
+        'merchant-uuid-1',
+        'admin-uuid-1',
+      );
+
+      expect(result.approvalStatus).toBe(ApprovalStatus.APPROVED);
+      expect(repository.approveUser).toHaveBeenCalledWith(
+        'merchant-uuid-1',
+        'admin-uuid-1',
+      );
+      expect(emailService.sendMerchantApprovedEmail).toHaveBeenCalledWith(
+        mockMerchant.email,
+        mockMerchant.fullName,
+        'Super Mart',
+      );
+      expect(prismaService.notification.create).toHaveBeenCalledTimes(2);
+
+      const calls = prismaService.notification.create.mock.calls as Array<
+        [
+          {
+            data: {
+              recipientUserId: string;
+              channel: NotificationChannel;
+              template: string;
+              title: string;
+            };
+          },
+        ]
+      >;
+      expect(calls[0][0].data).toMatchObject({
+        recipientUserId: 'merchant-uuid-1',
+        channel: NotificationChannel.IN_APP,
+        template: 'merchant_approved',
+        title: 'Your merchant account is now approved!',
+      });
+      expect(calls[1][0].data).toMatchObject({
+        recipientUserId: 'merchant-uuid-1',
+        channel: NotificationChannel.EMAIL,
+        template: 'merchant_approved',
+        title: 'Your merchant account is now approved!',
+      });
+    });
+
+    it('throws NotFoundException if merchant does not exist', async () => {
+      repository.findMerchantById.mockResolvedValue(null);
+
+      await expect(service.approveMerchant('unknown-merchant')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('throws BadRequestException if user is not a merchant', async () => {
+      repository.findMerchantById.mockResolvedValue(mockUser);
+
+      await expect(service.approveMerchant(mockUser.id)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+  });
+
+  describe('rejectMerchant', () => {
+    const mockMerchant: User & { merchantProfile: { businessName: string } } = {
+      ...mockUser,
+      id: 'merchant-uuid-1',
+      role: Role.MERCHANT,
+      approvalStatus: ApprovalStatus.PENDING,
+      merchantProfile: {
+        businessName: 'Super Mart',
+      },
+    };
+
+    it('rejects a merchant application, sends rejection email, and records notification', async () => {
+      repository.findMerchantById.mockResolvedValue(mockMerchant);
+      const rejectedMerchant = {
+        ...mockMerchant,
+        approvalStatus: ApprovalStatus.REJECTED,
+        rejectionReason: 'Invalid business registration documentation',
+        reviewedAt: new Date(),
+        reviewedBy: 'admin-uuid-1',
+      };
+      repository.rejectUser.mockResolvedValue(rejectedMerchant);
+
+      const result = await service.rejectMerchant(
+        'merchant-uuid-1',
+        'Invalid business registration documentation',
+        'admin-uuid-1',
+      );
+
+      expect(result.approvalStatus).toBe(ApprovalStatus.REJECTED);
+      expect(repository.rejectUser).toHaveBeenCalledWith(
+        'merchant-uuid-1',
+        'Invalid business registration documentation',
+        'admin-uuid-1',
+      );
+      expect(emailService.sendMerchantRejectedEmail).toHaveBeenCalledWith(
+        mockMerchant.email,
+        mockMerchant.fullName,
+        'Invalid business registration documentation',
+        'Super Mart',
+      );
+      expect(prismaService.notification.create).toHaveBeenCalledTimes(1);
+
+      const calls = prismaService.notification.create.mock.calls as Array<
+        [
+          {
+            data: {
+              recipientUserId: string;
+              channel: NotificationChannel;
+              template: string;
+              title: string;
+              description: string;
+            };
+          },
+        ]
+      >;
+      expect(calls[0][0].data).toMatchObject({
+        recipientUserId: 'merchant-uuid-1',
+        channel: NotificationChannel.EMAIL,
+        template: 'merchant_rejected',
+        title: 'Merchant application rejected',
+        description:
+          'Application could not be approved: Invalid business registration documentation',
+      });
+    });
+
+    it('throws NotFoundException if merchant does not exist', async () => {
+      repository.findMerchantById.mockResolvedValue(null);
+
+      await expect(
+        service.rejectMerchant('unknown-merchant', 'Reason'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('throws BadRequestException if user is not a merchant', async () => {
+      repository.findMerchantById.mockResolvedValue(mockUser);
+
+      await expect(
+        service.rejectMerchant(mockUser.id, 'Reason'),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('updateNotificationPreferences (Scenario 33)', () => {
+    it('updates user notification flags and records in-app notification', async () => {
+      prismaService.user.findUnique.mockResolvedValue(mockUser);
+      prismaService.user.update.mockResolvedValue({
+        ...mockUser,
+        deliveryStatusNotifications: false,
+        failedDeliveryNotifications: true,
+      });
+
+      const result = await service.updateNotificationPreferences(mockUser.id, {
+        deliveryStatusNotifications: false,
+        failedDeliveryNotifications: true,
+      });
+
+      expect(result).toMatchObject({
+        deliveryStatusNotifications: false,
+        failedDeliveryNotifications: true,
+        message: 'Your notification preferences have been saved.',
+      });
+
+      const calls = prismaService.notification.create.mock.calls as Array<
+        [
+          {
+            data: {
+              channel: NotificationChannel;
+              template: string;
+              title: string;
+              description: string;
+            };
+          },
+        ]
+      >;
+      const notif = calls.find(
+        (c) =>
+          c[0].data.recipientUserId === mockUser.id &&
+          c[0].data.channel === NotificationChannel.IN_APP &&
+          c[0].data.template === 'preferences_updated',
+      );
+      expect(notif).toBeDefined();
+      expect(notif?.[0].data.title).toBe('Preferences updated');
+      expect(notif?.[0].data.description).toBe(
+        'Your notification preferences have been saved.',
+      );
+    });
+
+    it('throws NotFoundException if user is not found', async () => {
+      prismaService.user.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.updateNotificationPreferences('non-existent-user', {
+          deliveryStatusNotifications: false,
+        }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });

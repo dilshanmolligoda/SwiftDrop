@@ -17,6 +17,11 @@ export interface RenderedNotification {
   readonly html: string;
   /** Short text for SMS (≤ 160 characters). */
   readonly sms: string;
+  readonly attachments?: Array<{
+    readonly filename: string;
+    readonly content: Buffer | string;
+    readonly contentType?: string;
+  }>;
 }
 
 export type SendResult =
@@ -26,6 +31,11 @@ export type SendResult =
   /** Rejected for good (e.g. mailbox does not exist) — do not retry. */
   | { readonly status: 'FAILED'; readonly reason: string };
 
+export interface SendSmsOptions {
+  readonly to: string;
+  readonly message: string;
+}
+
 /**
  * One way of reaching a customer (Strategy). Throw for a temporary problem
  * (server down, timeout): the message is retried with backoff.
@@ -33,8 +43,8 @@ export type SendResult =
 export interface NotificationChannel {
   readonly channel: ChannelName;
   send(
-    recipient: Recipient,
-    message: RenderedNotification,
+    recipientOrOptions: Recipient | SendSmsOptions,
+    message?: RenderedNotification,
   ): Promise<SendResult>;
 }
 

@@ -22,6 +22,8 @@ export interface DeliveryItem {
   readonly waitingTime: string
   readonly zone: string
   readonly createdAt: string
+  readonly orderReference?: string | null
+  readonly failureReason?: string | null
 }
 
 export interface AvailableCourierCandidate {

@@ -13,6 +13,7 @@ import { RolesGuard } from './modules/auth/guards/roles.guard.js';
 import { CsrfGuard } from './modules/auth/guards/csrf.guard.js';
 import { cookieParserMiddleware } from './modules/auth/utils/cookie.util.js';
 import { CourierModule } from './modules/courier/courier.module.js';
+import { EmailModule } from './modules/email/email.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 import { MerchantDashboardModule } from './modules/merchant-dashboard/merchant-dashboard.module.js';
@@ -20,6 +21,7 @@ import { MerchantWebhooksModule } from './modules/merchant-webhooks/merchant-web
 import { PricingModule } from './modules/pricing/pricing.module.js';
 import { RealtimeModule } from './modules/realtime/realtime.module.js';
 import { ParcelsModule } from './modules/parcels/parcels.module.js';
+import { AdminModule } from './modules/admin/admin.module.js';
 import { TrackingModule } from './modules/tracking/tracking.module.js';
 import { MerchantSettingsModule } from './modules/merchant-settings/merchant-settings.module.js';
 
@@ -31,8 +33,10 @@ import { MerchantSettingsModule } from './modules/merchant-settings/merchant-set
       envFilePath: ['.env', '../../.env'],
       validate: validateEnv,
     }),
+    AdminModule,
     AuthModule,
     CourierModule,
+    EmailModule,
     HealthModule,
     MerchantDashboardModule,
     MerchantSettingsModule,

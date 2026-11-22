@@ -28,6 +28,11 @@
   margin: 0;
 }
 
+.dateDropdownWrapper {
+  position: relative;
+  display: inline-block;
+}
+
 .dateBadge {
   display: inline-flex;
   align-items: center;
@@ -40,6 +45,65 @@
   font-weight: 500;
   color: #374151;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dateBadge:hover {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.chevron {
+  transition: transform 0.2s ease;
+  color: #6b7280;
+}
+
+.chevronRotated {
+  transform: rotate(180deg);
+}
+
+.dateDropdownMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  padding: 6px;
+  min-width: 200px;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dateOptionItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  font-size: 0.85rem;
+  color: #374151;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.15s ease;
+  width: 100%;
+}
+
+.dateOptionItem:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.dateOptionSelected {
+  background-color: #ecfdf5;
+  color: #065f46;
+  font-weight: 600;
 }
 
 /* Metrics Row */
@@ -253,10 +317,32 @@
   padding: 32px;
 }
 
+.trackingCell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .trackingNo {
   font-weight: 600;
   color: #111827;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.orderRefBadge {
+  display: inline-block;
+  padding: 1px 6px;
+  background-color: #f1f5f9;
+  color: #475569;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.recipientSubtext {
+  font-size: 0.75rem;
+  color: #64748b;
 }
 
 .routeText {
