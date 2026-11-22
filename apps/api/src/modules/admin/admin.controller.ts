@@ -40,9 +40,7 @@ export class AdminController {
   }
 
   @Get('applications/:id')
-  getApplicationDetails(
-    @Param('id', new ParseUUIDPipe()) id: string,
-  ) {
+  getApplicationDetails(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.adminService.getApplicationDetails(id);
   }
 
@@ -69,9 +67,7 @@ export class AdminController {
   }
 
   @Get('couriers/:id')
-  getCourierDetails(
-    @Param('id', new ParseUUIDPipe()) id: string,
-  ) {
+  getCourierDetails(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.adminService.getCourierDetails(id);
   }
 

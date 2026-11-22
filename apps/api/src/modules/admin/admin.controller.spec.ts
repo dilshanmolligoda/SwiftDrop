@@ -53,7 +53,7 @@ describe('AdminController', () => {
 
   it('is protected with ADMIN and DISPATCHER roles', () => {
     const reflector = new Reflector();
-    const roles = reflector.get(ROLES_KEY, AdminController);
+    const roles = reflector.get<Role[]>(ROLES_KEY, AdminController);
     expect(roles).toEqual([Role.ADMIN, Role.DISPATCHER]);
   });
 

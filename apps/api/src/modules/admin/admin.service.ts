@@ -523,19 +523,23 @@ export class AdminService {
       this.prisma.parcel.count({ where }),
     ]);
 
-    const formatted = parcels.map(({ assignments, merchantOrder, ...parcel }) => ({
-      ...parcel,
-      senderName: parcel.senderName || 'Central Warehouse',
-      senderAddress: parcel.senderAddress || 'SwiftDrop Hub, Colombo',
-      packageSize: parcel.packageSize ? String(parcel.packageSize) : 'MEDIUM',
-      weightKg: parcel.weightKg ? String(parcel.weightKg) : '1.00',
-      costLkr: parcel.costLkr ? String(parcel.costLkr) : '350.00',
-      failureReason: parcel.failureReason ?? null,
-      failedDeliveryAttempts: parcel.failedDeliveryAttempts ?? 0,
-      deliveredAt: parcel.deliveredAt ? parcel.deliveredAt.toISOString() : null,
-      activeAssignment: assignments[0] ?? null,
-      orderReference: merchantOrder?.reference ?? null,
-    }));
+    const formatted = parcels.map(
+      ({ assignments, merchantOrder, ...parcel }) => ({
+        ...parcel,
+        senderName: parcel.senderName || 'Central Warehouse',
+        senderAddress: parcel.senderAddress || 'SwiftDrop Hub, Colombo',
+        packageSize: parcel.packageSize ? String(parcel.packageSize) : 'MEDIUM',
+        weightKg: parcel.weightKg ? String(parcel.weightKg) : '1.00',
+        costLkr: parcel.costLkr ? String(parcel.costLkr) : '350.00',
+        failureReason: parcel.failureReason ?? null,
+        failedDeliveryAttempts: parcel.failedDeliveryAttempts ?? 0,
+        deliveredAt: parcel.deliveredAt
+          ? parcel.deliveredAt.toISOString()
+          : null,
+        activeAssignment: assignments[0] ?? null,
+        orderReference: merchantOrder?.reference ?? null,
+      }),
+    );
 
     return {
       data: formatted,
@@ -828,7 +832,9 @@ export class AdminService {
       status: parcel.status,
       failureReason:
         parcel.failureReason ||
-        (parcel.status === ParcelStatus.FAILED ? 'Delivery attempt failed' : null),
+        (parcel.status === ParcelStatus.FAILED
+          ? 'Delivery attempt failed'
+          : null),
       completedAt: parcel.deliveredAt ?? parcel.updatedAt,
     }));
 
