@@ -9,10 +9,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService, parseTtlToSeconds } from './auth.service.js';
 import { PasswordService } from './password.service.js';
 import { UsersService } from '../users/users.service.js';
+import { EmailService } from '../email/email.service.js';
+import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 import {
   Role,
   ApprovalStatus,
   VehicleType,
+  NotificationChannel,
+  NotificationStatus,
 } from '../../generated/prisma/enums.js';
 import type { User } from '../../generated/prisma/client.js';
 
@@ -24,19 +28,44 @@ describe('AuthService', () => {
     createCustomer: jest.Mock;
     createMerchant: jest.Mock;
     createCourier: jest.Mock;
+    createGoogleCustomer: jest.Mock;
+    findByGoogleSubject: jest.Mock;
+    linkGoogleSubject: jest.Mock;
   };
   let passwordService: { verify: jest.Mock; hash: jest.Mock };
-  let jwtService: { signAsync: jest.Mock };
+  let jwtService: { signAsync: jest.Mock; verifyAsync: jest.Mock };
   let configService: { getOrThrow: jest.Mock; get: jest.Mock };
+  let emailService: {
+    sendCustomerWelcomeEmail: jest.Mock;
+    sendWelcomeEmail: jest.Mock;
+    sendPasswordResetEmail: jest.Mock;
+    sendPasswordResetConfirmationEmail: jest.Mock;
+    sendGoogleLinkedEmail: jest.Mock;
+  };
+  let prismaService: {
+    user: { update: jest.Mock };
+    notification: { create: jest.Mock };
+  };
 
   const validUser: User = {
     id: '11111111-1111-1111-1111-111111111111',
     email: 'user@example.com',
     fullName: 'Test User',
+    phoneNumber: '+94771234567',
     passwordHash: '$2b$12$fakeHashedPassword',
     role: Role.CUSTOMER,
     approvalStatus: ApprovalStatus.APPROVED,
     isActive: true,
+    googleSubject: null,
+    twoFactorEnabled: false,
+    deliveryStatusNotifications: true,
+    failedDeliveryNotifications: true,
+    storeConnectionNotifications: true,
+    language: 'English',
+    timeZone: 'Asia/Colombo (UTC+05:30)',
+    reviewedAt: null,
+    reviewedBy: null,
+    rejectionReason: null,
     createdAt: new Date('2026-01-01T00:00:00Z'),
     updatedAt: new Date('2026-01-01T00:00:00Z'),
   };
@@ -48,6 +77,9 @@ describe('AuthService', () => {
       createCustomer: jest.fn(),
       createMerchant: jest.fn(),
       createCourier: jest.fn(),
+      createGoogleCustomer: jest.fn(),
+      findByGoogleSubject: jest.fn(),
+      linkGoogleSubject: jest.fn(),
     };
     passwordService = {
       verify: jest.fn(),
@@ -55,6 +87,24 @@ describe('AuthService', () => {
     };
     jwtService = {
       signAsync: jest.fn(),
+      verifyAsync: jest.fn(),
+    };
+    emailService = {
+      sendCustomerWelcomeEmail: jest.fn().mockResolvedValue(undefined),
+      sendWelcomeEmail: jest.fn().mockResolvedValue(undefined),
+      sendPasswordResetEmail: jest.fn().mockResolvedValue(undefined),
+      sendPasswordResetConfirmationEmail: jest
+        .fn()
+        .mockResolvedValue(undefined),
+      sendGoogleLinkedEmail: jest.fn().mockResolvedValue(undefined),
+    };
+    prismaService = {
+      user: {
+        update: jest.fn().mockResolvedValue(validUser),
+      },
+      notification: {
+        create: jest.fn().mockResolvedValue({ id: 'notif-uuid' }),
+      },
     };
     configService = {
       getOrThrow: jest.fn().mockImplementation((key: string) => {
@@ -76,6 +126,8 @@ describe('AuthService', () => {
         { provide: PasswordService, useValue: passwordService },
         { provide: JwtService, useValue: jwtService },
         { provide: ConfigService, useValue: configService },
+        { provide: EmailService, useValue: emailService },
+        { provide: PrismaService, useValue: prismaService },
       ],
     }).compile();
 
@@ -221,6 +273,7 @@ describe('AuthService', () => {
         id: validUser.id,
         email: validUser.email,
         fullName: validUser.fullName,
+        phoneNumber: validUser.phoneNumber,
         role: validUser.role,
         approvalStatus: validUser.approvalStatus,
         isActive: validUser.isActive,
@@ -286,6 +339,128 @@ describe('AuthService', () => {
       expect(result.user.approvalStatus).toBe(ApprovalStatus.APPROVED);
       expect(result.user.role).toBe(Role.CUSTOMER);
       expect(result.accessToken).toBe('signed-customer-token');
+      expect(emailService.sendCustomerWelcomeEmail).toHaveBeenCalledWith(
+        'newcustomer@example.com',
+        'New Customer',
+      );
+      expect(prismaService.notification.create).toHaveBeenCalledTimes(2);
+      const emailCall = prismaService.notification.create.mock.calls[0] as [
+        {
+          data: {
+            channel: string;
+            recipientUserId: string;
+            template: string;
+            title: string;
+            description: string;
+            status: string;
+          };
+        },
+      ];
+      expect(emailCall[0].data.channel).toBe(NotificationChannel.EMAIL);
+      expect(emailCall[0].data.recipientUserId).toBe('new-customer-uuid');
+      expect(emailCall[0].data.template).toBe('customer_welcome');
+      expect(emailCall[0].data.title).toBe('Welcome to SwiftDrop!');
+      expect(emailCall[0].data.description).toBe(
+        'Your customer account is active. Start by booking your first delivery.',
+      );
+      expect(emailCall[0].data.status).toBe(NotificationStatus.SENT);
+
+      const inAppCall = prismaService.notification.create.mock.calls[1] as [
+        {
+          data: {
+            channel: string;
+            recipientUserId: string;
+            template: string;
+            title: string;
+            description: string;
+            status: string;
+          };
+        },
+      ];
+      expect(inAppCall[0].data.channel).toBe(NotificationChannel.IN_APP);
+      expect(inAppCall[0].data.recipientUserId).toBe('new-customer-uuid');
+      expect(inAppCall[0].data.template).toBe('customer_welcome');
+      expect(inAppCall[0].data.title).toBe('Welcome to SwiftDrop!');
+      expect(inAppCall[0].data.description).toBe(
+        'Your customer account is active. Start by booking your first delivery.',
+      );
+      expect(inAppCall[0].data.status).toBe(NotificationStatus.SENT);
+    });
+
+    it('triggers a welcome email via EmailService and inserts in-app notification upon registration', async () => {
+      usersService.findByEmail.mockResolvedValue(null);
+      passwordService.hash.mockResolvedValue('$2b$12$hashedRegisteredPassword');
+      jwtService.signAsync.mockResolvedValue('signed-customer-token');
+
+      const createdUser: User = {
+        ...validUser,
+        id: 'customer-welcome-uuid',
+        email: 'welcome.test@example.com',
+        fullName: 'Jane Doe',
+        role: Role.CUSTOMER,
+        approvalStatus: ApprovalStatus.APPROVED,
+      };
+      usersService.createCustomer.mockResolvedValue(createdUser);
+
+      await authService.registerCustomer({
+        fullName: 'Jane Doe',
+        email: 'welcome.test@example.com',
+        phoneNumber: '0779998888',
+        password: 'securePassword123!',
+      });
+
+      expect(emailService.sendCustomerWelcomeEmail).toHaveBeenCalledWith(
+        'welcome.test@example.com',
+        'Jane Doe',
+      );
+      expect(prismaService.notification.create).toHaveBeenCalledTimes(2);
+      const emailNotifCall = prismaService.notification.create.mock
+        .calls[0] as [
+        {
+          data: {
+            channel: string;
+            recipientUserId: string;
+            template: string;
+            title: string;
+            description: string;
+            status: string;
+          };
+        },
+      ];
+      expect(emailNotifCall[0].data.channel).toBe(NotificationChannel.EMAIL);
+      expect(emailNotifCall[0].data.recipientUserId).toBe(
+        'customer-welcome-uuid',
+      );
+      expect(emailNotifCall[0].data.template).toBe('customer_welcome');
+      expect(emailNotifCall[0].data.title).toBe('Welcome to SwiftDrop!');
+      expect(emailNotifCall[0].data.description).toBe(
+        'Your customer account is active. Start by booking your first delivery.',
+      );
+      expect(emailNotifCall[0].data.status).toBe(NotificationStatus.SENT);
+
+      const inAppNotifCall = prismaService.notification.create.mock
+        .calls[1] as [
+        {
+          data: {
+            channel: string;
+            recipientUserId: string;
+            template: string;
+            title: string;
+            description: string;
+            status: string;
+          };
+        },
+      ];
+      expect(inAppNotifCall[0].data.channel).toBe(NotificationChannel.IN_APP);
+      expect(inAppNotifCall[0].data.recipientUserId).toBe(
+        'customer-welcome-uuid',
+      );
+      expect(inAppNotifCall[0].data.template).toBe('customer_welcome');
+      expect(inAppNotifCall[0].data.title).toBe('Welcome to SwiftDrop!');
+      expect(inAppNotifCall[0].data.description).toBe(
+        'Your customer account is active. Start by booking your first delivery.',
+      );
+      expect(inAppNotifCall[0].data.status).toBe(NotificationStatus.SENT);
     });
 
     it('throws ConflictException when email is already registered', async () => {
@@ -471,6 +646,334 @@ describe('AuthService', () => {
         rejectionReason: 'Invalid business address documentation',
       });
       expect('reviewedBy' in status).toBe(false);
+    });
+  });
+
+  describe('forgotPassword', () => {
+    it('generates a 15-minute signed token and dispatches reset email when user exists', async () => {
+      usersService.findByEmail.mockResolvedValue(validUser);
+      jwtService.signAsync.mockResolvedValue('secure-signed-reset-token');
+
+      const result = await authService.forgotPassword({
+        email: 'user@example.com',
+      });
+
+      expect(usersService.findByEmail).toHaveBeenCalledWith('user@example.com');
+      expect(jwtService.signAsync).toHaveBeenCalledWith(
+        {
+          sub: validUser.id,
+          userId: validUser.id,
+          purpose: 'password_reset',
+        },
+        expect.objectContaining({
+          expiresIn: '15m',
+          algorithm: 'HS256',
+        }),
+      );
+      expect(emailService.sendPasswordResetEmail).toHaveBeenCalledWith(
+        validUser.email,
+        'secure-signed-reset-token',
+        validUser.fullName,
+      );
+      expect(result).toEqual({
+        message: 'If the email exists, a reset link was sent',
+      });
+    });
+
+    it('returns standard 200 message without generating token or sending email when user does not exist', async () => {
+      usersService.findByEmail.mockResolvedValue(null);
+
+      const result = await authService.forgotPassword({
+        email: 'unknown@example.com',
+      });
+
+      expect(usersService.findByEmail).toHaveBeenCalledWith(
+        'unknown@example.com',
+      );
+      expect(jwtService.signAsync).not.toHaveBeenCalled();
+      expect(emailService.sendPasswordResetEmail).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        message: 'If the email exists, a reset link was sent',
+      });
+    });
+
+    it('returns standard message gracefully even if email service fails', async () => {
+      usersService.findByEmail.mockResolvedValue(validUser);
+      jwtService.signAsync.mockResolvedValue('secure-signed-reset-token');
+      emailService.sendPasswordResetEmail.mockRejectedValue(
+        new Error('SMTP connection error'),
+      );
+
+      const result = await authService.forgotPassword({
+        email: 'user@example.com',
+      });
+
+      expect(result).toEqual({
+        message: 'If the email exists, a reset link was sent',
+      });
+    });
+  });
+
+  describe('resetPassword', () => {
+    const validResetDto = {
+      token: 'valid-jwt-token',
+      newPassword: 'NewPassword123!',
+    };
+
+    it('successfully resets password, hashes new password, updates Prisma, dispatches security email and in-app notification', async () => {
+      jwtService.verifyAsync.mockResolvedValue({
+        sub: validUser.id,
+        userId: validUser.id,
+        purpose: 'password_reset',
+      });
+      usersService.findById.mockResolvedValue(validUser);
+      passwordService.hash.mockResolvedValue('$2b$12$newHashedPassword');
+
+      const result = await authService.resetPassword(validResetDto);
+
+      expect(jwtService.verifyAsync).toHaveBeenCalledWith(
+        'valid-jwt-token',
+        expect.objectContaining({
+          algorithms: ['HS256'],
+        }),
+      );
+      expect(usersService.findById).toHaveBeenCalledWith(validUser.id);
+      expect(passwordService.hash).toHaveBeenCalledWith('NewPassword123!');
+      expect(prismaService.user.update).toHaveBeenCalledWith({
+        where: { id: validUser.id },
+        data: { passwordHash: '$2b$12$newHashedPassword' },
+      });
+      expect(
+        emailService.sendPasswordResetConfirmationEmail,
+      ).toHaveBeenCalledWith(validUser.email, validUser.fullName);
+
+      const notifCalls = prismaService.notification.create.mock.calls as Array<
+        [
+          {
+            data: {
+              channel: NotificationChannel;
+              recipientUserId: string;
+              title: string;
+              description: string;
+              status: NotificationStatus;
+            };
+          },
+        ]
+      >;
+      const inAppCall = notifCalls.find(
+        ([arg]) => arg.data.channel === NotificationChannel.IN_APP,
+      );
+      expect(inAppCall).toBeDefined();
+      expect(inAppCall?.[0].data.recipientUserId).toBe(validUser.id);
+      expect(inAppCall?.[0].data.title).toBe('Password updated');
+      expect(inAppCall?.[0].data.description).toBe(
+        'Your account password was successfully reset.',
+      );
+      expect(inAppCall?.[0].data.status).toBe(NotificationStatus.SENT);
+
+      expect(result).toEqual({
+        message: 'Password has been reset successfully',
+      });
+    });
+
+    it('rejects consumed reset tokens with BadRequestException', async () => {
+      jwtService.verifyAsync.mockResolvedValue({
+        sub: validUser.id,
+        userId: validUser.id,
+        purpose: 'password_reset',
+      });
+      usersService.findById.mockResolvedValue(validUser);
+      passwordService.hash.mockResolvedValue('$2b$12$newHashedPassword');
+
+      const tokenToConsume = 'unique-consumed-token';
+      await authService.resetPassword({
+        token: tokenToConsume,
+        newPassword: 'NewPassword123!',
+      });
+
+      await expect(
+        authService.resetPassword({
+          token: tokenToConsume,
+          newPassword: 'AnotherPassword123!',
+        }),
+      ).rejects.toThrow(
+        new BadRequestException('Password reset token has already been used'),
+      );
+    });
+
+    it('rejects expired or invalid signature tokens with BadRequestException', async () => {
+      jwtService.verifyAsync.mockRejectedValue(new Error('jwt expired'));
+
+      await expect(
+        authService.resetPassword({
+          token: 'expired-token',
+          newPassword: 'NewPassword123!',
+        }),
+      ).rejects.toThrow(
+        new BadRequestException('Invalid or expired password reset token'),
+      );
+    });
+
+    it('rejects token with invalid purpose with BadRequestException', async () => {
+      jwtService.verifyAsync.mockResolvedValue({
+        sub: validUser.id,
+        userId: validUser.id,
+        purpose: 'access',
+      });
+
+      await expect(
+        authService.resetPassword({
+          token: 'wrong-purpose-token',
+          newPassword: 'NewPassword123!',
+        }),
+      ).rejects.toThrow(
+        new BadRequestException('Invalid password reset token purpose'),
+      );
+    });
+
+    it('throws BadRequestException if user cannot be found', async () => {
+      jwtService.verifyAsync.mockResolvedValue({
+        sub: 'missing-user',
+        userId: 'missing-user',
+        purpose: 'password_reset',
+      });
+      usersService.findById.mockResolvedValue(null);
+
+      await expect(
+        authService.resetPassword({
+          token: 'token-for-missing-user',
+          newPassword: 'NewPassword123!',
+        }),
+      ).rejects.toThrow(new BadRequestException('User not found'));
+    });
+  });
+
+  describe('Google OAuth Notifications (Scenario 05)', () => {
+    const googleIdentity = {
+      googleSubject: 'google-sub-12345',
+      email: 'customer@example.com',
+      fullName: 'Google User',
+      emailVerified: true,
+    };
+
+    it('dispatches email and records notifications when a new customer account is created via Google', async () => {
+      usersService.findByGoogleSubject.mockResolvedValue(null);
+      usersService.findByEmail.mockResolvedValue(null);
+      usersService.createGoogleCustomer.mockResolvedValue({
+        id: 'new-google-user-id',
+        email: 'customer@example.com',
+        fullName: 'Google User',
+        role: Role.CUSTOMER,
+        approvalStatus: ApprovalStatus.APPROVED,
+      });
+      jwtService.signAsync.mockResolvedValue('test-jwt');
+
+      const result = await authService.handleGoogleSignIn(googleIdentity);
+
+      expect(result.type).toBe('authenticated');
+      expect(emailService.sendGoogleLinkedEmail).toHaveBeenCalledWith(
+        'customer@example.com',
+        'customer@example.com',
+        'Google User',
+      );
+      expect(prismaService.notification.create).toHaveBeenCalled();
+      const calls = prismaService.notification.create.mock.calls as Array<
+        [
+          {
+            data: {
+              recipientUserId: string;
+              channel: NotificationChannel;
+              template: string;
+              title: string;
+              description: string;
+              status: NotificationStatus;
+            };
+          },
+        ]
+      >;
+      const inAppCall = calls.find(
+        (c) => c[0].data.channel === NotificationChannel.IN_APP,
+      );
+      const emailCall = calls.find(
+        (c) => c[0].data.channel === NotificationChannel.EMAIL,
+      );
+      expect(inAppCall).toBeDefined();
+      expect(inAppCall?.[0].data).toMatchObject({
+        recipientUserId: 'new-google-user-id',
+        channel: NotificationChannel.IN_APP,
+        template: 'google_account_linked',
+        title: 'Google account linked',
+        description: 'You can now sign in using Google.',
+        status: NotificationStatus.SENT,
+      });
+      expect(emailCall).toBeDefined();
+      expect(emailCall?.[0].data).toMatchObject({
+        recipientUserId: 'new-google-user-id',
+        channel: NotificationChannel.EMAIL,
+        template: 'google_account_linked',
+        title: 'Google account linked',
+        status: NotificationStatus.SENT,
+      });
+    });
+
+    it('dispatches email and records notifications when an existing user links their Google account', async () => {
+      usersService.findById.mockResolvedValue({
+        id: validUser.id,
+        email: 'customer@example.com',
+        fullName: 'Test Customer',
+        role: Role.CUSTOMER,
+        approvalStatus: ApprovalStatus.APPROVED,
+        isActive: true,
+        googleSubject: null,
+      });
+      usersService.findByGoogleSubject.mockResolvedValue(null);
+      usersService.linkGoogleSubject.mockResolvedValue({
+        ...validUser,
+        googleSubject: 'google-sub-12345',
+      });
+
+      const result = await authService.handleGoogleLink(
+        validUser.id,
+        googleIdentity,
+      );
+
+      expect(result.redirectUrl).toContain('link_success=google_connected');
+      expect(usersService.linkGoogleSubject).toHaveBeenCalledWith(
+        validUser.id,
+        'google-sub-12345',
+      );
+      expect(emailService.sendGoogleLinkedEmail).toHaveBeenCalledWith(
+        'customer@example.com',
+        'customer@example.com',
+        'Test Customer',
+      );
+      expect(prismaService.notification.create).toHaveBeenCalled();
+      const linkCalls = prismaService.notification.create.mock.calls as Array<
+        [
+          {
+            data: {
+              recipientUserId: string;
+              channel: NotificationChannel;
+              template: string;
+              title: string;
+              description: string;
+              status: NotificationStatus;
+            };
+          },
+        ]
+      >;
+      const linkInApp = linkCalls.find(
+        (c) => c[0].data.channel === NotificationChannel.IN_APP,
+      );
+      expect(linkInApp).toBeDefined();
+      expect(linkInApp?.[0].data).toMatchObject({
+        recipientUserId: validUser.id,
+        channel: NotificationChannel.IN_APP,
+        template: 'google_account_linked',
+        title: 'Google account linked',
+        description: 'You can now sign in using Google.',
+        status: NotificationStatus.SENT,
+      });
     });
   });
 

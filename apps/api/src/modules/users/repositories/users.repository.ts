@@ -97,6 +97,38 @@ export class UsersRepository {
     });
   }
 
+  async updatePassword(userId: string, passwordHash: string): Promise<User> {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        passwordHash,
+      },
+    });
+  }
+
+  async updateProfile(
+    userId: string,
+    data: { fullName?: string; email?: string; phoneNumber?: string },
+  ): Promise<User> {
+    const updateData: {
+      fullName?: string;
+      email?: string;
+      phoneNumber?: string;
+    } = {};
+    if (data.fullName !== undefined) updateData.fullName = data.fullName.trim();
+    if (data.email !== undefined) {
+      updateData.email = data.email.trim().toLowerCase();
+    }
+    if (data.phoneNumber !== undefined) {
+      updateData.phoneNumber = data.phoneNumber.trim();
+    }
+
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+    });
+  }
+
   async createCustomer(data: CreateCustomerData): Promise<User> {
     const normalizedEmail = data.email.trim().toLowerCase();
     return this.prisma.user.create({

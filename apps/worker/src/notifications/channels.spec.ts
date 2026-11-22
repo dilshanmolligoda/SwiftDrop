@@ -55,6 +55,36 @@ describe('EmailChannel', () => {
     });
   });
 
+  it('includes attachments when provided in rendered notification', async () => {
+    sendMail.mockResolvedValue({ messageId: 'm2' });
+    const email = new EmailChannel(testWorkerConfig());
+    const messageWithPdf: RenderedNotification = {
+      ...MESSAGE,
+      attachments: [
+        {
+          filename: 'SwiftDrop-Receipt-SD123.pdf',
+          content: Buffer.from('%PDF-1.4 mock pdf'),
+          contentType: 'application/pdf',
+        },
+      ],
+    };
+
+    await expect(email.send(RECIPIENT, messageWithPdf)).resolves.toEqual({
+      status: 'SENT',
+    });
+    expect(sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        attachments: [
+          {
+            filename: 'SwiftDrop-Receipt-SD123.pdf',
+            content: Buffer.from('%PDF-1.4 mock pdf'),
+            contentType: 'application/pdf',
+          },
+        ],
+      }),
+    );
+  });
+
   it('treats an SMTP 5xx for the recipient as permanent', async () => {
     sendMail.mockRejectedValue(
       Object.assign(new Error('mailbox unavailable'), { responseCode: 550 }),

@@ -31,12 +31,19 @@ function copyFor(event: ParcelEventV1): Copy | null {
     };
   }
   switch (statusAfter(event)) {
+    case 'ASSIGNED':
+      return {
+        template: 'parcel-assigned',
+        subject: `Courier Assigned — Parcel ${event.trackingNumber}`,
+        headline: 'Courier assigned',
+        body: `A courier has been assigned to collect your parcel ${event.trackingNumber}.`,
+      };
     case 'PICKED_UP':
       return {
         template: 'parcel-picked-up',
-        subject: 'Your parcel has been picked up',
-        headline: 'Picked up',
-        body: 'A SwiftDrop courier has collected your parcel.',
+        subject: `Parcel Picked Up — ${event.trackingNumber}`,
+        headline: 'Parcel picked up',
+        body: 'Your parcel has been collected by our courier and is now on its way to the distribution hub.',
       };
     case 'IN_TRANSIT':
       return {
@@ -66,17 +73,17 @@ function copyFor(event: ParcelEventV1): Copy | null {
           : FAILURE_REASONS.OTHER;
       return {
         template: 'parcel-delivery-failed',
-        subject: 'We could not deliver your parcel',
-        headline: 'Delivery attempt failed',
+        subject: `Delivery Attempt Failed: Parcel ${event.trackingNumber}`,
+        headline: 'Delivery needs attention',
         body: `We tried to deliver your parcel, but could not because ${reason}. We will be in touch about the next attempt.`,
       };
     }
     case 'RETURNED':
       return {
         template: 'parcel-returned',
-        subject: 'Your parcel is being returned',
-        headline: 'Returned to sender',
-        body: 'Your parcel could not be delivered and is being returned to the sender.',
+        subject: `Delivery Cancelled: Parcel ${event.trackingNumber}`,
+        headline: 'Delivery cancelled',
+        body: `Your delivery request ${event.trackingNumber} was cancelled. Fee adjustment or refund will be confirmed.`,
       };
     default:
       return null;

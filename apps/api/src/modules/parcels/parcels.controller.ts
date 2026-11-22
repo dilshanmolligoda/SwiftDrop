@@ -51,4 +51,12 @@ export class ParcelsController {
   ): Promise<CustomerParcelRecord> {
     return this.parcelsService.getById(user.id, id);
   }
+
+  @Post(':id/cancel')
+  cancelDelivery(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<CustomerParcelRecord> {
+    return this.parcelsService.cancel(user.id, id);
+  }
 }

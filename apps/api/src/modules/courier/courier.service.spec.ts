@@ -33,10 +33,19 @@ const validPng: UploadedProofFile = {
 
 function createHarness() {
   const transactionClient = {
-    deliveryAssignment: { findFirst: jest.fn() },
+    deliveryAssignment: {
+      findFirst: jest.fn(),
+      updateMany: jest.fn(),
+      create: jest.fn(),
+    },
     deliveryProof: { findFirst: jest.fn(), create: jest.fn() },
-    parcel: { updateMany: jest.fn() },
+    parcel: {
+      findUnique: jest.fn(),
+      update: jest.fn(),
+      updateMany: jest.fn(),
+    },
     parcelStatusEvent: { findFirst: jest.fn(), create: jest.fn() },
+    notification: { create: jest.fn() },
   };
   const prismaMock = {
     deliveryAssignment: {
@@ -78,7 +87,12 @@ function activeAssignment(
     courierId: COURIER_ID,
     endedAt: null,
     assignedAt: new Date('2026-11-03T14:00:00.000Z'),
-    parcel: { id: PARCEL_ID, status },
+    parcel: {
+      id: PARCEL_ID,
+      status,
+      customerId: 'customer-123',
+      trackingNumber: 'SD-001',
+    },
   };
 }
 
@@ -554,6 +568,72 @@ describe('CourierService', () => {
         service.uploadProof(COURIER_ID, PARCEL_ID, validPng),
       ).rejects.toThrow('database unavailable');
       expect(storage.delete).toHaveBeenCalledWith('random-proof.png');
+    });
+  });
+
+  describe('assignCourier', () => {
+    it('creates assignment, updates parcel, records outbox and notifies customer and courier', async () => {
+      const { service, transactionClient, outbox } = createHarness();
+      const mockParcel = {
+        id: PARCEL_ID,
+        customerId: 'customer-123',
+        trackingNumber: 'SD-ASSIGNED123',
+        status: ParcelStatus.PENDING,
+      };
+      transactionClient.parcel.findUnique.mockResolvedValue(mockParcel);
+      transactionClient.deliveryAssignment.create.mockResolvedValue({
+        id: ASSIGNMENT_ID,
+        parcelId: PARCEL_ID,
+        courierId: COURIER_ID,
+      });
+      transactionClient.parcel.update.mockResolvedValue({
+        ...mockParcel,
+        status: ParcelStatus.ASSIGNED,
+      });
+
+      const result = await service.assignCourier(
+        PARCEL_ID,
+        COURIER_ID,
+        'dispatcher-1',
+      );
+
+      expect(result).toEqual({
+        id: ASSIGNMENT_ID,
+        parcelId: PARCEL_ID,
+        courierId: COURIER_ID,
+      });
+      expect(outbox.recordParcelStatusChanged).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({
+          newStatus: ParcelStatus.ASSIGNED,
+          courierId: COURIER_ID,
+        }),
+      );
+      expect(transactionClient.notification.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          channel: 'IN_APP',
+          recipientUserId: 'customer-123',
+          template: 'parcel_assigned',
+          title: 'Courier assigned',
+        }),
+      });
+      expect(transactionClient.notification.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          channel: 'IN_APP',
+          recipientUserId: COURIER_ID,
+          template: 'courier_new_assignment',
+          title: 'New delivery assigned',
+        }),
+      });
+    });
+
+    it('throws NotFoundException when parcel does not exist', async () => {
+      const { service, transactionClient } = createHarness();
+      transactionClient.parcel.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.assignCourier('non-existent', COURIER_ID, 'dispatcher-1'),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });

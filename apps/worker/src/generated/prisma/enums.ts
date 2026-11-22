@@ -107,7 +107,8 @@ export type WebhookDeliveryStatus = (typeof WebhookDeliveryStatus)[keyof typeof 
 
 export const NotificationChannel = {
   EMAIL: 'EMAIL',
-  SMS: 'SMS'
+  SMS: 'SMS',
+  IN_APP: 'IN_APP'
 } as const
 
 export type NotificationChannel = (typeof NotificationChannel)[keyof typeof NotificationChannel]

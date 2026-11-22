@@ -30,6 +30,8 @@ export type NotificationMinAggregateOutputType = {
   channel: $Enums.NotificationChannel | null
   recipientUserId: string | null
   template: string | null
+  title: string | null
+  description: string | null
   status: $Enums.NotificationStatus | null
   errorMessage: string | null
   createdAt: Date | null
@@ -42,6 +44,8 @@ export type NotificationMaxAggregateOutputType = {
   channel: $Enums.NotificationChannel | null
   recipientUserId: string | null
   template: string | null
+  title: string | null
+  description: string | null
   status: $Enums.NotificationStatus | null
   errorMessage: string | null
   createdAt: Date | null
@@ -54,6 +58,8 @@ export type NotificationCountAggregateOutputType = {
   channel: number
   recipientUserId: number
   template: number
+  title: number
+  description: number
   status: number
   errorMessage: number
   createdAt: number
@@ -68,6 +74,8 @@ export type NotificationMinAggregateInputType = {
   channel?: true
   recipientUserId?: true
   template?: true
+  title?: true
+  description?: true
   status?: true
   errorMessage?: true
   createdAt?: true
@@ -80,6 +88,8 @@ export type NotificationMaxAggregateInputType = {
   channel?: true
   recipientUserId?: true
   template?: true
+  title?: true
+  description?: true
   status?: true
   errorMessage?: true
   createdAt?: true
@@ -92,6 +102,8 @@ export type NotificationCountAggregateInputType = {
   channel?: true
   recipientUserId?: true
   template?: true
+  title?: true
+  description?: true
   status?: true
   errorMessage?: true
   createdAt?: true
@@ -177,6 +189,8 @@ export type NotificationGroupByOutputType = {
   channel: $Enums.NotificationChannel
   recipientUserId: string
   template: string
+  title: string | null
+  description: string | null
   status: $Enums.NotificationStatus
   errorMessage: string | null
   createdAt: Date
@@ -210,6 +224,8 @@ export type NotificationWhereInput = {
   channel?: Prisma.EnumNotificationChannelFilter<"Notification"> | $Enums.NotificationChannel
   recipientUserId?: Prisma.UuidFilter<"Notification"> | string
   template?: Prisma.StringFilter<"Notification"> | string
+  title?: Prisma.StringNullableFilter<"Notification"> | string | null
+  description?: Prisma.StringNullableFilter<"Notification"> | string | null
   status?: Prisma.EnumNotificationStatusFilter<"Notification"> | $Enums.NotificationStatus
   errorMessage?: Prisma.StringNullableFilter<"Notification"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Notification"> | Date | string
@@ -223,6 +239,8 @@ export type NotificationOrderByWithRelationInput = {
   channel?: Prisma.SortOrder
   recipientUserId?: Prisma.SortOrder
   template?: Prisma.SortOrder
+  title?: Prisma.SortOrderInput | Prisma.SortOrder
+  description?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   errorMessage?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -240,6 +258,8 @@ export type NotificationWhereUniqueInput = Prisma.AtLeast<{
   channel?: Prisma.EnumNotificationChannelFilter<"Notification"> | $Enums.NotificationChannel
   recipientUserId?: Prisma.UuidFilter<"Notification"> | string
   template?: Prisma.StringFilter<"Notification"> | string
+  title?: Prisma.StringNullableFilter<"Notification"> | string | null
+  description?: Prisma.StringNullableFilter<"Notification"> | string | null
   status?: Prisma.EnumNotificationStatusFilter<"Notification"> | $Enums.NotificationStatus
   errorMessage?: Prisma.StringNullableFilter<"Notification"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Notification"> | Date | string
@@ -253,6 +273,8 @@ export type NotificationOrderByWithAggregationInput = {
   channel?: Prisma.SortOrder
   recipientUserId?: Prisma.SortOrder
   template?: Prisma.SortOrder
+  title?: Prisma.SortOrderInput | Prisma.SortOrder
+  description?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   errorMessage?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -271,6 +293,8 @@ export type NotificationScalarWhereWithAggregatesInput = {
   channel?: Prisma.EnumNotificationChannelWithAggregatesFilter<"Notification"> | $Enums.NotificationChannel
   recipientUserId?: Prisma.UuidWithAggregatesFilter<"Notification"> | string
   template?: Prisma.StringWithAggregatesFilter<"Notification"> | string
+  title?: Prisma.StringNullableWithAggregatesFilter<"Notification"> | string | null
+  description?: Prisma.StringNullableWithAggregatesFilter<"Notification"> | string | null
   status?: Prisma.EnumNotificationStatusWithAggregatesFilter<"Notification"> | $Enums.NotificationStatus
   errorMessage?: Prisma.StringNullableWithAggregatesFilter<"Notification"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Notification"> | Date | string
@@ -282,6 +306,8 @@ export type NotificationCreateInput = {
   eventId: string
   channel: $Enums.NotificationChannel
   template: string
+  title?: string | null
+  description?: string | null
   status: $Enums.NotificationStatus
   errorMessage?: string | null
   createdAt?: Date | string
@@ -295,6 +321,8 @@ export type NotificationUncheckedCreateInput = {
   channel: $Enums.NotificationChannel
   recipientUserId: string
   template: string
+  title?: string | null
+  description?: string | null
   status: $Enums.NotificationStatus
   errorMessage?: string | null
   createdAt?: Date | string
@@ -306,6 +334,8 @@ export type NotificationUpdateInput = {
   eventId?: Prisma.StringFieldUpdateOperationsInput | string
   channel?: Prisma.EnumNotificationChannelFieldUpdateOperationsInput | $Enums.NotificationChannel
   template?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumNotificationStatusFieldUpdateOperationsInput | $Enums.NotificationStatus
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -319,6 +349,8 @@ export type NotificationUncheckedUpdateInput = {
   channel?: Prisma.EnumNotificationChannelFieldUpdateOperationsInput | $Enums.NotificationChannel
   recipientUserId?: Prisma.StringFieldUpdateOperationsInput | string
   template?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumNotificationStatusFieldUpdateOperationsInput | $Enums.NotificationStatus
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -331,6 +363,8 @@ export type NotificationCreateManyInput = {
   channel: $Enums.NotificationChannel
   recipientUserId: string
   template: string
+  title?: string | null
+  description?: string | null
   status: $Enums.NotificationStatus
   errorMessage?: string | null
   createdAt?: Date | string
@@ -342,6 +376,8 @@ export type NotificationUpdateManyMutationInput = {
   eventId?: Prisma.StringFieldUpdateOperationsInput | string
   channel?: Prisma.EnumNotificationChannelFieldUpdateOperationsInput | $Enums.NotificationChannel
   template?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumNotificationStatusFieldUpdateOperationsInput | $Enums.NotificationStatus
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -354,6 +390,8 @@ export type NotificationUncheckedUpdateManyInput = {
   channel?: Prisma.EnumNotificationChannelFieldUpdateOperationsInput | $Enums.NotificationChannel
   recipientUserId?: Prisma.StringFieldUpdateOperationsInput | string
   template?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumNotificationStatusFieldUpdateOperationsInput | $Enums.NotificationStatus
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -382,6 +420,8 @@ export type NotificationCountOrderByAggregateInput = {
   channel?: Prisma.SortOrder
   recipientUserId?: Prisma.SortOrder
   template?: Prisma.SortOrder
+  title?: Prisma.SortOrder
+  description?: Prisma.SortOrder
   status?: Prisma.SortOrder
   errorMessage?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -394,6 +434,8 @@ export type NotificationMaxOrderByAggregateInput = {
   channel?: Prisma.SortOrder
   recipientUserId?: Prisma.SortOrder
   template?: Prisma.SortOrder
+  title?: Prisma.SortOrder
+  description?: Prisma.SortOrder
   status?: Prisma.SortOrder
   errorMessage?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -406,6 +448,8 @@ export type NotificationMinOrderByAggregateInput = {
   channel?: Prisma.SortOrder
   recipientUserId?: Prisma.SortOrder
   template?: Prisma.SortOrder
+  title?: Prisma.SortOrder
+  description?: Prisma.SortOrder
   status?: Prisma.SortOrder
   errorMessage?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -467,6 +511,8 @@ export type NotificationCreateWithoutRecipientInput = {
   eventId: string
   channel: $Enums.NotificationChannel
   template: string
+  title?: string | null
+  description?: string | null
   status: $Enums.NotificationStatus
   errorMessage?: string | null
   createdAt?: Date | string
@@ -478,6 +524,8 @@ export type NotificationUncheckedCreateWithoutRecipientInput = {
   eventId: string
   channel: $Enums.NotificationChannel
   template: string
+  title?: string | null
+  description?: string | null
   status: $Enums.NotificationStatus
   errorMessage?: string | null
   createdAt?: Date | string
@@ -519,6 +567,8 @@ export type NotificationScalarWhereInput = {
   channel?: Prisma.EnumNotificationChannelFilter<"Notification"> | $Enums.NotificationChannel
   recipientUserId?: Prisma.UuidFilter<"Notification"> | string
   template?: Prisma.StringFilter<"Notification"> | string
+  title?: Prisma.StringNullableFilter<"Notification"> | string | null
+  description?: Prisma.StringNullableFilter<"Notification"> | string | null
   status?: Prisma.EnumNotificationStatusFilter<"Notification"> | $Enums.NotificationStatus
   errorMessage?: Prisma.StringNullableFilter<"Notification"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Notification"> | Date | string
@@ -530,6 +580,8 @@ export type NotificationCreateManyRecipientInput = {
   eventId: string
   channel: $Enums.NotificationChannel
   template: string
+  title?: string | null
+  description?: string | null
   status: $Enums.NotificationStatus
   errorMessage?: string | null
   createdAt?: Date | string
@@ -541,6 +593,8 @@ export type NotificationUpdateWithoutRecipientInput = {
   eventId?: Prisma.StringFieldUpdateOperationsInput | string
   channel?: Prisma.EnumNotificationChannelFieldUpdateOperationsInput | $Enums.NotificationChannel
   template?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumNotificationStatusFieldUpdateOperationsInput | $Enums.NotificationStatus
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -552,6 +606,8 @@ export type NotificationUncheckedUpdateWithoutRecipientInput = {
   eventId?: Prisma.StringFieldUpdateOperationsInput | string
   channel?: Prisma.EnumNotificationChannelFieldUpdateOperationsInput | $Enums.NotificationChannel
   template?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumNotificationStatusFieldUpdateOperationsInput | $Enums.NotificationStatus
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -563,6 +619,8 @@ export type NotificationUncheckedUpdateManyWithoutRecipientInput = {
   eventId?: Prisma.StringFieldUpdateOperationsInput | string
   channel?: Prisma.EnumNotificationChannelFieldUpdateOperationsInput | $Enums.NotificationChannel
   template?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.EnumNotificationStatusFieldUpdateOperationsInput | $Enums.NotificationStatus
   errorMessage?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -577,6 +635,8 @@ export type NotificationSelect<ExtArgs extends runtime.Types.Extensions.Internal
   channel?: boolean
   recipientUserId?: boolean
   template?: boolean
+  title?: boolean
+  description?: boolean
   status?: boolean
   errorMessage?: boolean
   createdAt?: boolean
@@ -590,6 +650,8 @@ export type NotificationSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   channel?: boolean
   recipientUserId?: boolean
   template?: boolean
+  title?: boolean
+  description?: boolean
   status?: boolean
   errorMessage?: boolean
   createdAt?: boolean
@@ -603,6 +665,8 @@ export type NotificationSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   channel?: boolean
   recipientUserId?: boolean
   template?: boolean
+  title?: boolean
+  description?: boolean
   status?: boolean
   errorMessage?: boolean
   createdAt?: boolean
@@ -616,13 +680,15 @@ export type NotificationSelectScalar = {
   channel?: boolean
   recipientUserId?: boolean
   template?: boolean
+  title?: boolean
+  description?: boolean
   status?: boolean
   errorMessage?: boolean
   createdAt?: boolean
   sentAt?: boolean
 }
 
-export type NotificationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "eventId" | "channel" | "recipientUserId" | "template" | "status" | "errorMessage" | "createdAt" | "sentAt", ExtArgs["result"]["notification"]>
+export type NotificationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "eventId" | "channel" | "recipientUserId" | "template" | "title" | "description" | "status" | "errorMessage" | "createdAt" | "sentAt", ExtArgs["result"]["notification"]>
 export type NotificationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   recipient?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -644,6 +710,8 @@ export type $NotificationPayload<ExtArgs extends runtime.Types.Extensions.Intern
     channel: $Enums.NotificationChannel
     recipientUserId: string
     template: string
+    title: string | null
+    description: string | null
     status: $Enums.NotificationStatus
     errorMessage: string | null
     createdAt: Date
@@ -1077,6 +1145,8 @@ export interface NotificationFieldRefs {
   readonly channel: Prisma.FieldRef<"Notification", 'NotificationChannel'>
   readonly recipientUserId: Prisma.FieldRef<"Notification", 'String'>
   readonly template: Prisma.FieldRef<"Notification", 'String'>
+  readonly title: Prisma.FieldRef<"Notification", 'String'>
+  readonly description: Prisma.FieldRef<"Notification", 'String'>
   readonly status: Prisma.FieldRef<"Notification", 'NotificationStatus'>
   readonly errorMessage: Prisma.FieldRef<"Notification", 'String'>
   readonly createdAt: Prisma.FieldRef<"Notification", 'DateTime'>

@@ -17,6 +17,11 @@ export interface RenderedNotification {
   readonly html: string;
   /** Short text for SMS (≤ 160 characters). */
   readonly sms: string;
+  readonly attachments?: Array<{
+    readonly filename: string;
+    readonly content: Buffer | string;
+    readonly contentType?: string;
+  }>;
 }
 
 export type SendResult =

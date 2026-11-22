@@ -13,6 +13,7 @@ import { RolesGuard } from './modules/auth/guards/roles.guard.js';
 import { CsrfGuard } from './modules/auth/guards/csrf.guard.js';
 import { cookieParserMiddleware } from './modules/auth/utils/cookie.util.js';
 import { CourierModule } from './modules/courier/courier.module.js';
+import { EmailModule } from './modules/email/email.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 import { MerchantDashboardModule } from './modules/merchant-dashboard/merchant-dashboard.module.js';
@@ -33,6 +34,7 @@ import { MerchantSettingsModule } from './modules/merchant-settings/merchant-set
     }),
     AuthModule,
     CourierModule,
+    EmailModule,
     HealthModule,
     MerchantDashboardModule,
     MerchantSettingsModule,

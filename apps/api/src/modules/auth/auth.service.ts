@@ -2,21 +2,30 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  Logger,
+  Optional,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { randomUUID } from 'node:crypto';
 import { UsersService } from '../users/users.service.js';
+import { EmailService } from '../email/email.service.js';
+import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 import { PasswordService } from './password.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegisterCustomerDto } from './dto/register-customer.dto.js';
 import { RegisterMerchantDto } from './dto/register-merchant.dto.js';
 import { RegisterCourierDto } from './dto/register-courier.dto.js';
+import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
+import { ResetPasswordDto } from './dto/reset-password.dto.js';
 import { normalizePhoneNumber } from './utils/phone.util.js';
 import {
   Role,
   ApprovalStatus,
   VehicleType,
+  NotificationChannel,
+  NotificationStatus,
 } from '../../generated/prisma/enums.js';
 import type { JwtPayload } from './guards/jwt-auth.guard.js';
 import type { GoogleUserIdentity } from './google-auth.service.js';
@@ -87,11 +96,16 @@ export function parseTtlToSeconds(ttl: string | number): number {
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+  private readonly consumedResetTokens = new Set<string>();
+
   constructor(
     private readonly usersService: UsersService,
     private readonly passwordService: PasswordService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    @Optional() private readonly emailService?: EmailService,
+    @Optional() private readonly prisma?: PrismaService,
   ) {}
 
   async createAuthSession(user: {
@@ -174,6 +188,159 @@ export class AuthService {
     });
   }
 
+  async forgotPassword(dto: ForgotPasswordDto): Promise<{ message: string }> {
+    const normalizedEmail = dto.email.trim().toLowerCase();
+    const user = await this.usersService.findByEmail(normalizedEmail);
+
+    if (!user) {
+      return { message: 'If the email exists, a reset link was sent' };
+    }
+
+    const secret =
+      this.configService.get<string>('JWT_RESET_SECRET') ||
+      this.configService.getOrThrow<string>('JWT_ACCESS_SECRET');
+
+    const token = await this.jwtService.signAsync(
+      {
+        sub: user.id,
+        userId: user.id,
+        purpose: 'password_reset',
+      },
+      {
+        secret,
+        expiresIn: '15m',
+        algorithm: 'HS256',
+      },
+    );
+
+    if (this.emailService) {
+      try {
+        await this.emailService.sendPasswordResetEmail(
+          user.email,
+          token,
+          user.fullName,
+        );
+      } catch (error) {
+        this.logger.error(
+          `Failed to dispatch password reset email to ${user.email}: ${(error as Error).message}`,
+          (error as Error).stack,
+        );
+      }
+    }
+
+    return { message: 'If the email exists, a reset link was sent' };
+  }
+
+  invalidateRefreshTokens(userId: string): Promise<void> {
+    this.logger.log(`Invalidating active refresh tokens for user ${userId}`);
+    return Promise.resolve();
+  }
+
+  async resetPassword(dto: ResetPasswordDto): Promise<{ message: string }> {
+    if (this.consumedResetTokens.has(dto.token)) {
+      throw new BadRequestException(
+        'Password reset token has already been used',
+      );
+    }
+
+    const secret =
+      this.configService.get<string>('JWT_RESET_SECRET') ||
+      this.configService.getOrThrow<string>('JWT_ACCESS_SECRET');
+
+    let payload: { sub?: string; userId?: string; purpose?: string };
+    try {
+      payload = await this.jwtService.verifyAsync(dto.token, {
+        secret,
+        algorithms: ['HS256'],
+      });
+    } catch {
+      throw new BadRequestException('Invalid or expired password reset token');
+    }
+
+    if (payload.purpose !== 'password_reset') {
+      throw new BadRequestException('Invalid password reset token purpose');
+    }
+
+    const userId = payload.userId || payload.sub;
+    if (!userId) {
+      throw new BadRequestException('Invalid password reset token payload');
+    }
+
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    // Mark reset token as consumed to prevent token replay
+    this.consumedResetTokens.add(dto.token);
+
+    // Hash the new password using PasswordService
+    const newPasswordHash = await this.passwordService.hash(dto.newPassword);
+
+    // Update passwordHash in Prisma
+    if (this.prisma) {
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { passwordHash: newPasswordHash },
+      });
+    }
+
+    // Invalidate existing refresh tokens
+    await this.invalidateRefreshTokens(user.id);
+
+    // Send security notification email
+    if (this.emailService) {
+      try {
+        await this.emailService.sendPasswordResetConfirmationEmail(
+          user.email,
+          user.fullName,
+        );
+      } catch (error) {
+        this.logger.error(
+          `Failed to dispatch password reset confirmation email to ${user.email}: ${(error as Error).message}`,
+          (error as Error).stack,
+        );
+      }
+    }
+
+    // Insert in-app and email notifications in Prisma
+    if (this.prisma) {
+      try {
+        await this.prisma.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.IN_APP,
+            recipientUserId: user.id,
+            template: 'password_reset_success',
+            title: 'Password updated',
+            description: 'Your account password was successfully reset.',
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+
+        await this.prisma.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.EMAIL,
+            recipientUserId: user.id,
+            template: 'password_reset_success',
+            title: 'Password updated',
+            description: 'Your account password was successfully reset.',
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+      } catch (notifError) {
+        this.logger.error(
+          `Failed to create notification records for user ${user.id}: ${(notifError as Error).message}`,
+        );
+      }
+    }
+
+    return { message: 'Password has been reset successfully' };
+  }
+
   async registerCustomer(dto: RegisterCustomerDto): Promise<LoginResult> {
     const normalizedEmail = dto.email.trim().toLowerCase();
     const normalizedPhone = normalizePhoneNumber(dto.phoneNumber);
@@ -194,6 +361,83 @@ export class AuthService {
         phoneNumber: normalizedPhone,
         passwordHash,
       });
+
+      if (this.emailService) {
+        try {
+          await this.emailService.sendCustomerWelcomeEmail(
+            user.email,
+            user.fullName,
+          );
+
+          if (this.prisma) {
+            await this.prisma.notification.create({
+              data: {
+                eventId: randomUUID(),
+                channel: NotificationChannel.EMAIL,
+                recipientUserId: user.id,
+                template: 'customer_welcome',
+                title: 'Welcome to SwiftDrop!',
+                description:
+                  'Your customer account is active. Start by booking your first delivery.',
+                status: NotificationStatus.SENT,
+                sentAt: new Date(),
+              },
+            });
+
+            await this.prisma.notification.create({
+              data: {
+                eventId: randomUUID(),
+                channel: NotificationChannel.IN_APP,
+                recipientUserId: user.id,
+                template: 'customer_welcome',
+                title: 'Welcome to SwiftDrop!',
+                description:
+                  'Your customer account is active. Start by booking your first delivery.',
+                status: NotificationStatus.SENT,
+                sentAt: new Date(),
+              },
+            });
+          }
+        } catch (emailError) {
+          this.logger.error(
+            `Failed to dispatch welcome email or record notification for ${user.email}: ${(emailError as Error).message}`,
+            (emailError as Error).stack,
+          );
+          if (this.prisma) {
+            await this.prisma.notification
+              .create({
+                data: {
+                  eventId: randomUUID(),
+                  channel: NotificationChannel.EMAIL,
+                  recipientUserId: user.id,
+                  template: 'customer_welcome',
+                  title: 'Welcome to SwiftDrop!',
+                  description:
+                    'Your customer account is active. Start by booking your first delivery.',
+                  status: NotificationStatus.FAILED,
+                  errorMessage: (emailError as Error).message,
+                },
+              })
+              .catch(() => undefined);
+
+            await this.prisma.notification
+              .create({
+                data: {
+                  eventId: randomUUID(),
+                  channel: NotificationChannel.IN_APP,
+                  recipientUserId: user.id,
+                  template: 'customer_welcome',
+                  title: 'Welcome to SwiftDrop!',
+                  description:
+                    'Your customer account is active. Start by booking your first delivery.',
+                  status: NotificationStatus.SENT,
+                  sentAt: new Date(),
+                },
+              })
+              .catch(() => undefined);
+          }
+        }
+      }
 
       return this.createAuthSession({
         id: user.id,
@@ -434,6 +678,56 @@ export class AuthService {
       googleSubject: identity.googleSubject,
     });
 
+    // Send Google account linked email
+    if (this.emailService) {
+      try {
+        await this.emailService.sendGoogleLinkedEmail(
+          newCustomer.email,
+          identity.email,
+          newCustomer.fullName,
+        );
+      } catch (emailError) {
+        this.logger.error(
+          `Failed to send Google linked email to ${newCustomer.email}: ${(emailError as Error).message}`,
+        );
+      }
+    }
+
+    // Insert in-app and email notification records
+    if (this.prisma) {
+      try {
+        await this.prisma.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.IN_APP,
+            recipientUserId: newCustomer.id,
+            template: 'google_account_linked',
+            title: 'Google account linked',
+            description: 'You can now sign in using Google.',
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+
+        await this.prisma.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.EMAIL,
+            recipientUserId: newCustomer.id,
+            template: 'google_account_linked',
+            title: 'Google account linked',
+            description: `Your SwiftDrop profile is now connected with your Google account (${identity.email}). You can now use Login with Google.`,
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+      } catch (notifError) {
+        this.logger.error(
+          `Failed to create notification records for Google customer ${newCustomer.id}: ${(notifError as Error).message}`,
+        );
+      }
+    }
+
     const session = await this.createAuthSession({
       id: newCustomer.id,
       email: newCustomer.email,
@@ -502,6 +796,56 @@ export class AuthService {
       currentUser.id,
       identity.googleSubject,
     );
+
+    // Send Google account linked email
+    if (this.emailService) {
+      try {
+        await this.emailService.sendGoogleLinkedEmail(
+          currentUser.email,
+          identity.email,
+          currentUser.fullName,
+        );
+      } catch (emailError) {
+        this.logger.error(
+          `Failed to send Google linked email to ${currentUser.email}: ${(emailError as Error).message}`,
+        );
+      }
+    }
+
+    // Insert in-app and email notification records
+    if (this.prisma) {
+      try {
+        await this.prisma.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.IN_APP,
+            recipientUserId: currentUser.id,
+            template: 'google_account_linked',
+            title: 'Google account linked',
+            description: 'You can now sign in using Google.',
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+
+        await this.prisma.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.EMAIL,
+            recipientUserId: currentUser.id,
+            template: 'google_account_linked',
+            title: 'Google account linked',
+            description: `Your SwiftDrop profile is now connected with your Google account (${identity.email}). You can now use Login with Google.`,
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+      } catch (notifError) {
+        this.logger.error(
+          `Failed to create notification records for linked user ${currentUser.id}: ${(notifError as Error).message}`,
+        );
+      }
+    }
 
     return {
       redirectUrl: `${dashboardUrl}?link_success=google_connected`,

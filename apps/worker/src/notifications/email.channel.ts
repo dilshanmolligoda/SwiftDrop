@@ -42,6 +42,7 @@ export class EmailChannel implements NotificationChannel, OnModuleDestroy {
         subject: message.subject,
         text: message.text,
         html: message.html,
+        ...(message.attachments ? { attachments: message.attachments } : {}),
       });
       this.logger.log(
         `Sent "${message.template}" to ${maskEmail(recipient.email)}`,

@@ -6,7 +6,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { createHash, randomUUID } from 'node:crypto';
-import { ParcelStatus } from '../../generated/prisma/enums.js';
+import {
+  ParcelStatus,
+  NotificationChannel,
+  NotificationStatus,
+} from '../../generated/prisma/enums.js';
 import { Prisma } from '../../generated/prisma/client.js';
 import { OutboxWriter } from '../../infrastructure/outbox/outbox.writer.js';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
@@ -46,6 +50,23 @@ const DASHBOARD_STATUSES = [
   ParcelStatus.DELIVERED,
   ParcelStatus.FAILED,
 ] as const;
+
+interface TxWithNotification {
+  notification?: {
+    create: (args: {
+      data: {
+        eventId: string;
+        channel: NotificationChannel;
+        recipientUserId: string;
+        template: string;
+        title: string;
+        description: string;
+        status: NotificationStatus;
+        sentAt: Date;
+      };
+    }) => Promise<unknown>;
+  };
+}
 
 @Injectable()
 export class CourierService {
@@ -447,6 +468,101 @@ export class CourierService {
       courierId,
     });
 
+    const txNotif = tx as unknown as TxWithNotification;
+    if (txNotif.notification) {
+      if (
+        dto.status === ParcelStatus.PICKED_UP &&
+        assignment.parcel.customerId
+      ) {
+        await txNotif.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.IN_APP,
+            recipientUserId: assignment.parcel.customerId,
+            template: 'parcel_picked_up',
+            title: 'Parcel picked up',
+            description:
+              `${assignment.parcel.trackingNumber ?? ''} is on its way to the sorting facility.`.trim(),
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+      }
+
+      if (
+        dto.status === ParcelStatus.IN_TRANSIT &&
+        assignment.parcel.customerId
+      ) {
+        await txNotif.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.IN_APP,
+            recipientUserId: assignment.parcel.customerId,
+            template: 'parcel_in_transit',
+            title: 'Parcel in transit',
+            description:
+              `Parcel ${assignment.parcel.trackingNumber ?? ''} is in transit between delivery hubs.`.trim(),
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+      }
+
+      if (
+        dto.status === ParcelStatus.OUT_FOR_DELIVERY &&
+        assignment.parcel.customerId
+      ) {
+        await txNotif.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.IN_APP,
+            recipientUserId: assignment.parcel.customerId,
+            template: 'parcel_out_for_delivery',
+            title: 'Out for delivery',
+            description:
+              `Out for delivery: ${assignment.parcel.trackingNumber ?? ''} is scheduled to arrive today.`.trim(),
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+      }
+
+      if (
+        dto.status === ParcelStatus.DELIVERED &&
+        assignment.parcel.customerId
+      ) {
+        await txNotif.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.IN_APP,
+            recipientUserId: assignment.parcel.customerId,
+            template: 'parcel_delivered',
+            title: 'Parcel delivered',
+            description:
+              `${assignment.parcel.trackingNumber ?? ''} was delivered successfully.`.trim(),
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+      }
+
+      if (dto.status === ParcelStatus.FAILED && assignment.parcel.customerId) {
+        await txNotif.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.IN_APP,
+            recipientUserId: assignment.parcel.customerId,
+            template: 'parcel_failed',
+            title: 'Delivery needs attention',
+            description:
+              `Delivery attempt failed for ${assignment.parcel.trackingNumber ?? ''}. Reason: ${dto.failureReason ?? 'Delivery problem'}.`.trim(),
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+      }
+    }
+
     return { parcelId, status: dto.status, event, duplicate: false };
   }
 
@@ -496,6 +612,102 @@ export class CourierService {
         'Uploaded file is not a valid supported image',
       );
     }
+  }
+
+  async assignCourier(
+    parcelId: string,
+    courierId: string,
+    assignedById: string,
+  ) {
+    return this.prisma.$transaction(
+      async (tx) => {
+        const parcel = await tx.parcel.findUnique({
+          where: { id: parcelId },
+        });
+        if (!parcel) {
+          throw new NotFoundException('Parcel not found');
+        }
+
+        // End any existing active assignment for this parcel
+        await tx.deliveryAssignment.updateMany({
+          where: { parcelId, endedAt: null },
+          data: { endedAt: new Date() },
+        });
+
+        // Create new assignment
+        const assignment = await tx.deliveryAssignment.create({
+          data: {
+            id: randomUUID(),
+            parcelId,
+            courierId,
+            assignedById,
+            assignedAt: new Date(),
+          },
+        });
+
+        // Update parcel status to ASSIGNED
+        const updatedParcel = await tx.parcel.update({
+          where: { id: parcelId },
+          data: { status: ParcelStatus.ASSIGNED },
+        });
+
+        // Record status event
+        await tx.parcelStatusEvent.create({
+          data: {
+            id: randomUUID(),
+            parcelId,
+            assignmentId: assignment.id,
+            actorId: assignedById,
+            status: ParcelStatus.ASSIGNED,
+            note: 'Assigned to courier',
+          },
+        });
+
+        // Record outbox event
+        await this.outbox.recordParcelStatusChanged(tx, {
+          parcel: updatedParcel,
+          previousStatus: parcel.status,
+          newStatus: ParcelStatus.ASSIGNED,
+          failureReason: null,
+          courierId,
+        });
+
+        // In-app notifications
+        const txNotif = tx as unknown as TxWithNotification;
+        if (txNotif.notification) {
+          // Customer notification
+          await txNotif.notification.create({
+            data: {
+              eventId: randomUUID(),
+              channel: NotificationChannel.IN_APP,
+              recipientUserId: parcel.customerId,
+              template: 'parcel_assigned',
+              title: 'Courier assigned',
+              description: `Courier assigned: A courier has been assigned to collect your parcel ${parcel.trackingNumber}.`,
+              status: NotificationStatus.SENT,
+              sentAt: new Date(),
+            },
+          });
+
+          // Courier notification
+          await txNotif.notification.create({
+            data: {
+              eventId: randomUUID(),
+              channel: NotificationChannel.IN_APP,
+              recipientUserId: courierId,
+              template: 'courier_new_assignment',
+              title: 'New delivery assigned',
+              description: `Parcel ${parcel.trackingNumber} was assigned to your route.`,
+              status: NotificationStatus.SENT,
+              sentAt: new Date(),
+            },
+          });
+        }
+
+        return assignment;
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+    );
   }
 
   private safeOriginalFilename(filename: string): string {
