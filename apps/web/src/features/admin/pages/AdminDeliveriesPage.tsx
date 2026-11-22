@@ -407,11 +407,13 @@ export const AdminDeliveriesPage: React.FC = () => {
                       </td>
                       <td>
                         <span className={styles.waitingTime}>
-                          {calculateWaitingTime(item.createdAt)}
+                          {displayStatus === 'Delivered' ? '—' : calculateWaitingTime(item.createdAt)}
                         </span>
                       </td>
                       <td>
-                        {!courier ? (
+                        {displayStatus === 'Delivered' ? (
+                          <span className={styles.completedText} title="Delivery completed">—</span>
+                        ) : !courier ? (
                           <button
                             type="button"
                             className={styles.assignButton}

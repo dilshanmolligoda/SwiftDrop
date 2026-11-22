@@ -402,6 +402,14 @@
   text-decoration: underline;
 }
 
+.completedText {
+  color: #94a3b8;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: inline-block;
+  padding: 4px 8px;
+}
+
 /* Table Footer & Pagination */
 .tableFooter {
   display: flex;
