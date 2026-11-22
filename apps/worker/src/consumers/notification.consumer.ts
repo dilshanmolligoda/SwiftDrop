@@ -1,9 +1,11 @@
+import { createHash } from 'node:crypto';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import {
   ConsumerName,
   Queue,
   statusAfter,
   type ParcelEventV1,
+  type ParcelStatusChangedV1,
 } from '@swiftdrop/contracts';
 import { WORKER_CONFIG, type WorkerConfig } from '../config/worker.config.js';
 import type { ParcelEventConsumer } from '../messaging/parcel-event-consumer.js';
@@ -124,5 +126,74 @@ export class NotificationConsumer implements ParcelEventConsumer {
         });
       }
     }
+
+    if (
+      event.eventType === 'parcel.status.changed' &&
+      event.newStatus === 'PICKED_UP'
+    ) {
+      await this.handleRecipientPickedUpSms(event);
+    }
+  }
+
+  private async handleRecipientPickedUpSms(
+    event: ParcelStatusChangedV1,
+  ): Promise<void> {
+    const parcel = await this.repository.findParcel(event.parcelId);
+    if (!parcel || !parcel.recipientPhone) return;
+
+    const recipientEventId = this.deterministicUuid(
+      `${event.eventId}:recipient:sms`,
+    );
+    const recipientUser = await this.repository.findUserByPhone(
+      parcel.recipientPhone,
+    );
+    const recipientUserId = recipientUser?.id ?? parcel.customerId;
+
+    if (
+      await this.repository.alreadyHandled(
+        recipientEventId,
+        'SMS',
+        recipientUserId,
+      )
+    ) {
+      return;
+    }
+
+    const baseUrl = (
+      process.env.PUBLIC_TRACKING_URL ||
+      `${this.config.notifications.webAppUrl.replace(/\/+$/, '')}/tracking`
+    ).replace(/\/+$/, '');
+    const trackingUrl = `${baseUrl}/${event.trackingNumber}`;
+    const message = `Hello! ${parcel.senderName} has sent you a package via SwiftDrop (${event.trackingNumber}). Track live: ${trackingUrl}`;
+
+    const smsChannel = this.channels.find((c) => c.channel === 'SMS');
+    if (!smsChannel) return;
+
+    const result = await smsChannel.send({
+      to: parcel.recipientPhone,
+      message,
+    });
+
+    await this.repository.record({
+      eventId: recipientEventId,
+      channel: 'SMS',
+      recipientUserId,
+      template: 'recipient_parcel_dispatched',
+      title: 'Shipment dispatched',
+      description: message,
+      status: result.status,
+      errorMessage: result.status === 'SENT' ? null : result.reason,
+    });
+  }
+
+  private deterministicUuid(source: string): string {
+    const hash = createHash('sha256').update(source).digest('hex');
+    return [
+      hash.substring(0, 8),
+      hash.substring(8, 12),
+      '4' + hash.substring(13, 16),
+      '8' + hash.substring(17, 20),
+      hash.substring(20, 32),
+    ].join('-');
   }
 }

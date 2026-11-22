@@ -51,6 +51,16 @@ function channel(
 function setup(channels = [channel('EMAIL'), channel('SMS')]) {
   const repository = {
     findRecipient: jest.fn().mockResolvedValue(CUSTOMER),
+    findParcel: jest.fn().mockResolvedValue({
+      id: '0b6a3f0e-7d2c-4f1a-8e9b-1c2d3e4f5a6b',
+      trackingNumber: 'SD-0123456789ABCDEF0123456789ABCDEF',
+      customerId: CUSTOMER.userId,
+      senderName: 'Sender Bob',
+      recipientName: 'Recipient Alice',
+      recipientPhone: '+94771112233',
+      recipientAddress: '123 Main St, Colombo',
+    }),
+    findUserByPhone: jest.fn().mockResolvedValue(null),
     alreadyHandled: jest.fn().mockResolvedValue(false),
     record: jest.fn().mockResolvedValue(undefined),
   };
@@ -271,5 +281,51 @@ describe('NotificationConsumer', () => {
       status: 'SENT',
       errorMessage: null,
     });
+  });
+
+  it('dispatches recipient SMS alert when parcel status changes to PICKED_UP (Scenario 15)', async () => {
+    const { consumer, repository, channels } = setup();
+    const pickedUpEvent: ParcelStatusChangedV1 = {
+      ...EVENT,
+      newStatus: 'PICKED_UP',
+      previousStatus: 'ASSIGNED',
+    };
+
+    await consumer.handle(pickedUpEvent);
+
+    const smsChannel = channels.find((c) => c.channel === 'SMS');
+    expect(smsChannel?.send).toHaveBeenCalled();
+    const smsCalls = (smsChannel?.send as jest.Mock).mock.calls as Array<
+      [{ to: string; message: string }]
+    >;
+    const recipientCall = smsCalls.find(
+      (call) => call[0].to === '+94771112233',
+    );
+    expect(recipientCall).toBeDefined();
+    expect(recipientCall?.[0].message).toContain(
+      'Hello! Sender Bob has sent you a package via SwiftDrop',
+    );
+
+    const recordCalls = repository.record.mock.calls as Array<
+      [
+        {
+          channel: string;
+          template: string;
+          title: string;
+          description: string;
+          status: string;
+        },
+      ]
+    >;
+    const recipientRecord = recordCalls.find(
+      (call) =>
+        call[0].channel === 'SMS' &&
+        call[0].template === 'recipient_parcel_dispatched',
+    );
+    expect(recipientRecord).toBeDefined();
+    expect(recipientRecord?.[0].description).toContain(
+      'Hello! Sender Bob has sent you a package via SwiftDrop',
+    );
+    expect(recipientRecord?.[0].status).toBe('SENT');
   });
 });

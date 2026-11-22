@@ -36,6 +36,30 @@ export class NotificationRepository {
     };
   }
 
+  /** Fetches parcel details including recipient contacts and sender name */
+  async findParcel(parcelId: string) {
+    return this.prisma.parcel.findUnique({
+      where: { id: parcelId },
+      select: {
+        id: true,
+        trackingNumber: true,
+        customerId: true,
+        senderName: true,
+        recipientName: true,
+        recipientPhone: true,
+        recipientAddress: true,
+      },
+    });
+  }
+
+  /** Finds an active user by phone number */
+  async findUserByPhone(phoneNumber: string): Promise<{ id: string } | null> {
+    return this.prisma.user.findFirst({
+      where: { phoneNumber, isActive: true },
+      select: { id: true },
+    });
+  }
+
   /** True when this channel already has a result for the event. */
   async alreadyHandled(
     eventId: string,
@@ -57,6 +81,8 @@ export class NotificationRepository {
     channel: NotificationChannel;
     recipientUserId: string;
     template: string;
+    title?: string;
+    description?: string;
     status: NotificationStatus;
     errorMessage: string | null;
   }): Promise<void> {
