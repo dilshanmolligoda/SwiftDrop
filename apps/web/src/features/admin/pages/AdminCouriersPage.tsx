@@ -323,7 +323,13 @@ export const AdminCouriersPage: React.FC = () => {
                           <button
                             type="button"
                             className={styles.viewDeliveriesLink}
-                            onClick={() => navigate('/admin/deliveries')}
+                            onClick={() =>
+                              navigate(
+                                `/admin/deliveries?courierId=${courier.id}&courierName=${encodeURIComponent(
+                                  courier.name,
+                                )}`,
+                              )
+                            }
                           >
                             View deliveries
                           </button>

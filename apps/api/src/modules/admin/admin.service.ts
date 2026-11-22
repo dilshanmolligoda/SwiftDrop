@@ -452,6 +452,16 @@ export class AdminService {
 
     const where: Prisma.ParcelWhereInput = {
       ...(query.status ? { status: query.status } : {}),
+      ...(query.courierId
+        ? {
+            assignments: {
+              some: {
+                courierId: query.courierId,
+                endedAt: null,
+              },
+            },
+          }
+        : {}),
       ...(search
         ? {
             OR: [

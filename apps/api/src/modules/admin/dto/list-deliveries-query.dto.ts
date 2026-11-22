@@ -4,6 +4,7 @@ import {
   IsInt,
   IsOptional,
   IsString,
+  IsUUID,
   Max,
   MaxLength,
   Min,
@@ -27,6 +28,10 @@ export class ListDeliveriesQueryDto {
   @IsOptional()
   @IsEnum(ParcelStatus)
   status?: ParcelStatus;
+
+  @IsOptional()
+  @IsUUID(undefined, { message: 'courierId must be a valid UUID' })
+  courierId?: string;
 
   @IsOptional()
   @Transform(({ value }: { value: unknown }) =>

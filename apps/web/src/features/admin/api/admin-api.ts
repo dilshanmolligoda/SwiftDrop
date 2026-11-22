@@ -187,7 +187,7 @@ export const adminApi = {
   getCouriers: (params?: { page?: number; limit?: number; search?: string; status?: string }) =>
     apiRequest<AdminCouriersResponse>('/admin/couriers', { query: params }),
 
-  getDeliveries: (params?: { page?: number; limit?: number; search?: string; status?: string }) =>
+  getDeliveries: (params?: { page?: number; limit?: number; search?: string; status?: string; courierId?: string }) =>
     apiRequest<AdminDeliveriesResponse>('/admin/deliveries', { query: params }),
 
   getApplications: (params?: { page?: number; limit?: number; search?: string; status?: string; role?: string }) =>

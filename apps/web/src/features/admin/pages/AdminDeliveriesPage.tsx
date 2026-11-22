@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   Package,
   Truck,
@@ -9,6 +10,7 @@ import {
   ChevronLeft,
   Loader2,
   AlertCircle,
+  X,
 } from 'lucide-react'
 import type { DeliveryItem, DeliveryStatus } from '../types/admin-deliveries.types'
 import { AssignCourierDrawer } from '../components/AssignCourierDrawer'
@@ -50,6 +52,10 @@ function calculateWaitingTime(createdAt: string): string {
 }
 
 export const AdminDeliveriesPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const courierIdParam = searchParams.get('courierId') || undefined
+  const courierNameParam = searchParams.get('courierName') || undefined
+
   const [deliveries, setDeliveries] = useState<AdminDeliveryItem[]>([])
   const [kpis, setKpis] = useState<AdminDashboardKpis | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -68,6 +74,14 @@ export const AdminDeliveriesPage: React.FC = () => {
 
   const [reloadTrigger, setReloadTrigger] = useState(0)
 
+  const handleClearCourierFilter = () => {
+    const updated = new URLSearchParams(searchParams)
+    updated.delete('courierId')
+    updated.delete('courierName')
+    setSearchParams(updated)
+    setPage(1)
+  }
+
   useEffect(() => {
     let isMounted = true
     const controller = new AbortController()
@@ -79,6 +93,7 @@ export const AdminDeliveriesPage: React.FC = () => {
             page,
             limit,
             search: searchQuery.trim() || undefined,
+            courierId: courierIdParam,
           }),
           adminApi.getDashboard(controller.signal),
         ])
@@ -104,7 +119,7 @@ export const AdminDeliveriesPage: React.FC = () => {
       isMounted = false
       controller.abort()
     }
-  }, [page, limit, searchQuery, reloadTrigger])
+  }, [page, limit, searchQuery, courierIdParam, reloadTrigger])
 
   const filteredDeliveries = useMemo(() => {
     return deliveries.filter((item) => {
@@ -246,6 +261,23 @@ export const AdminDeliveriesPage: React.FC = () => {
 
       {/* Main Content Card */}
       <div className={styles.contentCard}>
+        {courierNameParam && (
+          <div className={styles.activeCourierBanner}>
+            <span>
+              Showing active deliveries assigned to <strong>{courierNameParam}</strong>
+            </span>
+            <button
+              type="button"
+              className={styles.clearFilterButton}
+              onClick={handleClearCourierFilter}
+              aria-label="Clear courier filter"
+            >
+              <X size={14} aria-hidden="true" />
+              <span>Clear filter</span>
+            </button>
+          </div>
+        )}
+
         {/* Filter Tabs */}
         <div className={styles.tabsRow} role="tablist" aria-label="Deliveries status tabs">
           <button
@@ -411,9 +443,7 @@ export const AdminDeliveriesPage: React.FC = () => {
                         </span>
                       </td>
                       <td>
-                        {displayStatus === 'Delivered' ? (
-                          <span className={styles.completedText} title="Delivery completed">—</span>
-                        ) : !courier ? (
+                        {!courier ? (
                           <button
                             type="button"
                             className={styles.assignButton}
@@ -421,7 +451,7 @@ export const AdminDeliveriesPage: React.FC = () => {
                           >
                             Assign
                           </button>
-                        ) : (
+                        ) : displayStatus === 'Failed attempt' ? (
                           <button
                             type="button"
                             className={styles.viewDetailsLink}
@@ -429,6 +459,13 @@ export const AdminDeliveriesPage: React.FC = () => {
                           >
                             Reassign →
                           </button>
+                        ) : (
+                          <span
+                            className={styles.completedText}
+                            title={displayStatus === 'Delivered' ? 'Delivery completed' : 'Active delivery in progress'}
+                          >
+                            —
+                          </span>
                         )}
                       </td>
                     </tr>

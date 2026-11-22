@@ -114,6 +114,39 @@
   overflow: hidden;
 }
 
+.activeCourierBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 8px;
+  padding: 8px 16px;
+  margin: 16px 24px 0 24px;
+  font-size: 0.875rem;
+  color: #065f46;
+}
+
+.clearFilterButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: #ffffff;
+  border: 1px solid #a7f3d0;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #047857;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.clearFilterButton:hover {
+  background-color: #d1fae5;
+  color: #064e3b;
+}
+
 /* Filter Tabs */
 .tabsRow {
   display: flex;
