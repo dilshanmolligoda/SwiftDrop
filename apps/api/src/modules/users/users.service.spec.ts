@@ -28,6 +28,8 @@ describe('UsersService', () => {
     createCourier: jest.Mock;
     updatePassword: jest.Mock;
     updateProfile: jest.Mock;
+    approveUser: jest.Mock;
+    rejectUser: jest.Mock;
   };
   let passwordService: {
     verify: jest.Mock;
@@ -36,6 +38,7 @@ describe('UsersService', () => {
   let emailService: {
     sendPasswordChangedSettingsEmail: jest.Mock;
     sendProfileUpdatedEmail: jest.Mock;
+    sendCourierApprovedEmail: jest.Mock;
   };
   let prismaService: {
     notification: { create: jest.Mock };
@@ -73,6 +76,7 @@ describe('UsersService', () => {
       createCourier: jest.fn(),
       updatePassword: jest.fn(),
       updateProfile: jest.fn(),
+      approveUser: jest.fn(),
     };
     passwordService = {
       verify: jest.fn(),
@@ -81,6 +85,7 @@ describe('UsersService', () => {
     emailService = {
       sendPasswordChangedSettingsEmail: jest.fn().mockResolvedValue(undefined),
       sendProfileUpdatedEmail: jest.fn().mockResolvedValue(undefined),
+      sendCourierApprovedEmail: jest.fn().mockResolvedValue(undefined),
     };
     prismaService = {
       notification: {
@@ -459,6 +464,83 @@ describe('UsersService', () => {
       await expect(
         service.updateProfile('missing-user', { fullName: 'New Name' }),
       ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('approveCourier', () => {
+    const mockCourier: User = {
+      ...mockUser,
+      id: 'courier-uuid-1',
+      role: Role.COURIER,
+      approvalStatus: ApprovalStatus.PENDING,
+    };
+
+    it('approves a courier, sends approval email, and inserts notifications', async () => {
+      repository.findById.mockResolvedValue(mockCourier);
+      const approvedCourier = {
+        ...mockCourier,
+        approvalStatus: ApprovalStatus.APPROVED,
+        reviewedAt: new Date(),
+        reviewedBy: 'admin-uuid-1',
+      };
+      repository.approveUser.mockResolvedValue(approvedCourier);
+
+      const result = await service.approveCourier(
+        'courier-uuid-1',
+        'admin-uuid-1',
+      );
+
+      expect(result.approvalStatus).toBe(ApprovalStatus.APPROVED);
+      expect(repository.approveUser).toHaveBeenCalledWith(
+        'courier-uuid-1',
+        'admin-uuid-1',
+      );
+      expect(emailService.sendCourierApprovedEmail).toHaveBeenCalledWith(
+        mockCourier.email,
+        mockCourier.fullName,
+      );
+      expect(prismaService.notification.create).toHaveBeenCalledTimes(2);
+
+      const calls = prismaService.notification.create.mock.calls as Array<
+        [
+          {
+            data: {
+              recipientUserId: string;
+              channel: NotificationChannel;
+              template: string;
+              title: string;
+            };
+          },
+        ]
+      >;
+      expect(calls[0][0].data).toMatchObject({
+        recipientUserId: 'courier-uuid-1',
+        channel: NotificationChannel.IN_APP,
+        template: 'courier_approved',
+        title: 'Your courier account has been approved!',
+      });
+      expect(calls[1][0].data).toMatchObject({
+        recipientUserId: 'courier-uuid-1',
+        channel: NotificationChannel.EMAIL,
+        template: 'courier_approved',
+        title: 'Your courier account has been approved!',
+      });
+    });
+
+    it('throws NotFoundException if courier is not found', async () => {
+      repository.findById.mockResolvedValue(null);
+
+      await expect(service.approveCourier('unknown-courier')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('throws BadRequestException if user is not a courier', async () => {
+      repository.findById.mockResolvedValue(mockUser); // mockUser has role CUSTOMER
+
+      await expect(service.approveCourier(mockUser.id)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 });

@@ -129,6 +129,34 @@ export class UsersRepository {
     });
   }
 
+  async approveUser(userId: string, reviewedBy?: string): Promise<User> {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        approvalStatus: ApprovalStatus.APPROVED,
+        reviewedAt: new Date(),
+        reviewedBy: reviewedBy ?? null,
+        rejectionReason: null,
+      },
+    });
+  }
+
+  async rejectUser(
+    userId: string,
+    rejectionReason: string,
+    reviewedBy?: string,
+  ): Promise<User> {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        approvalStatus: ApprovalStatus.REJECTED,
+        reviewedAt: new Date(),
+        reviewedBy: reviewedBy ?? null,
+        rejectionReason: rejectionReason.trim(),
+      },
+    });
+  }
+
   async createCustomer(data: CreateCustomerData): Promise<User> {
     const normalizedEmail = data.email.trim().toLowerCase();
     return this.prisma.user.create({

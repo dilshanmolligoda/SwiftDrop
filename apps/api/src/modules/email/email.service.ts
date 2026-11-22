@@ -249,6 +249,20 @@ export class EmailService {
     });
   }
 
+  async sendCourierApprovedEmail(to: string, fullName: string): Promise<void> {
+    const dashboardUrl = `${this.webAppUrl}/courier/dashboard`;
+    const subject = 'Your SwiftDrop Courier Profile Has Been Approved';
+    const html = this.renderCourierApprovedHtml(fullName, dashboardUrl);
+    const text = `Hello ${fullName},\n\nCongratulations! Your SwiftDrop courier application has been approved. You are now active in the SwiftDrop fleet and can start receiving delivery assignments.\n\nLog in to view your daily delivery assignments: ${dashboardUrl}\n\nBest regards,\nThe SwiftDrop Dispatch Team`;
+
+    await this.sendMail({
+      to,
+      subject,
+      html,
+      text,
+    });
+  }
+
   private renderCustomerWelcomeHtml(
     fullName: string,
     loginUrl: string,
@@ -1232,6 +1246,101 @@ export class EmailService {
                   <strong>Status:</strong> Pending Review<br>
                   Our dispatch operations team typically reviews documents within 24 to 48 hours. You will receive an email notification as soon as your account is approved.
                 </p>
+              </div>
+              <p style="font-size: 14px; line-height: 1.5; color: #64748b; margin-top: 24px;">
+                Best regards,<br>
+                <strong>The SwiftDrop Dispatch Team</strong>
+              </p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 24px 32px; text-align: center; font-size: 12px; color: #64748b; line-height: 1.5;">
+              SwiftDrop - Courier Operations<br>
+              Colombo, Sri Lanka
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+  }
+
+  private renderCourierApprovedHtml(
+    fullName: string,
+    dashboardUrl: string,
+  ): string {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Courier Account Approved</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f1f5f9;
+      color: #1e293b;
+      -webkit-font-smoothing: antialiased;
+    }
+    table {
+      border-collapse: collapse;
+    }
+    .container {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    .button {
+      display: inline-block;
+      background-color: #16a34a;
+      color: #ffffff !important;
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      padding: 14px 28px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 32px 16px; background-color: #f1f5f9;">
+  <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+    <tr>
+      <td align="center">
+        <table class="container" width="600" cellpadding="0" cellspacing="0" role="presentation" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #0f172a 0%, #166534 100%); padding: 36px 32px; text-align: center;">
+              <h1 style="color: #ffffff; font-size: 26px; font-weight: 700; margin: 0; letter-spacing: -0.5px;">SwiftDrop</h1>
+              <p style="color: #bbf7d0; font-size: 14px; margin: 8px 0 0 0; font-weight: 500;">Courier Operations Fleet</p>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding: 40px 36px;">
+              <h2 style="font-size: 20px; font-weight: 600; color: #0f172a; margin-top: 0; margin-bottom: 20px;">Courier Profile Approved</h2>
+              <p style="font-size: 15px; line-height: 1.6; color: #334155; margin-bottom: 20px;">Hello ${fullName},</p>
+              <p style="font-size: 15px; line-height: 1.6; color: #334155; margin-bottom: 20px;">
+                Congratulations! Your SwiftDrop courier profile has been reviewed and approved. You are now active in our courier fleet and eligible to receive daily delivery assignments.
+              </p>
+              <div style="background-color: #f0fdf4; border-left: 4px solid #16a34a; padding: 16px; border-radius: 4px; margin-bottom: 24px;">
+                <p style="margin: 0; font-size: 14px; color: #166534; line-height: 1.5;">
+                  <strong>Status:</strong> Approved<br>
+                  Log in to your courier dashboard to review routes, update your live availability, and manage assigned deliveries.
+                </p>
+              </div>
+              <div style="text-align: center; margin: 32px 0;">
+                <a href="${dashboardUrl}" class="button" style="display: inline-block; background-color: #16a34a; color: #ffffff !important; font-size: 15px; font-weight: 600; text-decoration: none; padding: 14px 28px; border-radius: 8px;">
+                  Open Courier Dashboard
+                </a>
               </div>
               <p style="font-size: 14px; line-height: 1.5; color: #64748b; margin-top: 24px;">
                 Best regards,<br>

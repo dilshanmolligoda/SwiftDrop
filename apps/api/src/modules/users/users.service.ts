@@ -21,6 +21,7 @@ import { UpdateProfileDto } from './dto/update-profile.dto.js';
 import {
   NotificationChannel,
   NotificationStatus,
+  Role,
 } from '../../generated/prisma/enums.js';
 import type {
   User,
@@ -290,5 +291,69 @@ export class UsersService {
       message: 'Profile updated successfully',
       user: safeUser,
     };
+  }
+
+  async approveCourier(courierId: string, reviewedBy?: string): Promise<User> {
+    const user = await this.usersRepository.findById(courierId);
+    if (!user) {
+      throw new NotFoundException('Courier not found');
+    }
+    if (user.role !== Role.COURIER) {
+      throw new BadRequestException('User is not a courier');
+    }
+
+    const updatedUser = await this.usersRepository.approveUser(
+      courierId,
+      reviewedBy,
+    );
+
+    if (this.emailService) {
+      try {
+        await this.emailService.sendCourierApprovedEmail(
+          updatedUser.email,
+          updatedUser.fullName,
+        );
+      } catch (emailErr) {
+        this.logger.error(
+          `Failed to send courier approval email to ${updatedUser.email}: ${(emailErr as Error).message}`,
+        );
+      }
+    }
+
+    if (this.prisma) {
+      try {
+        await this.prisma.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.IN_APP,
+            recipientUserId: updatedUser.id,
+            template: 'courier_approved',
+            title: 'Your courier account has been approved!',
+            description: 'Log in to view your daily delivery assignments.',
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+
+        await this.prisma.notification.create({
+          data: {
+            eventId: randomUUID(),
+            channel: NotificationChannel.EMAIL,
+            recipientUserId: updatedUser.id,
+            template: 'courier_approved',
+            title: 'Your courier account has been approved!',
+            description: 'Log in to view your daily delivery assignments.',
+            status: NotificationStatus.SENT,
+            sentAt: new Date(),
+          },
+        });
+      } catch (notifErr) {
+        this.logger.error(
+          `Failed to record courier approval notification for ${updatedUser.id}: ${(notifErr as Error).message}`,
+        );
+      }
+    }
+
+    return updatedUser;
   }
 }
