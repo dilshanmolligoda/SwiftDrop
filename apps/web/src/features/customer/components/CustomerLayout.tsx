@@ -402,14 +402,16 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({ children }) => {
               )}
             </div>
 
-            <button
-              type="button"
-              onClick={openCreateModal}
-              className="customer-topbar__create-btn"
-            >
-              <Plus className="w-4 h-4 mr-1.5" />
-              <span>Create delivery</span>
-            </button>
+            {activePath.replace(/\/+$/, '') !== '/customer/dashboard' && (
+              <button
+                type="button"
+                onClick={openCreateModal}
+                className="customer-topbar__create-btn"
+              >
+                <Plus className="w-4 h-4 mr-1.5" />
+                <span>Create delivery</span>
+              </button>
+            )}
           </div>
         </header>
 
