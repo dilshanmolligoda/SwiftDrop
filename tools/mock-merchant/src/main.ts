@@ -17,6 +17,9 @@ import {
 } from './store.js';
 
 const PORT = Number(process.env.MOCK_MERCHANT_PORT ?? 5000);
+/** Webhook URL shown on the page for registering in SwiftDrop (see page.ts). */
+const PUBLIC_WEBHOOK_URL =
+  process.env.MOCK_MERCHANT_WEBHOOK_URL?.trim() || undefined;
 const MAX_BODY_BYTES = 1_000_000;
 const API_TIMEOUT_MS = 10_000;
 
@@ -46,7 +49,7 @@ async function handle(req: IncomingMessage, res: ServerResponse) {
   const { pathname } = new URL(req.url ?? '/', 'http://localhost');
   switch (`${req.method} ${pathname}`) {
     case 'GET /':
-      return sendHtml(res, renderPage());
+      return sendHtml(res, renderPage({ webhookUrl: PUBLIC_WEBHOOK_URL }));
     case 'GET /state':
       return sendJson(res, 200, publicState());
     case 'POST /settings':

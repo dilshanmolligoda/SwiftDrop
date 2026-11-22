@@ -569,7 +569,7 @@ export const CustomerDashboard: React.FC = () => {
                         : 'badge--default'
                     }`}
                   >
-                    {selectedDelivery.status.replace(/_/g, ' ')}
+                    {DELIVERY_STATUS_LABELS[selectedDelivery.status]}
                   </span>
                 </div>
 

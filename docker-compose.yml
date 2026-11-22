@@ -151,6 +151,9 @@ services:
       context: .
       dockerfile: tools/mock-merchant/Dockerfile
     env_file: .env
+    environment:
+      # The worker (in Docker) reaches the store by service name.
+      MOCK_MERCHANT_WEBHOOK_URL: http://mock-merchant:${MOCK_MERCHANT_PORT:-5000}/webhooks/swiftdrop
     restart: unless-stopped
     ports:
       - "${MOCK_MERCHANT_PORT:-5000}:${MOCK_MERCHANT_PORT:-5000}"

@@ -3,7 +3,21 @@
  * delivery, and live lists of orders sent and webhooks received.
  * Values are rendered with textContent only, so payloads cannot inject HTML.
  */
-export function renderPage(): string {
+export interface PageOptions {
+  /**
+   * The address SwiftDrop's worker should call. In Docker this is the internal
+   * `http://mock-merchant:5000/...`, not the address the browser used to open
+   * the page (that one is behind Caddy's basic auth). Unset → page origin.
+   */
+  readonly webhookUrl?: string;
+}
+
+export function renderPage(options: PageOptions = {}): string {
+  // JSON for the inline script; escape "<" so a value can't close the tag.
+  const webhookUrlJson = JSON.stringify(options.webhookUrl ?? null).replace(
+    /</g,
+    '\\u003c',
+  );
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -60,6 +74,7 @@ export function renderPage(): string {
 
   <section>
     <h2>Checkout — book a delivery</h2>
+    <p class="muted">Needs SwiftDrop's merchant order API (<code>POST /merchant-api/orders</code>) and an <code>sd_…</code> API key. Until that API exists this form returns 404 — create the parcel in SwiftDrop (<b>Create delivery</b>) instead; its status webhooks still arrive here.</p>
     <form id="order">
       <label>Order reference<input name="merchantOrderRef" required></label>
       <label>Recipient name<input name="recipientName" required></label>
@@ -80,7 +95,7 @@ export function renderPage(): string {
 </main>
 <script>
   const $ = (id) => document.getElementById(id);
-  $('hookUrl').textContent = location.origin + '/webhooks/swiftdrop';
+  $('hookUrl').textContent = ${webhookUrlJson} || location.origin + '/webhooks/swiftdrop';
 
   async function post(path, body) {
     const res = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
