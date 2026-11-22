@@ -3,6 +3,24 @@
 Production still uses authenticated REST searches and retries. There is no
 WebSocket/SSE connection, polling, new endpoint, or simulated production event.
 
+## Status labels
+
+Status codes from REST and recorded history events remain unchanged. Customer
+Tracking and Delivery History use `STATUS_DETAILS` in `customerTrackingApi.ts`;
+Dashboard cards and the details modal use `DELIVERY_STATUS_LABELS` in
+`../context/customerDeliveryModel.ts`. Keep these friendly labels consistent:
+
+| Persisted/API status | Display label |
+| --- | --- |
+| PENDING | Pending pickup |
+| CREATED | Created |
+| ASSIGNED | Assigned |
+
+PENDING is no longer displayed as Created, and the Dashboard details modal uses
+friendly labels instead of raw uppercase status codes. CREATED remains a
+separate supported status. None of these pre-pickup statuses confirms pickup or
+creates a timeline event; recorded event statuses and timestamps are preserved.
+
 ## Request lifecycle
 
 `useCustomerRequest` retains its existing arguments and `data`, `error`,
@@ -58,7 +76,7 @@ From the repository root, using Node with native TypeScript loading (verified
 with the existing Node v24.12.0):
 
 ```sh
-node --test apps/web/tests/customerRequest.test.mjs apps/web/tests/customerTrackingUpdates.test.mjs
+node --test apps/web/tests/*.test.mjs apps/web/tests/*.test.cjs
 npm run lint:check -w apps/web
 npm run build:web
 ```
@@ -68,3 +86,9 @@ subscription function with isolated promises and test-only notifications.
 They need no new dependencies or running API/database. They cover retention,
 access failures, stale responses, cleanup/restarts, refresh coalescing, and
 notification filtering/deduplication. They are not live browser/transport tests.
+
+Label regressions also render the Customer Tracking badge/timeline, Delivery
+History rows and Dashboard details modal. They distinguish PENDING from CREATED
+and confirm that tracking/history parsers preserve the original API status codes
+and recorded event timestamps. These checks use existing compiler and server
+rendering dependencies without opening a Socket.IO connection.

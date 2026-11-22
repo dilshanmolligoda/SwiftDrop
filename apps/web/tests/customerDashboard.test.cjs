@@ -64,6 +64,13 @@ const clickDetails = view => {
   button.props.onClick()
   view.render()
 }
+const modalStatus = view => {
+  const modal = nodes(view.tree).find(node => node.props?.role === 'dialog')
+  assert.ok(modal, 'Delivery details must be open')
+  const badge = nodes(modal).find(node => node.type === 'span' && node.props.className?.startsWith('badge '))
+  assert.ok(badge, 'Delivery details must show a status badge')
+  return text(badge)
+}
 
 for (const [status, label] of [['CREATED', 'Created'], ['ASSIGNED', 'Assigned'], ['PENDING', 'Pending pickup']]) {
   test(`${status} stays visible without falsely confirming pickup`, () => {
@@ -72,6 +79,13 @@ for (const [status, label] of [['CREATED', 'Created'], ['ASSIGNED', 'Assigned'],
     assert.ok(view.html().includes(label))
     assert.doesNotMatch(view.html(), />Confirmed</)
     assert.doesNotMatch(view.html(), /This page updates automatically|>Live</)
+  })
+
+  test(`${status} has the same friendly label in the card and details modal`, () => {
+    const view = dashboard([parcel(status)])
+    clickDetails(view)
+    assert.equal(modalStatus(view), label)
+    assert.doesNotMatch(view.html(), />Confirmed</)
   })
 }
 
@@ -92,11 +106,10 @@ for (const [status, label] of [['FAILED', 'Failed'], ['RETURNED', 'Returned']]) 
 test('an open details modal follows the current provider record', () => {
   const view = dashboard([parcel('PICKED_UP')])
   clickDetails(view)
-  assert.match(view.html(), /PICKED UP/)
+  assert.equal(modalStatus(view), 'Picked up')
   view.render({ deliveries: [{ ...parcel('IN_TRANSIT'), recipientName: 'Updated Recipient' }] })
-  assert.match(view.html(), /IN TRANSIT/)
+  assert.equal(modalStatus(view), 'In transit')
   assert.match(view.html(), /Updated Recipient/)
-  assert.doesNotMatch(view.html(), /PICKED UP/)
 })
 
 test('clearing deliveries removes an open private modal', () => {
@@ -110,7 +123,7 @@ test('the details modal follows a delivery that has left the active list', () =>
   const view = dashboard([parcel('OUT_FOR_DELIVERY')])
   clickDetails(view)
   view.render({ deliveries: [parcel('DELIVERED')] })
-  assert.match(view.html(), /DELIVERED/)
+  assert.equal(modalStatus(view), 'Delivered')
   assert.match(view.html(), /role="dialog"/)
   assert.doesNotMatch(view.html(), /class="delivery-card"/)
 })
