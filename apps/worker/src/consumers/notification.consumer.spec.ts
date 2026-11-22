@@ -54,6 +54,7 @@ function setup(channels = [channel('EMAIL'), channel('SMS')]) {
     findParcel: jest.fn().mockResolvedValue(null),
     findUserByPhone: jest.fn().mockResolvedValue(null),
     findUserById: jest.fn().mockResolvedValue(null),
+    findMerchantOrderRef: jest.fn().mockResolvedValue(null),
     alreadyHandled: jest.fn().mockResolvedValue(false),
     record: jest.fn().mockResolvedValue(undefined),
   };
@@ -542,5 +543,61 @@ describe('NotificationConsumer', () => {
     );
     expect(smsRecord).toBeDefined();
     expect(smsRecord?.[0].title).toBe('New delivery assigned');
+  });
+
+  it('sends email and creates in-app notification for merchant when order delivery fails (Scenario 29)', async () => {
+    const { consumer, repository, channels } = setup();
+
+    const merchantUser = {
+      id: 'merchant-uuid-1',
+      fullName: 'Acme Merchant',
+      phoneNumber: '+94771234567',
+      email: 'orders@acmeco.com',
+    };
+    repository.findUserById.mockResolvedValue(merchantUser);
+    repository.findMerchantOrderRef.mockResolvedValue('ORD-9988');
+
+    const merchantFailedEvent: ParcelStatusChangedV1 = {
+      ...EVENT,
+      eventId: 'failed-event-uuid-1',
+      newStatus: 'FAILED',
+      failureReason: 'INCORRECT_ADDRESS',
+      merchantId: 'merchant-uuid-1',
+    };
+
+    await consumer.handle(merchantFailedEvent);
+
+    const emailChannel = channels.find((c) => c.channel === 'EMAIL');
+    const emailCalls = (emailChannel?.send as jest.Mock).mock.calls as Array<
+      [Recipient, RenderedNotification]
+    >;
+    const merchantEmailCall = emailCalls.find(
+      (call) => call[0].email === 'orders@acmeco.com',
+    );
+    expect(merchantEmailCall).toBeDefined();
+    expect(merchantEmailCall?.[1].template).toBe(
+      'merchant_order_delivery_failed',
+    );
+    expect(merchantEmailCall?.[1].subject).toContain('ORD-9988');
+
+    const recordCalls = repository.record.mock.calls as Array<
+      [
+        {
+          recipientUserId: string;
+          channel: string;
+          template: string;
+          title?: string;
+          description?: string;
+        },
+      ]
+    >;
+    const inAppRecord = recordCalls.find(
+      (c) =>
+        c[0].channel === 'IN_APP' &&
+        c[0].recipientUserId === 'merchant-uuid-1' &&
+        c[0].template === 'merchant_order_delivery_failed',
+    );
+    expect(inAppRecord).toBeDefined();
+    expect(inAppRecord?.[0].title).toBe('Order ORD-9988 delivery failed');
   });
 });

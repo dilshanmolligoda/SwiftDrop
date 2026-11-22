@@ -73,6 +73,23 @@ export class NotificationRepository {
     });
   }
 
+  /** Finds the merchant order reference for a parcel */
+  async findMerchantOrderRef(
+    parcelId: string,
+    merchantUserId: string,
+  ): Promise<string | null> {
+    const parcel = await this.prisma.parcel.findUnique({
+      where: { id: parcelId },
+      select: {
+        merchantOrder: { select: { reference: true, merchantUserId: true } },
+      },
+    });
+    const order = parcel?.merchantOrder;
+    return order && order.merchantUserId === merchantUserId
+      ? order.reference
+      : null;
+  }
+
   /** True when this channel already has a result for the event. */
   async alreadyHandled(
     eventId: string,
