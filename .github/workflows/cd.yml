@@ -30,6 +30,8 @@ jobs:
             dockerfile: apps/worker/Dockerfile
           - name: mock-merchant
             dockerfile: tools/mock-merchant/Dockerfile
+          - name: ai-assistant
+            dockerfile: apps/ai-assistant/Dockerfile
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
@@ -56,6 +58,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             VITE_API_BASE_URL=${{ vars.VITE_API_BASE_URL || '/api/v1' }}
-            VITE_AI_ASSISTANT_URL=${{ vars.VITE_AI_ASSISTANT_URL || 'http://localhost:3100' }}
+            VITE_AI_ASSISTANT_URL=${{ vars.VITE_AI_ASSISTANT_URL || '/api/assistant' }}
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.name }}
